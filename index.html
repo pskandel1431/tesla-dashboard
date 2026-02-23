@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tesla Dashboard</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #e6e6e6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .container {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1300px;
+    margin: auto;
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 28px;
+    border-radius: 22px;
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .time {
+    font-size: 3.4rem;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .weather-main {
+    font-size: 2.4rem;
+    font-weight: 500;
+  }
+
+  .weather-sub {
+    margin-top: 8px;
+    opacity: 0.8;
+    font-size: 1.2rem;
+  }
+
+  .calendar-title {
+    font-size: 1.5rem;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  .event {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    font-size: 1.2rem;
+  }
+
+  .shortcuts {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .shortcut-btn {
+    flex: 1;
+    min-width: 220px;
+    padding: 22px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 18px;
+    font-size: 1.35rem;
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .shortcut-btn:hover {
+    background: rgba(255,255,255,0.18);
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- TIME -->
+  <div class="card time" id="timeDisplay"></div>
+
+  <!-- WEATHER -->
+  <div class="card">
+    <div class="weather-main" id="weatherMain">Loading weather…</div>
+    <div class="weather-sub" id="weatherSub"></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="card">
+    <div class="calendar-title">Today’s Schedule</div>
+    <div id="calendarEvents">Loading events…</div>
+  </div>
+
+  <!-- SHORTCUTS -->
+  <div class="card shortcuts">
+    <button class="shortcut-btn" onclick="location.href='https://tessie.com'">Tessie</button>
+    <button class="shortcut-btn" onclick="location.href='https://maps.google.com'">Google Maps</button>
+    <button class="shortcut-btn" onclick="location.href='https://www.wunderground.com/radar'">Weather Radar</button>
+    <button class="shortcut-btn" onclick="alert('TW placeholder')">TW</button>
+  </div>
+
+</div>
+
+<script>
+  // TIME
+  function updateTime() {
+    const now = new Date();
+    document.getElementById("timeDisplay").innerText =
+      now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+  setInterval(updateTime, 1000);
+  updateTime();
+
+  // WEATHER (OpenWeatherMap)
+  async function loadWeather() {
+    const apiKey = "YOUR_OPENWEATHER_API_KEY";
+    const zip = "01075";
+    const url = `https://api.openweathermap.org/data/2.5/weather?zip=${zip},US&units=imperial&appid=${apiKey}`;
+
+    const data = await fetch(url).then(r => r.json());
+
+    document.getElementById("weatherMain").innerText =
+      `${Math.round(data.main.temp)}°F — ${data.weather[0].main}`;
+
+    document.getElementById("weatherSub").innerText =
+      `${data.name} • Feels like ${Math.round(data.main.feels_like)}°F`;
+  }
+  loadWeather();
+
+  // CALENDAR (ICS placeholder)
+  async function loadCalendar() {
+    document.getElementById("calendarEvents").innerHTML =
+      "<div>No events today (calendar integration coming next)</div>";
+  }
+  loadCalendar();
+</script>
+
+</body>
+</html>
