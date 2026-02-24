@@ -5,540 +5,221 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesla Dashboard</title>
 
-<!-- Feather Icons -->
-<script src="https://unpkg.com/feather-icons"></script>
-
 <style>
   body {
     margin: 0;
-    padding: 0;
-    background: radial-gradient(circle at center, #0b0b0b 0%, #000 70%);
-    color: #e8e8e8;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    letter-spacing: 0.2px;
+    padding: 20px;
+    font-family: system-ui, sans-serif;
+    background: #000;
+    color: #fff;
   }
 
-  /* TOP BANNER */
-  .top-banner {
-    width: 100%;
-    padding: 14px 26px;
-    background: rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 0 18px rgba(255,255,255,0.08);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
   }
 
-  .top-left, .top-right {
+  .event-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 1.15rem;
-    opacity: 0.9;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
   }
 
-  .top-right {
-    opacity: 0.75;
-  }
-
-  .container {
-    padding: 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    max-width: 1300px;
-    margin: auto;
-    animation: fadeIn 0.8s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* HIGH-CONTRAST GLASS CARDS */
-  .card {
-    background: rgba(255, 255, 255, 0.08);
-    padding: 28px;
-    border-radius: 20px;
-    backdrop-filter: blur(22px);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 0 18px rgba(255,255,255,0.08),
-                0 0 22px rgba(0,0,0,0.6);
-    transition: background 0.3s ease;
-  }
-
-  .card:hover {
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .time {
-    font-size: 3.2rem;
-    font-weight: 500;
-    text-align: center;
-    letter-spacing: 1px;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .weather-main {
-    font-size: 2.2rem;
-    font-weight: 400;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .weather-sub {
-    margin-top: 8px;
-    opacity: 0.75;
-    font-size: 1.15rem;
-  }
-
-  /* 5-DAY FORECAST */
-  .forecast-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-    font-size: 1.15rem;
-    align-items: center;
-  }
-
-  .forecast-row:last-child {
-    border-bottom: none;
-  }
-
-  .forecast-day {
-    width: 60px;
-    opacity: 0.85;
-  }
-
-  .forecast-icon {
-    width: 30px;
-    text-align: center;
-  }
-
-  .forecast-temps {
-    width: 120px;
-    text-align: right;
-  }
-
-  .insight {
-    margin-top: 12px;
-    opacity: 0.75;
-    font-size: 1.1rem;
-    text-align: center;
-  }
-
-  /* CALENDAR */
-  .calendar-title {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
-    font-weight: 500;
-    opacity: 0.9;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .calendar-summary {
-    opacity: 0.8;
-    font-size: 1.05rem;
-    margin-bottom: 10px;
-  }
-
-  .event {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.10);
-    font-size: 1.05rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .event:last-child {
-    border-bottom: none;
-  }
-
-  .event-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .event-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
   }
 
   .event-time {
-    font-weight: 500;
-    min-width: 70px;
+    width: 70px;
+    font-weight: 600;
+    margin-right: 10px;
   }
 
   .event-title {
     flex: 1;
   }
 
-  .event-source {
+  .no-events {
+    font-size: 1.2rem;
     opacity: 0.7;
-    font-size: 0.95rem;
-    padding-left: 30px;
-  }
-
-  /* SHORTCUTS */
-  .shortcuts {
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .shortcut-btn {
-    flex: 1;
-    min-width: 220px;
-    padding: 20px;
-    background: rgba(255,255,255,0.10);
-    border: none;
-    border-radius: 16px;
-    font-size: 1.25rem;
-    color: #fff;
-    font-weight: 400;
-    cursor: pointer;
-    transition: background 0.25s ease, transform 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .shortcut-btn:hover {
-    background: rgba(255,255,255,0.16);
-    transform: translateY(-2px);
+    margin-top: 20px;
   }
 </style>
 </head>
 
 <body>
-
-<!-- TOP BANNER -->
-<div class="top-banner">
-  <div class="top-left">
-    <i data-feather="clock"></i>
-    <span id="topTime"></span>
-  </div>
-
-  <div class="top-right">
-    <i data-feather="refresh-cw"></i>
-    <span id="topUpdated"></span>
-  </div>
-</div>
-
-<div class="container">
-
-  <!-- TIME CARD -->
-  <div class="card time" id="timeDisplay">
-    <i data-feather="clock"></i>
-  </div>
-
-  <!-- WEATHER -->
-  <div class="card">
-    <div class="weather-main" id="weatherMain">
-      <i data-feather="cloud"></i> Loading weather…
-    </div>
-    <div class="weather-sub" id="weatherSub"></div>
-  </div>
-
-  <!-- 5-DAY FORECAST -->
-  <div class="card">
-    <div class="calendar-title">
-      <i data-feather="cloud-snow"></i> 5-Day Forecast
-    </div>
-    <div id="forecastContainer">Loading forecast…</div>
-    <div class="insight" id="weatherInsight"></div>
-  </div>
-
-  <!-- CALENDAR -->
-  <div class="card">
-    <div class="calendar-title">
-      <i data-feather="calendar"></i> Today’s Schedule
-    </div>
-    <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
-    <div id="calendarEvents">Loading events…</div>
-  </div>
-
-  <!-- SHORTCUTS -->
-  <div class="card shortcuts">
-    <button class="shortcut-btn" onclick="location.href='https://tessie.com'">
-      <i data-feather="cpu"></i> Tessie
-    </button>
-    <button class="shortcut-btn" onclick="location.href='https://maps.google.com'">
-      <i data-feather="map"></i> Google Maps
-    </button>
-    <button class="shortcut-btn" onclick="location.href='https://www.wunderground.com/radar'">
-      <i data-feather="cloud-rain"></i> Weather Radar
-    </button>
-    <button class="shortcut-btn" onclick="alert('TW placeholder')">
-      <i data-feather="star"></i> TW
-    </button>
-  </div>
-
-</div>
+<h1>Today's Events</h1>
+<div id="events"></div>
 
 <script>
-  feather.replace();
-
-  /* TOP BANNER TIME */
-  function updateTopTime() {
-    const now = new Date();
-    document.getElementById("topTime").innerText =
-      now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    feather.replace();
+// ---------------------------------------------
+// CALENDAR SOURCES
+// ---------------------------------------------
+const CALENDARS = [
+  {
+    name: "personal",
+    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/personal.ics",
+    color: "#4f9cff"
+  },
+  {
+    name: "kenyon",
+    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics",
+    color: "#9b59b6"
+  },
+  {
+    name: "family",
+    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/family.ics",
+    color: "#27ae60"
   }
-  setInterval(updateTopTime, 1000);
-  updateTopTime();
+];
 
-  function updateTopUpdated() {
-    const now = new Date();
-    const formatted = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    document.getElementById("topUpdated").innerText = `Updated at ${formatted}`;
-    feather.replace();
-  }
+// ---------------------------------------------
+// ICS DATE PARSER
+// ---------------------------------------------
+function parseICalDate(value) {
+  const raw = value.split(":").pop();
 
-  /* MAIN TIME CARD */
-  function updateTime() {
-    const now = new Date();
-    document.getElementById("timeDisplay").innerHTML =
-      `<i data-feather="clock"></i> ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
-    feather.replace();
-  }
-  setInterval(updateTime, 1000);
-  updateTime();
-
-  /* WEATHER */
-  async function loadWeather() {
-    const apiKey = "89c3522f7c542a2f0aaa7cacf8d6ef28";
-    const zip = "01075";
-
-    // Current weather
-    const currentUrl = `https://api.openweathermap.org/data/2.5/weather?zip=${zip},US&units=imperial&appid=${apiKey}`;
-    const current = await fetch(currentUrl).then(r => r.json());
-
-    document.getElementById("weatherMain").innerHTML =
-      `<i data-feather="cloud"></i> ${Math.round(current.main.temp)}°F — ${current.weather[0].main}`;
-    document.getElementById("weatherSub").innerText =
-      `${current.name} • Feels like ${Math.round(current.main.feels_like)}°F`;
-
-    feather.replace();
-
-    // 5-day forecast
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&units=imperial&appid=${apiKey}`;
-    const forecast = await fetch(forecastUrl).then(r => r.json());
-
-    const days = {};
-    forecast.list.forEach(entry => {
-      const date = new Date(entry.dt * 1000);
-      const day = date.toLocaleDateString("en-US", { weekday: "short" });
-
-      if (!days[day]) {
-        days[day] = {
-          temps: [],
-          conditions: []
-        };
-      }
-
-      days[day].temps.push(entry.main.temp);
-      days[day].conditions.push(entry.weather[0].main);
-    });
-
-    const forecastContainer = document.getElementById("forecastContainer");
-    forecastContainer.innerHTML = "";
-
-    const icons = {
-      "Clear": "sun",
-      "Clouds": "cloud",
-      "Rain": "cloud-rain",
-      "Snow": "cloud-snow",
-      "Thunderstorm": "zap",
-      "Drizzle": "cloud-drizzle",
-      "Mist": "wind"
-    };
-
-    const insightConditions = [];
-
-    Object.keys(days).slice(0, 5).forEach(day => {
-      const temps = days[day].temps;
-      const conditions = days[day].conditions;
-
-      const high = Math.round(Math.max(...temps));
-      const low = Math.round(Math.min(...temps));
-
-      const common = conditions.sort((a,b) =>
-        conditions.filter(v => v===a).length - conditions.filter(v => v===b).length
-      ).pop();
-
-      insightConditions.push({ day, condition: common });
-
-      const icon = icons[common] || "cloud";
-
-      forecastContainer.innerHTML += `
-        <div class="forecast-row">
-          <div class="forecast-day">${day}</div>
-          <div class="forecast-icon"><i data-feather="${icon}"></i></div>
-          <div class="forecast-temps">${high}° / ${low}°</div>
-        </div>
-      `;
-    });
-
-    feather.replace();
-
-    // Natural-language insight
-    const insight = document.getElementById("weatherInsight");
-    const inclement = insightConditions.find(d =>
-      ["Rain", "Snow", "Thunderstorm"].includes(d.condition)
-    );
-
-    if (inclement) {
-      insight.innerText = `Possible ${inclement.condition.toLowerCase()} on ${inclement.day}.`;
-    } else {
-      insight.innerText = "No significant weather expected this week.";
-    }
+  // All-day event
+  if (!raw.includes("T")) {
+    const year = Number(raw.slice(0, 4));
+    const month = Number(raw.slice(4, 6)) - 1;
+    const day = Number(raw.slice(6, 8));
+    return new Date(year, month, day);
   }
 
-  loadWeather().then(updateTopUpdated);
+  // Timed event
+  const [datePart, timePartRaw] = raw.split("T");
+  const timePart = timePartRaw.replace("Z", "");
 
-  /* CALENDAR — MERGED 3 ICS FEEDS */
-  async function loadCalendar() {
-    const calendars = [
-      {
-        url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/public/basic.ics",
-        label: "Personal"
-      },
-      {
-        url: "https://calendar.google.com/calendar/ical/kandel1%40kenyon.edu/public/basic.ics",
-        label: "Kenyon"
-      },
-      {
-        url: "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/public/basic.ics",
-        label: "Family"
-      }
-    ];
+  const year = Number(datePart.slice(0, 4));
+  const month = Number(datePart.slice(4, 6)) - 1;
+  const day = Number(datePart.slice(6, 8));
 
-    const todayStr = new Date().toISOString().split("T")[0].replace(/-/g, "");
+  const hour = Number(timePart.slice(0, 2));
+  const minute = Number(timePart.slice(2, 4));
+  const second = Number(timePart.slice(4, 6) || "0");
 
-    const fetches = calendars.map(c =>
-      fetch(c.url).then(r => r.text()).then(text => ({ text, label: c.label }))
-    );
+  const isUTC = timePartRaw.endsWith("Z");
 
-    const results = await Promise.all(fetches);
+  return isUTC
+    ? new Date(Date.UTC(year, month, day, hour, minute, second))
+    : new Date(year, month, day, hour, minute, second);
+}
 
-    const allEvents = [];
+// ---------------------------------------------
+// ICS PARSER
+// ---------------------------------------------
+function parseICS(text, source) {
+  const events = [];
+  const lines = text.split(/\r?\n/);
 
-    results.forEach(({ text, label }) => {
-      const chunks = text.split("BEGIN:VEVENT").slice(1);
-      chunks.forEach(chunk => {
-        const summary = chunk.match(/SUMMARY:(.*)/)?.[1] || "Untitled Event";
-        const dtstart = chunk.match(/DTSTART.*:(\d+)/)?.[1];
-        if (!dtstart) return;
-        if (!dtstart.startsWith(todayStr)) return;
+  let current = null;
 
-        const timePart = dtstart.slice(9, 13);
-        const hour = timePart ? timePart.slice(0,2) : "00";
-        const minute = timePart ? timePart.slice(2) : "00";
-
-        const dateObj = new Date(
-          Number(todayStr.slice(0,4)),
-          Number(todayStr.slice(4,6)) - 1,
-          Number(todayStr.slice(6,8)),
-          Number(hour),
-          Number(minute)
-        );
-
-        allEvents.push({
-          summary,
-          dtstart,
-          dateObj,
-          source: label
+  for (let line of lines) {
+    if (line.startsWith("BEGIN:VEVENT")) {
+      current = {};
+    } else if (line.startsWith("END:VEVENT")) {
+      if (current.DTSTART && current.SUMMARY) {
+        events.push({
+          title: current.SUMMARY,
+          start: parseICalDate(current.DTSTART),
+          end: current.DTEND ? parseICalDate(current.DTEND) : null,
+          source
         });
-      });
-    });
-
-    allEvents.sort((a, b) => a.dateObj - b.dateObj);
-
-    const container = document.getElementById("calendarEvents");
-    const summaryEl = document.getElementById("calendarSummary");
-    container.innerHTML = "";
-
-    if (allEvents.length === 0) {
-      summaryEl.innerText = "No events today — enjoy the free time.";
-      container.innerHTML = "<div class='event'>Nothing scheduled across Personal, Kenyon, or Family.</div>";
-      return;
+      }
+      current = null;
+    } else if (current) {
+      const [key, ...rest] = line.split(":");
+      const value = rest.join(":");
+      if (key.startsWith("DTSTART")) current.DTSTART = value;
+      if (key.startsWith("DTEND")) current.DTEND = value;
+      if (key === "SUMMARY") current.SUMMARY = value;
     }
-
-    // Natural-language summary
-    const count = allEvents.length;
-    const first = allEvents[0].dateObj;
-    const hour = first.getHours();
-    let timeBucket = "day";
-    if (hour < 12) timeBucket = "morning";
-    else if (hour < 17) timeBucket = "afternoon";
-    else timeBucket = "evening";
-
-    if (count === 1) {
-      summaryEl.innerText = `You have 1 event today, this ${timeBucket}.`;
-    } else if (count <= 3) {
-      summaryEl.innerText = `You have ${count} events today, mostly in the ${timeBucket}.`;
-    } else {
-      summaryEl.innerText = `You have a busy ${timeBucket} with ${count} events across your calendars.`;
-    }
-
-    // Icon selection based on keywords
-    function iconForEvent(title) {
-      const t = title.toLowerCase();
-      if (t.includes("meeting") || t.includes("sync") || t.includes("call") || t.includes("zoom"))
-        return "users";
-      if (t.includes("doctor") || t.includes("dentist") || t.includes("appointment"))
-        return "activity";
-      if (t.includes("gym") || t.includes("workout") || t.includes("run"))
-        return "heart";
-      if (t.includes("school") || t.includes("pickup") || t.includes("dropoff"))
-        return "book";
-      if (t.includes("birthday") || t.includes("party"))
-        return "gift";
-      if (t.includes("flight") || t.includes("airport"))
-        return "navigation";
-      return "calendar";
-    }
-
-    allEvents.forEach(ev => {
-      const h = ev.dateObj.getHours();
-      const m = ev.dateObj.getMinutes().toString().padStart(2, "0");
-      const hour12 = ((h + 11) % 12) + 1;
-      const ampm = h >= 12 ? "PM" : "AM";
-      const timeLabel = `${hour12}:${m} ${ampm}`;
-      const icon = iconForEvent(ev.summary);
-
-      container.innerHTML += `
-        <div class="event">
-          <div class="event-main">
-            <i data-feather="${icon}"></i>
-            <div class="event-time">${timeLabel}</div>
-            <div class="event-title">${ev.summary}</div>
-          </div>
-          <div class="event-source">From ${ev.source} calendar</div>
-        </div>
-      `;
-    });
-
-    feather.replace();
   }
 
-  loadCalendar().then(updateTopUpdated);
-</script>
+  return events;
+}
 
+// ---------------------------------------------
+// LOAD ALL CALENDARS
+// ---------------------------------------------
+async function loadAllEvents() {
+  const all = [];
+
+  for (const cal of CALENDARS) {
+    try {
+      const res = await fetch(cal.url + "?t=" + Date.now()); // cache-bust
+      const text = await res.text();
+      const events = parseICS(text, cal.name);
+      all.push(...events);
+    } catch (e) {
+      console.error("Error loading", cal.name, e);
+    }
+  }
+
+  return all;
+}
+
+// ---------------------------------------------
+// FILTER FOR TODAY
+// ---------------------------------------------
+function eventsForToday(events) {
+  const today = new Date();
+  return events.filter(ev => {
+    return (
+      ev.start.getFullYear() === today.getFullYear() &&
+      ev.start.getMonth() === today.getMonth() &&
+      ev.start.getDate() === today.getDate()
+    );
+  });
+}
+
+// ---------------------------------------------
+// RENDER EVENTS
+// ---------------------------------------------
+function renderEvents(events) {
+  const container = document.getElementById("events");
+  container.innerHTML = "";
+
+  if (events.length === 0) {
+    container.innerHTML = `<div class="no-events">No events today — enjoy your free time.</div>`;
+    return;
+  }
+
+  events.sort((a, b) => a.start - b.start);
+
+  for (const ev of events) {
+    const timeLabel = ev.start.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+
+    const color = CALENDARS.find(c => c.name === ev.source).color;
+
+    container.innerHTML += `
+      <div class="event-row">
+        <span class="event-dot" style="background:${color}"></span>
+        <span class="event-time">${timeLabel}</span>
+        <span class="event-title">${ev.title}</span>
+      </div>
+    `;
+  }
+}
+
+// ---------------------------------------------
+// MAIN
+// ---------------------------------------------
+async function init() {
+  const events = await loadAllEvents();
+  const todaysEvents = eventsForToday(events);
+  renderEvents(todaysEvents);
+}
+
+init();
+</script>
 </body>
 </html>
-```
