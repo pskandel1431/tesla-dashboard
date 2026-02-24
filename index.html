@@ -64,13 +64,15 @@
   }
 
   .card {
-    background: rgba(255, 255, 255, 0.08);
-    padding: 24px;
-    border-radius: 20px;
-    backdrop-filter: blur(22px);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 0 18px rgba(255,255,255,0.08),
-                0 0 22px rgba(0,0,0,0.6);
+    background: rgba(255, 255, 255, 0.10);
+    padding: 28px;
+    border-radius: 22px;
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+      0 8px 22px rgba(0,0,0,0.55),
+      inset 0 0 18px rgba(255,255,255,0.10);
+    margin-bottom: 26px;
   }
 
   .card-header {
@@ -179,11 +181,6 @@
     height: 32px;
   }
 
-  .forecast-temps {
-    width: 110px;
-    text-align: right;
-  }
-
   .insight {
     margin-top: 10px;
     opacity: 0.75;
@@ -232,6 +229,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+    cursor: pointer;
   }
 
   .event:last-child {
@@ -263,6 +261,18 @@
     opacity: 0.7;
     font-size: 0.85rem;
     padding-left: 26px;
+  }
+
+  .event-details {
+    margin-top: 6px;
+    padding-left: 26px;
+    font-size: 0.9rem;
+    opacity: 0.75;
+    display: none;
+  }
+
+  .event.expanded .event-details {
+    display: block;
   }
 
   .shortcuts-card {
@@ -303,6 +313,12 @@
   .shortcut-btn i {
     width: 20px;
     height: 20px;
+  }
+
+  .weather-main img,
+  .hourly-item img,
+  .forecast-icon img {
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
   }
 </style>
 </head>
@@ -389,14 +405,16 @@
       <span>Shortcuts</span>
     </div>
     <div class="shortcuts">
-      <button class="shortcut-btn">
-        <i data-feather="map"></i> Maps
+      <button class="shortcut-btn" onclick="window.location.href='https://us83.tribalwars.us/game.php?village=2878&screen=main'">
+        <i data-feather='target'></i> Game
       </button>
-      <button class="shortcut-btn">
-        <i data-feather="music"></i> Music
+
+      <button class="shortcut-btn" onclick="window.location.href='https://dash.tessie.com/'">
+        <i data-feather='cpu'></i> Tessie
       </button>
+
       <button class="shortcut-btn">
-        <i data-feather="home"></i> Home
+        <i data-feather='star'></i> Coming Soon
       </button>
     </div>
   </div>
@@ -408,11 +426,25 @@ feather.replace();
 // CLOCK
 function updateTime() {
   const now = new Date();
-  const options = { hour: "numeric", minute: "2-digit" };
-  const timeStr = now.toLocaleTimeString([], options);
-  document.getElementById("topTime").textContent = timeStr;
+
+  const dateStr = now.toLocaleDateString([], {
+    weekday: "long",
+    month: "long",
+    day: "numeric"
+  });
+
+  const timeStr = now.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
+  const banner = `${dateStr} | ${timeStr}`;
+
+  document.getElementById("topTime").textContent = banner;
+
   document.getElementById("timeDisplay").innerHTML =
     '<i data-feather="clock"></i><span>' + timeStr + "</span>";
+
   feather.replace();
 }
 setInterval(updateTime, 1000);
@@ -423,6 +455,25 @@ const OPENWEATHER_API_KEY = "89c3522f7c542a2f0aaa7cacf8d6ef28";
 const LAT = 42.2043;
 const LON = -72.6162;
 const UNITS = "imperial";
+
+function generateWeatherNarrative(current, forecast) {
+  const descMain = current.weather[0].main.toLowerCase();
+  const temp = Math.round(current.main.temp);
+
+  let narrative = `It’s currently ${temp}°F with ${descMain}.`;
+
+  if (descMain.includes("snow")) narrative += " Roads may be slick — allow extra travel time.";
+  if (descMain.includes("rain")) narrative += " Expect wet conditions — visibility may be reduced.";
+  if (descMain.includes("wind")) narrative += " Strong winds could impact driving.";
+  if (descMain.includes("storm")) narrative += " Thunderstorms possible — stay alert.";
+
+  const next12 = forecast.list.slice(0, 4).map(f => f.weather[0].main.toLowerCase());
+  if (next12.some(w => w.includes("snow"))) narrative += " Snow is expected later today.";
+  if (next12.some(w => w.includes("rain"))) narrative += " Rain is likely in the next few hours.";
+  if (next12.some(w => w.includes("wind"))) narrative += " Windy conditions are expected soon.";
+
+  return narrative;
+}
 
 // WEATHER + FORECAST
 async function loadWeather() {
@@ -446,6 +497,9 @@ async function loadWeather() {
 
     document.getElementById("topUpdated").textContent =
       "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+    document.getElementById("weatherInsight").textContent =
+      generateWeatherNarrative(current, forecast);
   } catch (e) {
     console.error("Weather error", e);
     document.getElementById("weatherMain").textContent = "Weather unavailable";
@@ -465,9 +519,16 @@ function renderCurrentWeather(data) {
   iconImg.alt = desc;
   iconImg.style.display = "block";
 
+  const sunrise = new Date(data.sys.sunrise * 1000)
+    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  const sunset = new Date(data.sys.sunset * 1000)
+    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
   document.getElementById("weatherTemp").textContent = `${temp}°F`;
-  document.getElementById("weatherSub").textContent =
-    `${city} • ${desc.charAt(0).toUpperCase() + desc.slice(1)} • Feels like ${feels}°F`;
+  document.getElementById("weatherSub").innerHTML =
+    `${city} • ${desc.charAt(0).toUpperCase() + desc.slice(1)} • Feels like ${feels}°F<br>
+     Sunrise: ${sunrise} • Sunset: ${sunset}`;
 }
 
 function renderHourly(data) {
@@ -513,7 +574,6 @@ function renderForecast(data) {
   });
 
   const days = Object.keys(byDay).slice(0, 5);
-  const tempsForInsight = [];
 
   days.forEach(dayKey => {
     const entry = byDay[dayKey];
@@ -524,8 +584,6 @@ function renderForecast(data) {
     const iconCode = entry.weather[0].icon;
     const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
 
-    tempsForInsight.push(entry.main.temp);
-
     const row = document.createElement("div");
     row.className = "forecast-row";
     row.innerHTML = `
@@ -535,16 +593,6 @@ function renderForecast(data) {
     `;
     container.appendChild(row);
   });
-
-  if (tempsForInsight.length > 0) {
-    const avg = tempsForInsight.reduce((a, b) => a + b, 0) / tempsForInsight.length;
-    let insight = "Mild week ahead.";
-    if (avg >= 85) insight = "Hot stretch coming—plan for AC and hydration.";
-    else if (avg <= 40) insight = "Chilly week—layers will be your friend.";
-    document.getElementById("weatherInsight").textContent = insight;
-  } else {
-    document.getElementById("weatherInsight").textContent = "";
-  }
 }
 
 // CALENDAR SOURCES
@@ -552,7 +600,7 @@ const CALENDARS = [
   {
     name: "Personal",
     key: "personal",
-    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/personal.ics",
+    url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/private-3f860a04fb0570102688170b52564c42/basic.ics",
     color: "#4f9cff"
   },
   {
@@ -564,7 +612,7 @@ const CALENDARS = [
   {
     name: "Family",
     key: "family",
-    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/family.ics",
+    url: "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/private-6aa24b9fdb6c890da5038ca012dfd501/basic.ics",
     color: "#27ae60"
   }
 ];
@@ -782,7 +830,15 @@ function renderCalendar(events) {
         <span class="event-title">${ev.title}</span>
       </div>
       <div class="event-source">${cal ? cal.name : ""}</div>
+      <div class="event-details">
+        ${ev.end ? "Ends at " + ev.end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}
+      </div>
     `;
+
+    div.addEventListener("click", () => {
+      div.classList.toggle("expanded");
+    });
+
     container.appendChild(div);
   });
 }
