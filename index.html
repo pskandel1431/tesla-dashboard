@@ -1,3 +1,6 @@
+Here’s the fully updated script with **3 merged calendars**, **Tesla‑style icons**, and a **natural‑language summary of your day**.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +19,34 @@
     color: #e8e8e8;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     letter-spacing: 0.2px;
+  }
+
+  /* TOP BANNER */
+  .top-banner {
+    width: 100%;
+    padding: 14px 26px;
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .top-left, .top-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.15rem;
+    opacity: 0.9;
+  }
+
+  .top-right {
+    opacity: 0.75;
   }
 
   .container {
@@ -49,14 +80,6 @@
     background: rgba(255, 255, 255, 0.12);
   }
 
-  #lastUpdated {
-    text-align: center;
-    opacity: 0.55;
-    font-size: 0.9rem;
-    margin-top: -10px;
-    margin-bottom: -10px;
-  }
-
   .time {
     font-size: 3.2rem;
     font-weight: 500;
@@ -80,52 +103,6 @@
     margin-top: 8px;
     opacity: 0.75;
     font-size: 1.15rem;
-  }
-
-  .calendar-title {
-    font-size: 1.4rem;
-    margin-bottom: 14px;
-    font-weight: 500;
-    opacity: 0.9;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .event {
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.10);
-    font-size: 1.15rem;
-  }
-
-  .shortcuts {
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .shortcut-btn {
-    flex: 1;
-    min-width: 220px;
-    padding: 20px;
-    background: rgba(255,255,255,0.10);
-    border: none;
-    border-radius: 16px;
-    font-size: 1.25rem;
-    color: #fff;
-    font-weight: 400;
-    cursor: pointer;
-    transition: background 0.25s ease, transform 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .shortcut-btn:hover {
-    background: rgba(255,255,255,0.16);
-    transform: translateY(-2px);
   }
 
   /* 5-DAY FORECAST */
@@ -163,15 +140,109 @@
     font-size: 1.1rem;
     text-align: center;
   }
+
+  /* CALENDAR */
+  .calendar-title {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    font-weight: 500;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .calendar-summary {
+    opacity: 0.8;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  .event {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    font-size: 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .event:last-child {
+    border-bottom: none;
+  }
+
+  .event-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .event-time {
+    font-weight: 500;
+    min-width: 70px;
+  }
+
+  .event-title {
+    flex: 1;
+  }
+
+  .event-source {
+    opacity: 0.7;
+    font-size: 0.95rem;
+    padding-left: 30px;
+  }
+
+  /* SHORTCUTS */
+  .shortcuts {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .shortcut-btn {
+    flex: 1;
+    min-width: 220px;
+    padding: 20px;
+    background: rgba(255,255,255,0.10);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.25rem;
+    color: #fff;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .shortcut-btn:hover {
+    background: rgba(255,255,255,0.16);
+    transform: translateY(-2px);
+  }
 </style>
 </head>
 
 <body>
+
+<!-- TOP BANNER -->
+<div class="top-banner">
+  <div class="top-left">
+    <i data-feather="clock"></i>
+    <span id="topTime"></span>
+  </div>
+
+  <div class="top-right">
+    <i data-feather="refresh-cw"></i>
+    <span id="topUpdated"></span>
+  </div>
+</div>
+
 <div class="container">
 
-  <div id="lastUpdated"></div>
-
-  <!-- TIME -->
+  <!-- TIME CARD -->
   <div class="card time" id="timeDisplay">
     <i data-feather="clock"></i>
   </div>
@@ -198,7 +269,8 @@
     <div class="calendar-title">
       <i data-feather="calendar"></i> Today’s Schedule
     </div>
-    <div id="calendarEvents">No events today (calendar integration coming soon)</div>
+    <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
+    <div id="calendarEvents">Loading events…</div>
   </div>
 
   <!-- SHORTCUTS -->
@@ -222,7 +294,24 @@
 <script>
   feather.replace();
 
-  // TIME
+  /* TOP BANNER TIME */
+  function updateTopTime() {
+    const now = new Date();
+    document.getElementById("topTime").innerText =
+      now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    feather.replace();
+  }
+  setInterval(updateTopTime, 1000);
+  updateTopTime();
+
+  function updateTopUpdated() {
+    const now = new Date();
+    const formatted = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    document.getElementById("topUpdated").innerText = `Updated at ${formatted}`;
+    feather.replace();
+  }
+
+  /* MAIN TIME CARD */
   function updateTime() {
     const now = new Date();
     document.getElementById("timeDisplay").innerHTML =
@@ -232,14 +321,7 @@
   setInterval(updateTime, 1000);
   updateTime();
 
-  // LAST UPDATED
-  function setLastUpdated() {
-    const now = new Date();
-    const formatted = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    document.getElementById("lastUpdated").innerText = `Updated at ${formatted}`;
-  }
-
-  // WEATHER
+  /* WEATHER */
   async function loadWeather() {
     const apiKey = "89c3522f7c542a2f0aaa7cacf8d6ef28";
     const zip = "01075";
@@ -329,16 +411,137 @@
     }
   }
 
-  loadWeather().then(setLastUpdated);
+  loadWeather().then(updateTopUpdated);
 
-  // CALENDAR placeholder
+  /* CALENDAR — MERGED 3 ICS FEEDS */
   async function loadCalendar() {
-    document.getElementById("calendarEvents").innerHTML =
-      "<div>No events today (calendar integration coming soon)</div>";
+    const calendars = [
+      {
+        url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/public/basic.ics",
+        label: "Personal"
+      },
+      {
+        url: "https://calendar.google.com/calendar/ical/kandel1%40kenyon.edu/public/basic.ics",
+        label: "Kenyon"
+      },
+      {
+        url: "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/public/basic.ics",
+        label: "Family"
+      }
+    ];
+
+    const todayStr = new Date().toISOString().split("T")[0].replace(/-/g, "");
+
+    const fetches = calendars.map(c =>
+      fetch(c.url).then(r => r.text()).then(text => ({ text, label: c.label }))
+    );
+
+    const results = await Promise.all(fetches);
+
+    const allEvents = [];
+
+    results.forEach(({ text, label }) => {
+      const chunks = text.split("BEGIN:VEVENT").slice(1);
+      chunks.forEach(chunk => {
+        const summary = chunk.match(/SUMMARY:(.*)/)?.[1] || "Untitled Event";
+        const dtstart = chunk.match(/DTSTART.*:(\d+)/)?.[1];
+        if (!dtstart) return;
+        if (!dtstart.startsWith(todayStr)) return;
+
+        const timePart = dtstart.slice(9, 13);
+        const hour = timePart ? timePart.slice(0,2) : "00";
+        const minute = timePart ? timePart.slice(2) : "00";
+
+        const dateObj = new Date(
+          Number(todayStr.slice(0,4)),
+          Number(todayStr.slice(4,6)) - 1,
+          Number(todayStr.slice(6,8)),
+          Number(hour),
+          Number(minute)
+        );
+
+        allEvents.push({
+          summary,
+          dtstart,
+          dateObj,
+          source: label
+        });
+      });
+    });
+
+    allEvents.sort((a, b) => a.dateObj - b.dateObj);
+
+    const container = document.getElementById("calendarEvents");
+    const summaryEl = document.getElementById("calendarSummary");
+    container.innerHTML = "";
+
+    if (allEvents.length === 0) {
+      summaryEl.innerText = "No events today — enjoy the free time.";
+      container.innerHTML = "<div class='event'>Nothing scheduled across Personal, Kenyon, or Family.</div>";
+      return;
+    }
+
+    // Natural-language summary
+    const count = allEvents.length;
+    const first = allEvents[0].dateObj;
+    const hour = first.getHours();
+    let timeBucket = "day";
+    if (hour < 12) timeBucket = "morning";
+    else if (hour < 17) timeBucket = "afternoon";
+    else timeBucket = "evening";
+
+    if (count === 1) {
+      summaryEl.innerText = `You have 1 event today, this ${timeBucket}.`;
+    } else if (count <= 3) {
+      summaryEl.innerText = `You have ${count} events today, mostly in the ${timeBucket}.`;
+    } else {
+      summaryEl.innerText = `You have a busy ${timeBucket} with ${count} events across your calendars.`;
+    }
+
+    // Icon selection based on keywords
+    function iconForEvent(title) {
+      const t = title.toLowerCase();
+      if (t.includes("meeting") || t.includes("sync") || t.includes("call") || t.includes("zoom"))
+        return "users";
+      if (t.includes("doctor") || t.includes("dentist") || t.includes("appointment"))
+        return "activity";
+      if (t.includes("gym") || t.includes("workout") || t.includes("run"))
+        return "heart";
+      if (t.includes("school") || t.includes("pickup") || t.includes("dropoff"))
+        return "book";
+      if (t.includes("birthday") || t.includes("party"))
+        return "gift";
+      if (t.includes("flight") || t.includes("airport"))
+        return "navigation";
+      return "calendar";
+    }
+
+    allEvents.forEach(ev => {
+      const h = ev.dateObj.getHours();
+      const m = ev.dateObj.getMinutes().toString().padStart(2, "0");
+      const hour12 = ((h + 11) % 12) + 1;
+      const ampm = h >= 12 ? "PM" : "AM";
+      const timeLabel = `${hour12}:${m} ${ampm}`;
+      const icon = iconForEvent(ev.summary);
+
+      container.innerHTML += `
+        <div class="event">
+          <div class="event-main">
+            <i data-feather="${icon}"></i>
+            <div class="event-time">${timeLabel}</div>
+            <div class="event-title">${ev.summary}</div>
+          </div>
+          <div class="event-source">From ${ev.source} calendar</div>
+        </div>
+      `;
+    });
+
+    feather.replace();
   }
 
-  loadCalendar().then(setLastUpdated);
+  loadCalendar().then(updateTopUpdated);
 </script>
 
 </body>
 </html>
+```
