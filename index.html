@@ -5,13 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesla Dashboard</title>
 
+<!-- Feather Icons -->
+<script src="https://unpkg.com/feather-icons"></script>
+
 <style>
   body {
     margin: 0;
     padding: 0;
-    background: #000;
-    color: #e6e6e6;
+    background: radial-gradient(circle at center, #0b0b0b 0%, #000 70%);
+    color: #e8e8e8;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: 0.2px;
   }
 
   .container {
@@ -21,44 +25,75 @@
     gap: 28px;
     max-width: 1300px;
     margin: auto;
+    animation: fadeIn 0.8s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .card {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
     padding: 28px;
-    border-radius: 22px;
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background 0.3s ease;
+  }
+
+  .card:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  #lastUpdated {
+    text-align: center;
+    opacity: 0.55;
+    font-size: 0.9rem;
+    margin-top: -10px;
+    margin-bottom: -10px;
   }
 
   .time {
-    font-size: 3.4rem;
-    font-weight: 600;
+    font-size: 3.2rem;
+    font-weight: 500;
     text-align: center;
     letter-spacing: 1px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
   }
 
   .weather-main {
-    font-size: 2.4rem;
-    font-weight: 500;
+    font-size: 2.2rem;
+    font-weight: 400;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .weather-sub {
     margin-top: 8px;
-    opacity: 0.8;
-    font-size: 1.2rem;
+    opacity: 0.75;
+    font-size: 1.15rem;
   }
 
   .calendar-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     margin-bottom: 14px;
-    font-weight: 600;
+    font-weight: 500;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .event {
     padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    font-size: 1.15rem;
   }
 
   .shortcuts {
@@ -71,19 +106,24 @@
   .shortcut-btn {
     flex: 1;
     min-width: 220px;
-    padding: 22px;
-    background: rgba(255,255,255,0.12);
+    padding: 20px;
+    background: rgba(255,255,255,0.08);
     border: none;
-    border-radius: 18px;
-    font-size: 1.35rem;
+    border-radius: 16px;
+    font-size: 1.25rem;
     color: #fff;
-    font-weight: 500;
+    font-weight: 400;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background 0.25s ease, transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
 
   .shortcut-btn:hover {
-    background: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
   }
 </style>
 </head>
@@ -91,42 +131,68 @@
 <body>
 <div class="container">
 
+  <div id="lastUpdated"></div>
+
   <!-- TIME -->
-  <div class="card time" id="timeDisplay"></div>
+  <div class="card time" id="timeDisplay">
+    <i data-feather="clock"></i>
+  </div>
 
   <!-- WEATHER -->
   <div class="card">
-    <div class="weather-main" id="weatherMain">Loading weather…</div>
+    <div class="weather-main" id="weatherMain">
+      <i data-feather="cloud"></i> Loading weather…
+    </div>
     <div class="weather-sub" id="weatherSub"></div>
   </div>
 
   <!-- CALENDAR -->
   <div class="card">
-    <div class="calendar-title">Today’s Schedule</div>
+    <div class="calendar-title">
+      <i data-feather="calendar"></i> Today’s Schedule
+    </div>
     <div id="calendarEvents">Loading events…</div>
   </div>
 
   <!-- SHORTCUTS -->
   <div class="card shortcuts">
-    <button class="shortcut-btn" onclick="location.href='https://tessie.com'">Tessie</button>
-    <button class="shortcut-btn" onclick="location.href='https://maps.google.com'">Google Maps</button>
-    <button class="shortcut-btn" onclick="location.href='https://www.wunderground.com/radar'">Weather Radar</button>
-    <button class="shortcut-btn" onclick="alert('TW placeholder')">TW</button>
+    <button class="shortcut-btn" onclick="location.href='https://tessie.com'">
+      <i data-feather="cpu"></i> Tessie
+    </button>
+    <button class="shortcut-btn" onclick="location.href='https://maps.google.com'">
+      <i data-feather="map"></i> Google Maps
+    </button>
+    <button class="shortcut-btn" onclick="location.href='https://www.wunderground.com/radar'">
+      <i data-feather="cloud-rain"></i> Weather Radar
+    </button>
+    <button class="shortcut-btn" onclick="alert('TW placeholder')">
+      <i data-feather="star"></i> TW
+    </button>
   </div>
 
 </div>
 
 <script>
+  feather.replace();
+
   // TIME
   function updateTime() {
     const now = new Date();
-    document.getElementById("timeDisplay").innerText =
-      now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    document.getElementById("timeDisplay").innerHTML =
+      `<i data-feather="clock"></i> ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    feather.replace();
   }
   setInterval(updateTime, 1000);
   updateTime();
 
-  // WEATHER (OpenWeatherMap)
+  // LAST UPDATED
+  function setLastUpdated() {
+    const now = new Date();
+    const formatted = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    document.getElementById("lastUpdated").innerText = `Updated at ${formatted}`;
+  }
+
+  // WEATHER
   async function loadWeather() {
     const apiKey = "89c3522f7c542a2f0aaa7cacf8d6ef28";
     const zip = "01075";
@@ -134,20 +200,24 @@
 
     const data = await fetch(url).then(r => r.json());
 
-    document.getElementById("weatherMain").innerText =
-      `${Math.round(data.main.temp)}°F — ${data.weather[0].main}`;
+    document.getElementById("weatherMain").innerHTML =
+      `<i data-feather="cloud"></i> ${Math.round(data.main.temp)}°F — ${data.weather[0].main}`;
 
     document.getElementById("weatherSub").innerText =
       `${data.name} • Feels like ${Math.round(data.main.feels_like)}°F`;
-  }
-  loadWeather();
 
-  // CALENDAR (ICS placeholder)
+    feather.replace();
+  }
+
+  loadWeather().then(setLastUpdated);
+
+  // CALENDAR (placeholder)
   async function loadCalendar() {
     document.getElementById("calendarEvents").innerHTML =
-      "<div>No events today (calendar integration coming next)</div>";
+      "<div>No events today (calendar integration coming soon)</div>";
   }
-  loadCalendar();
+
+  loadCalendar().then(setLastUpdated);
 </script>
 
 </body>
