@@ -537,6 +537,171 @@
   }
 
   loadCalendar().then(updateTopUpdated);
+
+  <script>
+const CALENDARS = [
+  {
+    name: "personal",
+    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/personal.ics",
+    color: "#4f9cff"
+  },
+  {
+    name: "kenyon",
+    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics",
+    color: "#9b59b6"
+  },
+  {
+    name: "family",
+    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/family.ics",
+    color: "#27ae60"
+  }
+];
+
+// -----------------------------
+// ICS DATE PARSER (FIXES 12:00 BUG)
+// -----------------------------
+function parseICalDate(value) {
+  const raw = value.split(":").pop();
+
+  // All-day event (no time)
+  if (!raw.includes("T")) {
+    const year = Number(raw.slice(0, 4));
+    const month = Number(raw.slice(4, 6)) - 1;
+    const day = Number(raw.slice(6, 8));
+    return new Date(year, month, day);
+  }
+
+  // Timed event
+  const [datePart, timePartRaw] = raw.split("T");
+  const timePart = timePartRaw.replace("Z", "");
+
+  const year = Number(datePart.slice(0, 4));
+  const month = Number(datePart.slice(4, 6)) - 1;
+  const day = Number(datePart.slice(6, 8));
+
+  const hour = Number(timePart.slice(0, 2));
+  const minute = Number(timePart.slice(2, 4));
+  const second = Number(timePart.slice(4, 6) || "0");
+
+  const isUTC = timePartRaw.endsWith("Z");
+
+  return isUTC
+    ? new Date(Date.UTC(year, month, day, hour, minute, second))
+    : new Date(year, month, day, hour, minute, second);
+}
+
+// -----------------------------
+// ICS PARSER
+// -----------------------------
+function parseICS(text, source) {
+  const events = [];
+  const lines = text.split(/\r?\n/);
+
+  let current = null;
+
+  for (let line of lines) {
+    if (line.startsWith("BEGIN:VEVENT")) {
+      current = {};
+    } else if (line.startsWith("END:VEVENT")) {
+      if (current.DTSTART && current.SUMMARY) {
+        events.push({
+          title: current.SUMMARY,
+          start: parseICalDate(current.DTSTART),
+          end: current.DTEND ? parseICalDate(current.DTEND) : null,
+          source
+        });
+      }
+      current = null;
+    } else if (current) {
+      const [key, ...rest] = line.split(":");
+      const value = rest.join(":");
+      if (key.startsWith("DTSTART")) current.DTSTART = value;
+      if (key.startsWith("DTEND")) current.DTEND = value;
+      if (key === "SUMMARY") current.SUMMARY = value;
+    }
+  }
+
+  return events;
+}
+
+// -----------------------------
+// LOAD ALL CALENDARS
+// -----------------------------
+async function loadAllEvents() {
+  const all = [];
+
+  for (const cal of CALENDARS) {
+    try {
+      const res = await fetch(cal.url + "?t=" + Date.now()); // cache-bust
+      const text = await res.text();
+      const events = parseICS(text, cal.name);
+      all.push(...events);
+    } catch (e) {
+      console.error("Error loading", cal.name, e);
+    }
+  }
+
+  return all;
+}
+
+// -----------------------------
+// RENDER EVENTS
+// -----------------------------
+function renderEvents(events) {
+  const container = document.getElementById("events");
+  container.innerHTML = "";
+
+  if (events.length === 0) {
+    container.innerHTML = `<div class="no-events">No events today — enjoy your free time.</div>`;
+    return;
+  }
+
+  events.sort((a, b) => a.start - b.start);
+
+  for (const ev of events) {
+    const timeLabel = ev.start.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+
+    const color = CALENDARS.find(c => c.name === ev.source).color;
+
+    container.innerHTML += `
+      <div class="event-row">
+        <span class="event-dot" style="background:${color}"></span>
+        <span class="event-time">${timeLabel}</span>
+        <span class="event-title">${ev.title}</span>
+      </div>
+    `;
+  }
+}
+
+// -----------------------------
+// FILTER FOR TODAY
+// -----------------------------
+function eventsForToday(events) {
+  const today = new Date();
+  return events.filter(ev => {
+    return (
+      ev.start.getFullYear() === today.getFullYear() &&
+      ev.start.getMonth() === today.getMonth() &&
+      ev.start.getDate() === today.getDate()
+    );
+  });
+}
+
+// -----------------------------
+// MAIN
+// -----------------------------
+async function init() {
+  const events = await loadAllEvents();
+  const todaysEvents = eventsForToday(events);
+  renderEvents(todaysEvents);
+}
+
+init();
+</script>
+
 </script>
 
 </body>
