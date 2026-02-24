@@ -4,82 +4,425 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesla Dashboard</title>
- 
+
+<!-- Feather Icons -->
+<script src="https://unpkg.com/feather-icons"></script>
+
 <style>
   body {
     margin: 0;
-    padding: 20px;
-    font-family: system-ui, sans-serif;
-    background: #000;
-    color: #fff;
+    padding: 0;
+    background: radial-gradient(circle at center, #0b0b0b 0%, #000 70%);
+    color: #e8e8e8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: 0.2px;
   }
 
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
+  /* TOP BANNER */
+  .top-banner {
+    width: 100%;
+    padding: 14px 26px;
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
-  .event-row {
+  .top-left, .top-right {
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
-    font-size: 1.2rem;
+    gap: 10px;
+    font-size: 1.15rem;
+    opacity: 0.9;
   }
 
-  .event-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 10px;
+  .top-right {
+    opacity: 0.75;
+  }
+
+  .container {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1300px;
+    margin: auto;
+  }
+
+  /* HIGH-CONTRAST GLASS CARDS */
+  .card {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 28px;
+    border-radius: 20px;
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.08),
+                0 0 22px rgba(0,0,0,0.6);
+  }
+
+  .time {
+    font-size: 3.2rem;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .weather-main {
+    font-size: 2.2rem;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .weather-sub {
+    margin-top: 8px;
+    opacity: 0.75;
+    font-size: 1.15rem;
+  }
+
+  /* 5-DAY FORECAST */
+  .forecast-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    font-size: 1.15rem;
+    align-items: center;
+  }
+
+  .forecast-row:last-child {
+    border-bottom: none;
+  }
+
+  .forecast-day {
+    width: 60px;
+    opacity: 0.85;
+  }
+
+  .forecast-icon {
+    width: 30px;
+    text-align: center;
+  }
+
+  .forecast-temps {
+    width: 120px;
+    text-align: right;
+  }
+
+  .insight {
+    margin-top: 12px;
+    opacity: 0.75;
+    font-size: 1.1rem;
+    text-align: center;
+  }
+
+  /* CALENDAR */
+  .calendar-title {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    font-weight: 500;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .calendar-summary {
+    opacity: 0.8;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  .event {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    font-size: 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .event:last-child {
+    border-bottom: none;
+  }
+
+  .event-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .event-time {
-    width: 70px;
-    font-weight: 600;
-    margin-right: 10px;
+    font-weight: 500;
+    min-width: 70px;
   }
 
   .event-title {
     flex: 1;
   }
 
-  .no-events {
-    font-size: 1.2rem;
+  .event-source {
     opacity: 0.7;
-    margin-top: 20px;
+    font-size: 0.95rem;
+    padding-left: 30px;
+  }
+
+  .event-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  /* SHORTCUTS */
+  .shortcuts {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .shortcut-btn {
+    flex: 1;
+    min-width: 220px;
+    padding: 20px;
+    background: rgba(255,255,255,0.10);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.25rem;
+    color: #fff;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .shortcut-btn:hover {
+    background: rgba(255,255,255,0.16);
+    transform: translateY(-2px);
   }
 </style>
 </head>
 
 <body>
-<h1>Today's Events</h1>
-<div id="events"></div>
+
+<!-- TOP BANNER -->
+<div class="top-banner">
+  <div class="top-left">
+    <i data-feather="clock"></i>
+    <span id="topTime"></span>
+  </div>
+
+  <div class="top-right">
+    <i data-feather="refresh-cw"></i>
+    <span id="topUpdated"></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TIME CARD -->
+  <div class="card time" id="timeDisplay">
+    <i data-feather="clock"></i>
+  </div>
+
+  <!-- WEATHER -->
+  <div class="card">
+    <div class="weather-main" id="weatherMain">
+      <i data-feather="cloud"></i> Loading weather…
+    </div>
+    <div class="weather-sub" id="weatherSub"></div>
+  </div>
+
+  <!-- 5-DAY FORECAST -->
+  <div class="card">
+    <div class="calendar-title">
+      <i data-feather="cloud-snow"></i> 5-Day Forecast
+    </div>
+    <div id="forecastContainer">Loading forecast…</div>
+    <div class="insight" id="weatherInsight"></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="card">
+    <div class="calendar-title">
+      <i data-feather="calendar"></i> Today’s Schedule
+    </div>
+    <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
+    <div id="calendarEvents">Loading events…</div>
+  </div>
+
+  <!-- SHORTCUTS -->
+  <div class="card">
+    <div class="calendar-title">
+      <i data-feather="zap"></i> Shortcuts
+    </div>
+    <div class="shortcuts">
+      <button class="shortcut-btn">
+        <i data-feather="map"></i> Maps
+      </button>
+      <button class="shortcut-btn">
+        <i data-feather="music"></i> Music
+      </button>
+      <button class="shortcut-btn">
+        <i data-feather="home"></i> Home
+      </button>
+    </div>
+  </div>
+
+</div>
 
 <script>
-// ---------------------------------------------
+feather.replace();
+
+// -----------------------------
+// CLOCK / TOP BANNER
+// -----------------------------
+function updateTime() {
+  const now = new Date();
+  const options = { hour: "numeric", minute: "2-digit" };
+  const timeStr = now.toLocaleTimeString([], options);
+  document.getElementById("topTime").textContent = timeStr;
+  document.getElementById("timeDisplay").innerHTML =
+    '<i data-feather="clock"></i> ' + timeStr;
+  feather.replace();
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// -----------------------------
+// OPENWEATHER CONFIG
+// -----------------------------
+const OPENWEATHER_API_KEY = "89c3522f7c542a2f0aaa7cacf8d6ef28"; // <-- put your key here
+const LAT = 42.2043;  // Holyoke, MA approx
+const LON = -72.6162;
+const UNITS = "imperial"; // Fahrenheit
+
+// -----------------------------
+// WEATHER + FORECAST
+// -----------------------------
+async function loadWeather() {
+  try {
+    const currentUrl =
+      `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
+    const forecastUrl =
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
+
+    const [currentRes, forecastRes] = await Promise.all([
+      fetch(currentUrl),
+      fetch(forecastUrl)
+    ]);
+
+    const current = await currentRes.json();
+    const forecast = await forecastRes.json();
+
+    renderCurrentWeather(current);
+    renderForecast(forecast);
+    document.getElementById("topUpdated").textContent =
+      "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  } catch (e) {
+    console.error("Weather error", e);
+    document.getElementById("weatherMain").textContent = "Weather unavailable";
+  }
+}
+
+function renderCurrentWeather(data) {
+  const temp = Math.round(data.main.temp);
+  const feels = Math.round(data.main.feels_like);
+  const desc = data.weather[0].description;
+  const city = data.name;
+
+  document.getElementById("weatherMain").innerHTML =
+    `<i data-feather="cloud"></i> ${temp}°F in ${city}`;
+  document.getElementById("weatherSub").textContent =
+    `${desc.charAt(0).toUpperCase() + desc.slice(1)} • Feels like ${feels}°F`;
+
+  feather.replace();
+}
+
+function renderForecast(data) {
+  const container = document.getElementById("forecastContainer");
+  container.innerHTML = "";
+
+  // Group by day (take one around midday)
+  const byDay = {};
+  data.list.forEach(entry => {
+    const dt = new Date(entry.dt * 1000);
+    const dayKey = dt.toISOString().slice(0, 10);
+    if (!byDay[dayKey] || dt.getHours() === 12) {
+      byDay[dayKey] = entry;
+    }
+  });
+
+  const days = Object.keys(byDay).slice(0, 5);
+  days.forEach(dayKey => {
+    const entry = byDay[dayKey];
+    const dt = new Date(entry.dt * 1000);
+    const label = dt.toLocaleDateString([], { weekday: "short" });
+    const min = Math.round(entry.main.temp_min);
+    const max = Math.round(entry.main.temp_max);
+    const desc = entry.weather[0].main;
+
+    const row = document.createElement("div");
+    row.className = "forecast-row";
+    row.innerHTML = `
+      <div class="forecast-day">${label}</div>
+      <div class="forecast-icon">${desc}</div>
+      <div class="forecast-temps">${min}° / ${max}°</div>
+    `;
+    container.appendChild(row);
+  });
+
+  // Simple insight
+  const temps = days.map(d => byDay[d].main.temp);
+  const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+  let insight = "Mild week ahead.";
+  if (avg >= 85) insight = "Hot stretch coming—plan for AC and hydration.";
+  else if (avg <= 40) insight = "Chilly week—layers will be your friend.";
+  document.getElementById("weatherInsight").textContent = insight;
+}
+
+// -----------------------------
 // CALENDAR SOURCES
-// ---------------------------------------------
+// -----------------------------
 const CALENDARS = [
   {
-    name: "personal",
+    name: "Personal",
+    key: "personal",
     url: "https://pskandel1431.github.io/tesla-dashboard/calendars/personal.ics",
     color: "#4f9cff"
   },
   {
-    name: "kenyon",
+    name: "Kenyon",
+    key: "kenyon",
     url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics",
     color: "#9b59b6"
   },
   {
-    name: "family",
+    name: "Family",
+    key: "family",
     url: "https://pskandel1431.github.io/tesla-dashboard/calendars/family.ics",
     color: "#27ae60"
   }
 ];
 
-// ---------------------------------------------
+// -----------------------------
 // ICS DATE PARSER
-// ---------------------------------------------
+// -----------------------------
 function parseICalDate(value) {
   const raw = value.split(":").pop();
 
@@ -110,13 +453,12 @@ function parseICalDate(value) {
     : new Date(year, month, day, hour, minute, second);
 }
 
-// ---------------------------------------------
+// -----------------------------
 // ICS PARSER
-// ---------------------------------------------
-function parseICS(text, source) {
+// -----------------------------
+function parseICS(text, sourceKey) {
   const events = [];
   const lines = text.split(/\r?\n/);
-
   let current = null;
 
   for (let line of lines) {
@@ -128,7 +470,7 @@ function parseICS(text, source) {
           title: current.SUMMARY,
           start: parseICalDate(current.DTSTART),
           end: current.DTEND ? parseICalDate(current.DTEND) : null,
-          source
+          sourceKey
         });
       }
       current = null;
@@ -144,9 +486,9 @@ function parseICS(text, source) {
   return events;
 }
 
-// ---------------------------------------------
+// -----------------------------
 // LOAD ALL CALENDARS
-// ---------------------------------------------
+// -----------------------------
 async function loadAllEvents() {
   const all = [];
 
@@ -154,7 +496,7 @@ async function loadAllEvents() {
     try {
       const res = await fetch(cal.url + "?t=" + Date.now()); // cache-bust
       const text = await res.text();
-      const events = parseICS(text, cal.name);
+      const events = parseICS(text, cal.key);
       all.push(...events);
     } catch (e) {
       console.error("Error loading", cal.name, e);
@@ -164,9 +506,9 @@ async function loadAllEvents() {
   return all;
 }
 
-// ---------------------------------------------
+// -----------------------------
 // FILTER FOR TODAY
-// ---------------------------------------------
+// -----------------------------
 function eventsForToday(events) {
   const today = new Date();
   return events.filter(ev => {
@@ -178,45 +520,60 @@ function eventsForToday(events) {
   });
 }
 
-// ---------------------------------------------
-// RENDER EVENTS
-// ---------------------------------------------
-function renderEvents(events) {
-  const container = document.getElementById("events");
+// -----------------------------
+// RENDER CALENDAR
+// -----------------------------
+function renderCalendar(events) {
+  const container = document.getElementById("calendarEvents");
+  const summaryEl = document.getElementById("calendarSummary");
   container.innerHTML = "";
 
   if (events.length === 0) {
-    container.innerHTML = `<div class="no-events">No events today — enjoy your free time.</div>`;
+    summaryEl.textContent = "No events today — enjoy the open space.";
+    container.textContent = "";
     return;
   }
 
   events.sort((a, b) => a.start - b.start);
 
-  for (const ev of events) {
+  // Summary
+  const first = events[0];
+  const last = events[events.length - 1];
+  const firstTime = first.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const lastTime = last.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  summaryEl.textContent =
+    `${events.length} event${events.length > 1 ? "s" : ""} today, from ${firstTime} to ${lastTime}.`;
+
+  // Events
+  events.forEach(ev => {
+    const cal = CALENDARS.find(c => c.key === ev.sourceKey);
     const timeLabel = ev.start.toLocaleTimeString([], {
       hour: "numeric",
       minute: "2-digit"
     });
 
-    const color = CALENDARS.find(c => c.name === ev.source).color;
-
-    container.innerHTML += `
-      <div class="event-row">
-        <span class="event-dot" style="background:${color}"></span>
+    const div = document.createElement("div");
+    div.className = "event";
+    div.innerHTML = `
+      <div class="event-main">
+        <span class="event-dot" style="background:${cal.color}"></span>
         <span class="event-time">${timeLabel}</span>
         <span class="event-title">${ev.title}</span>
       </div>
+      <div class="event-source">${cal.name}</div>
     `;
-  }
+    container.appendChild(div);
+  });
 }
 
-// ---------------------------------------------
-// MAIN
-// ---------------------------------------------
+// -----------------------------
+// MAIN INIT
+// -----------------------------
 async function init() {
+  await loadWeather();
   const events = await loadAllEvents();
   const todaysEvents = eventsForToday(events);
-  renderEvents(todaysEvents);
+  renderCalendar(todaysEvents);
 }
 
 init();
