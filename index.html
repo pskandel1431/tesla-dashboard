@@ -33,17 +33,20 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* HIGH-CONTRAST GLASS CARDS */
   .card {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.08);
     padding: 28px;
     border-radius: 20px;
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.08),
+                0 0 22px rgba(0,0,0,0.6);
     transition: background 0.3s ease;
   }
 
   .card:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.12);
   }
 
   #lastUpdated {
@@ -68,7 +71,6 @@
   .weather-main {
     font-size: 2.2rem;
     font-weight: 400;
-    transition: opacity 0.3s ease;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -107,7 +109,7 @@
     flex: 1;
     min-width: 220px;
     padding: 20px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.10);
     border: none;
     border-radius: 16px;
     font-size: 1.25rem;
@@ -122,8 +124,44 @@
   }
 
   .shortcut-btn:hover {
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.16);
     transform: translateY(-2px);
+  }
+
+  /* 5-DAY FORECAST */
+  .forecast-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    font-size: 1.15rem;
+    align-items: center;
+  }
+
+  .forecast-row:last-child {
+    border-bottom: none;
+  }
+
+  .forecast-day {
+    width: 60px;
+    opacity: 0.85;
+  }
+
+  .forecast-icon {
+    width: 30px;
+    text-align: center;
+  }
+
+  .forecast-temps {
+    width: 120px;
+    text-align: right;
+  }
+
+  .insight {
+    margin-top: 12px;
+    opacity: 0.75;
+    font-size: 1.1rem;
+    text-align: center;
   }
 </style>
 </head>
@@ -146,12 +184,21 @@
     <div class="weather-sub" id="weatherSub"></div>
   </div>
 
+  <!-- 5-DAY FORECAST -->
+  <div class="card">
+    <div class="calendar-title">
+      <i data-feather="cloud-snow"></i> 5-Day Forecast
+    </div>
+    <div id="forecastContainer">Loading forecast…</div>
+    <div class="insight" id="weatherInsight"></div>
+  </div>
+
   <!-- CALENDAR -->
   <div class="card">
     <div class="calendar-title">
       <i data-feather="calendar"></i> Today’s Schedule
     </div>
-    <div id="calendarEvents">Loading events…</div>
+    <div id="calendarEvents">No events today (calendar integration coming soon)</div>
   </div>
 
   <!-- SHORTCUTS -->
@@ -196,22 +243,95 @@
   async function loadWeather() {
     const apiKey = "89c3522f7c542a2f0aaa7cacf8d6ef28";
     const zip = "01075";
-    const url = `https://api.openweathermap.org/data/2.5/weather?zip=${zip},US&units=imperial&appid=${apiKey}`;
 
-    const data = await fetch(url).then(r => r.json());
+    // Current weather
+    const currentUrl = `https://api.openweathermap.org/data/2.5/weather?zip=${zip},US&units=imperial&appid=${apiKey}`;
+    const current = await fetch(currentUrl).then(r => r.json());
 
     document.getElementById("weatherMain").innerHTML =
-      `<i data-feather="cloud"></i> ${Math.round(data.main.temp)}°F — ${data.weather[0].main}`;
-
+      `<i data-feather="cloud"></i> ${Math.round(current.main.temp)}°F — ${current.weather[0].main}`;
     document.getElementById("weatherSub").innerText =
-      `${data.name} • Feels like ${Math.round(data.main.feels_like)}°F`;
+      `${current.name} • Feels like ${Math.round(current.main.feels_like)}°F`;
 
     feather.replace();
+
+    // 5-day forecast
+    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?zip=${zip},US&units=imperial&appid=${apiKey}`;
+    const forecast = await fetch(forecastUrl).then(r => r.json());
+
+    const days = {};
+    forecast.list.forEach(entry => {
+      const date = new Date(entry.dt * 1000);
+      const day = date.toLocaleDateString("en-US", { weekday: "short" });
+
+      if (!days[day]) {
+        days[day] = {
+          temps: [],
+          conditions: []
+        };
+      }
+
+      days[day].temps.push(entry.main.temp);
+      days[day].conditions.push(entry.weather[0].main);
+    });
+
+    const forecastContainer = document.getElementById("forecastContainer");
+    forecastContainer.innerHTML = "";
+
+    const icons = {
+      "Clear": "sun",
+      "Clouds": "cloud",
+      "Rain": "cloud-rain",
+      "Snow": "cloud-snow",
+      "Thunderstorm": "zap",
+      "Drizzle": "cloud-drizzle",
+      "Mist": "wind"
+    };
+
+    const insightConditions = [];
+
+    Object.keys(days).slice(0, 5).forEach(day => {
+      const temps = days[day].temps;
+      const conditions = days[day].conditions;
+
+      const high = Math.round(Math.max(...temps));
+      const low = Math.round(Math.min(...temps));
+
+      const common = conditions.sort((a,b) =>
+        conditions.filter(v => v===a).length - conditions.filter(v => v===b).length
+      ).pop();
+
+      insightConditions.push({ day, condition: common });
+
+      const icon = icons[common] || "cloud";
+
+      forecastContainer.innerHTML += `
+        <div class="forecast-row">
+          <div class="forecast-day">${day}</div>
+          <div class="forecast-icon"><i data-feather="${icon}"></i></div>
+          <div class="forecast-temps">${high}° / ${low}°</div>
+        </div>
+      `;
+    });
+
+    feather.replace();
+
+    // Natural-language insight
+    const insight = document.getElementById("weatherInsight");
+    const inclement = insightConditions.find(d =>
+      ["Rain", "Snow", "Thunderstorm"].includes(d.condition)
+    );
+
+    if (inclement) {
+      insight.innerText = `Possible ${inclement.condition.toLowerCase()} on ${inclement.day}.`;
+    } else {
+      insight.innerText = "No significant weather expected this week.";
+    }
   }
 
   loadWeather().then(setLastUpdated);
 
-  // CALENDAR (placeholder)
+  // CALENDAR placeholder
   async function loadCalendar() {
     document.getElementById("calendarEvents").innerHTML =
       "<div>No events today (calendar integration coming soon)</div>";
