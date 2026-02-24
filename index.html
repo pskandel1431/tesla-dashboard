@@ -1,64 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tesla Dashboard</title>
-
-<style>
-  body {
-    margin: 0;
-    padding: 20px;
-    font-family: system-ui, sans-serif;
-    background: #000;
-    color: #fff;
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-  }
-
-  .event-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-    font-size: 1.2rem;
-  }
-
-  .event-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
-
-  .event-time {
-    width: 70px;
-    font-weight: 600;
-    margin-right: 10px;
-  }
-
-  .event-title {
-    flex: 1;
-  }
-
-  .no-events {
-    font-size: 1.2rem;
-    opacity: 0.7;
-    margin-top: 20px;
-  }
-</style>
-</head>
-
-<body>
-<h1>Today's Events</h1>
-<div id="events"></div>
-
 <script>
-// ---------------------------------------------
-// CALENDAR SOURCES
-// ---------------------------------------------
 const CALENDARS = [
   {
     name: "personal",
@@ -77,13 +17,13 @@ const CALENDARS = [
   }
 ];
 
-// ---------------------------------------------
-// ICS DATE PARSER
-// ---------------------------------------------
+// -----------------------------
+// ICS DATE PARSER (FIXES 12:00 BUG)
+// -----------------------------
 function parseICalDate(value) {
   const raw = value.split(":").pop();
 
-  // All-day event
+  // All-day event (no time)
   if (!raw.includes("T")) {
     const year = Number(raw.slice(0, 4));
     const month = Number(raw.slice(4, 6)) - 1;
@@ -110,9 +50,9 @@ function parseICalDate(value) {
     : new Date(year, month, day, hour, minute, second);
 }
 
-// ---------------------------------------------
+// -----------------------------
 // ICS PARSER
-// ---------------------------------------------
+// -----------------------------
 function parseICS(text, source) {
   const events = [];
   const lines = text.split(/\r?\n/);
@@ -144,9 +84,9 @@ function parseICS(text, source) {
   return events;
 }
 
-// ---------------------------------------------
+// -----------------------------
 // LOAD ALL CALENDARS
-// ---------------------------------------------
+// -----------------------------
 async function loadAllEvents() {
   const all = [];
 
@@ -164,23 +104,9 @@ async function loadAllEvents() {
   return all;
 }
 
-// ---------------------------------------------
-// FILTER FOR TODAY
-// ---------------------------------------------
-function eventsForToday(events) {
-  const today = new Date();
-  return events.filter(ev => {
-    return (
-      ev.start.getFullYear() === today.getFullYear() &&
-      ev.start.getMonth() === today.getMonth() &&
-      ev.start.getDate() === today.getDate()
-    );
-  });
-}
-
-// ---------------------------------------------
+// -----------------------------
 // RENDER EVENTS
-// ---------------------------------------------
+// -----------------------------
 function renderEvents(events) {
   const container = document.getElementById("events");
   container.innerHTML = "";
@@ -210,9 +136,23 @@ function renderEvents(events) {
   }
 }
 
-// ---------------------------------------------
+// -----------------------------
+// FILTER FOR TODAY
+// -----------------------------
+function eventsForToday(events) {
+  const today = new Date();
+  return events.filter(ev => {
+    return (
+      ev.start.getFullYear() === today.getFullYear() &&
+      ev.start.getMonth() === today.getMonth() &&
+      ev.start.getDate() === today.getDate()
+    );
+  });
+}
+
+// -----------------------------
 // MAIN
-// ---------------------------------------------
+// -----------------------------
 async function init() {
   const events = await loadAllEvents();
   const todaysEvents = eventsForToday(events);
@@ -221,5 +161,3 @@ async function init() {
 
 init();
 </script>
-</body>
-</html>
