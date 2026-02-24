@@ -1,1 +1,32 @@
 
+name: Update Calendars
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes
+  workflow_dispatch:        # allow manual run
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Fetch Personal Calendar
+        run: curl -L "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/public/basic.ics" -o calendars/personal.ics
+
+      - name: Fetch Kenyon Calendar
+        run: curl -L "https://calendar.google.com/calendar/ical/kandel1%40kenyon.edu/public/basic.ics" -o calendars/kenyon.ics
+
+      - name: Fetch Family Calendar
+        run: curl -L "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/public/basic.ics" -o calendars/family.ics
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add calendars/*.ics
+          git commit -m "Update calendars" || echo "No changes"
+          git push
