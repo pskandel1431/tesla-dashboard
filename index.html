@@ -1,941 +1,625 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Tesla Dashboard</title>
 
-<!-- Feather Icons -->
 <script src="https://unpkg.com/feather-icons"></script>
 
 <style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: radial-gradient(circle at center, #0b0b0b 0%, #000 70%);
-    color: #e8e8e8;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    letter-spacing: 0.2px;
+  :root{
+    --bg-card: rgba(255,255,255,0.10);
+    --muted: rgba(255,255,255,0.75);
+    --divider: rgba(255,255,255,0.12);
   }
 
-  .top-banner {
-    width: 100%;
-    padding: 14px 26px;
-    background: rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 0 18px rgba(255,255,255,0.08);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background: radial-gradient(circle at center,#070707 0%, #000 70%);
+    color:#eaeaea;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
   }
 
-  .top-left, .top-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.15rem;
-    opacity: 0.9;
+  .page{
+    max-width:1300px;
+    margin:28px auto;
+    padding:0 20px 60px;
   }
 
-  .top-right {
-    opacity: 0.75;
+  .top-banner{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 18px;
+    background:var(--bg-card);
+    border-radius:12px;
+    margin-bottom:18px;
+    border:1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(8px);
   }
 
-  .page {
-    padding: 32px;
-    max-width: 1300px;
-    margin: auto;
+  .grid{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:20px;
   }
 
-  .grid {
-    display: grid;
-    grid-template-columns: 1.1fr 1.1fr;
-    gap: 24px;
+  @media (max-width:1200px){
+    .grid{ grid-template-columns: 1fr; }
   }
 
-  @media (max-width: 1300px) {
-    .grid {
-      grid-template-columns: 1fr;
-    }
+  .card{
+    background:var(--bg-card);
+    padding:18px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.6), inset 0 0 12px rgba(255,255,255,0.03);
   }
 
-  .card {
-    background: rgba(255, 255, 255, 0.10);
-    padding: 28px;
-    border-radius: 22px;
-    backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow:
-      0 8px 22px rgba(0,0,0,0.55),
-      inset 0 0 18px rgba(255,255,255,0.10);
-    margin-bottom: 26px;
+  .card-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    margin-bottom:10px;
+    opacity:0.95;
   }
 
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-    opacity: 0.9;
+  /* Weather Hub */
+  #weatherHub .weather-main{
+    display:flex;
+    gap:18px;
+    align-items:center;
   }
 
-  .time-card {
-    font-size: 3.2rem;
-    font-weight: 500;
-    text-align: center;
-    letter-spacing: 1px;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    align-items: center;
+  .weather-icon-big{
+    width:96px;
+    height:96px;
+    flex:0 0 96px;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6));
   }
 
-  .time-card span {
-    display: inline-block;
+  .weather-temp{
+    font-size:2.6rem;
+    font-weight:600;
+    line-height:1;
   }
 
-  .weather-main {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 10px;
+  .weather-sub{
+    margin-top:6px;
+    color:var(--muted);
+    font-size:0.98rem;
   }
 
-  .weather-icon-big {
-    width: 80px;
-    filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+  .sunrise-icon, .sunset-icon{
+    width:26px;
+    height:26px;
+    vertical-align:middle;
   }
 
-  .weather-temp {
-    font-size: 2.4rem;
-    font-weight: 500;
+  .weather-divider{
+    border:none;
+    border-top:1px solid var(--divider);
+    margin:12px 0;
   }
 
-  .weather-sub {
-    margin-top: 2px;
-    opacity: 0.8;
-    font-size: 1rem;
+  /* Hourly */
+  .hourly-container{ overflow-x:auto; padding-bottom:6px; }
+  .hourly-strip{ display:flex; gap:10px; min-width:max-content; align-items:flex-start; }
+  .hourly-item{
+    min-width:92px;
+    padding:8px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.03);
+    text-align:center;
+    font-size:0.92rem;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:center;
+  }
+  .hourly-item img{ width:44px; height:44px; }
+  .hourly-time{ opacity:0.85; font-size:0.9rem; }
+  .hourly-temp{ font-weight:600; }
+  .hourly-pop{ font-size:0.78rem; color:var(--muted); }
+  .hourly-wind{ font-size:0.78rem; color:var(--muted); display:flex; gap:6px; align-items:center; }
+  .wind-icon{ width:22px; height:22px; opacity:0.9; }
+
+  /* 5-day condensed */
+  #weatherDaily{ margin-top:6px; }
+  .forecast-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 0;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    font-size:0.88rem;
+    line-height:1.05;
+  }
+  .forecast-row:last-child{ border-bottom:none; }
+  .forecast-day{ width:48px; opacity:0.9; font-weight:600; }
+  .forecast-icon{ width:44px; flex:0 0 44px; text-align:center; }
+  .forecast-icon img{ width:36px; height:36px; }
+  .forecast-temps{ width:86px; text-align:right; font-weight:600; }
+  .forecast-pop{ width:44px; text-align:right; color:var(--muted); font-size:0.82rem; }
+  .forecast-wind{ width:72px; text-align:right; color:var(--muted); font-size:0.82rem; display:flex; gap:6px; justify-content:flex-end; align-items:center; }
+  .wind-icon-small{ width:18px; height:18px; opacity:0.85; }
+
+  /* Trend arrow */
+  .trend {
+    display:inline-block;
+    margin-left:8px;
+    font-size:1.05rem;
+    opacity:0.95;
   }
 
-  .sunrise-icon,
-  .sunset-icon {
-    width: 22px;
-    vertical-align: middle;
-  }
+  /* temp color helpers (fallback) */
+  .temp-hot{ color:#ff6b6b; }
+  .temp-warm{ color:#ffa94d; }
+  .temp-mild{ color:#ffd43b; }
+  .temp-cool{ color:#4fa3ff; }
+  .temp-low-deep{ color:#4fa3ff; } /* low <32 */
+  .muted { color:var(--muted); }
 
-  .sunrise-icon {
-    filter: drop-shadow(0 0 4px rgba(255,200,0,0.6));
-  }
+  /* Calendar & events (unchanged) */
+  .events-list{ margin-top:10px; }
+  .event{ padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
+  .event-main{ display:flex; gap:8px; align-items:center; }
+  .event-dot{ width:10px; height:10px; border-radius:50%; }
+  .event-time{ min-width:70px; font-weight:600; }
+  .event-details{ display:none; padding-left:26px; opacity:0.8; font-size:0.9rem; }
+  .event.expanded .event-details{ display:block; }
 
-  .sunset-icon {
-    filter: drop-shadow(0 0 4px rgba(255,120,0,0.6));
-  }
-
-  .weather-divider {
-    border: none;
-    border-top: 1px solid rgba(255,255,255,0.15);
-    margin: 14px 0;
-  }
-
-  .hourly-container {
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-
-  .hourly-strip {
-    display: flex;
-    gap: 12px;
-    min-width: max-content;
-  }
-
-  .hourly-item {
-    min-width: 80px;
-    padding: 8px 10px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.06);
-    text-align: center;
-    font-size: 0.9rem;
-  }
-
-  .hourly-item img {
-    width: 32px;
-  }
-
-  .hourly-time {
-    opacity: 0.8;
-    margin-bottom: 4px;
-  }
-
-  .hourly-temp {
-    font-weight: 500;
-  }
-
-  .forecast-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-    font-size: 0.95rem;
-    align-items: center;
-  }
-
-  .forecast-row:last-child {
-    border-bottom: none;
-  }
-
-  .forecast-day {
-    width: 60px;
-    opacity: 0.85;
-  }
-
-  .forecast-icon {
-    width: 40px;
-    text-align: center;
-  }
-
-  .forecast-icon img {
-    width: 28px;
-  }
-
-  .forecast-temps {
-    width: 110px;
-    text-align: right;
-  }
-
-  .insight {
-    margin-top: 10px;
-    opacity: 0.75;
-    font-size: 0.95rem;
-  }
-
-  .calendar-summary {
-    opacity: 0.85;
-    font-size: 1rem;
-    margin-bottom: 8px;
-  }
-
-  .calendar-updated {
-    opacity: 0.6;
-    font-size: 0.85rem;
-    margin-bottom: 10px;
-  }
-
-  .now-next-later {
-    margin-top: 6px;
-    font-size: 0.98rem;
-  }
-
-  .nnl-section {
-    margin-bottom: 6px;
-  }
-
-  .nnl-label {
-    font-weight: 600;
-    opacity: 0.9;
-    margin-right: 4px;
-  }
-
-  .nnl-text {
-    opacity: 0.85;
-  }
-
-  .events-list {
-    margin-top: 10px;
-  }
-
-  .event {
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.10);
-    font-size: 0.98rem;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    cursor: pointer;
-  }
-
-  .event:last-child {
-    border-bottom: none;
-  }
-
-  .event-main {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .event-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-
-  .event-time {
-    font-weight: 500;
-    min-width: 70px;
-  }
-
-  .event-title {
-    flex: 1;
-  }
-
-  .event-source {
-    opacity: 0.7;
-    font-size: 0.85rem;
-    padding-left: 26px;
-  }
-
-  .event-details {
-    margin-top: 6px;
-    padding-left: 26px;
-    font-size: 0.9rem;
-    opacity: 0.75;
-    display: none;
-  }
-
-  .event.expanded .event-details {
-    display: block;
-  }
-
-  .shortcuts-card {
-    margin-top: 24px;
-  }
-
-  .shortcuts {
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .shortcut-btn {
-    flex: 1;
-    min-width: 220px;
-    padding: 18px;
-    background: rgba(255,255,255,0.10);
-    border: none;
-    border-radius: 16px;
-    font-size: 1.1rem;
-    color: #fff;
-    font-weight: 400;
-    cursor: pointer;
-    transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .shortcut-btn:hover {
-    background: rgba(255,255,255,0.16);
-    transform: translateY(-2px);
-    box-shadow: 0 0 12px rgba(255,255,255,0.18);
-  }
-
-  .shortcut-btn i {
-    width: 20px;
-    height: 20px;
-  }
+  /* shortcuts */
+  .shortcuts{ display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+  .shortcut-btn{ min-width:180px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:8px; align-items:center; justify-content:center; }
 </style>
 </head>
-
 <body>
-<div class="top-banner">
-  <div class="top-left">
-    <i data-feather="clock"></i>
-    <span id="topTime"></span>
-  </div>
-  <div class="top-right">
-    <i data-feather="refresh-cw"></i>
-    <span id="topUpdated"></span>
-  </div>
-</div>
+  <div class="page">
+    <div class="top-banner">
+      <div><i data-feather="clock"></i> <span id="topTime">--</span></div>
+      <div><i data-feather="refresh-cw"></i> <span id="topUpdated">--</span></div>
+    </div>
 
-<div class="page">
-  <div class="grid">
-    <!-- LEFT COLUMN -->
-    <div class="left-col">
-      <div class="card time-card" id="timeDisplay">
-        <span>--:--</span>
+    <div class="grid">
+      <!-- LEFT: Weather Hub -->
+      <div>
+        <div class="card" id="weatherHub">
+          <div class="card-header"><i data-feather="cloud"></i><span>Weather</span></div>
+
+          <div id="weatherCurrent"></div>
+
+          <div class="weather-divider"></div>
+
+          <div id="weatherHourly"></div>
+
+          <div class="weather-divider"></div>
+
+          <div id="weatherDaily"></div>
+
+          <div class="insight" id="weatherInsight"></div>
+        </div>
       </div>
 
-      <!-- Unified Weather Hub -->
-      <div class="card" id="weatherHub">
-        <div class="card-header">
-          <i data-feather="cloud"></i>
-          <span>Weather</span>
+      <!-- RIGHT: Calendar -->
+      <div>
+        <div class="card">
+          <div class="card-header"><i data-feather="calendar"></i><span>Today’s Schedule</span></div>
+          <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
+          <div class="calendar-updated" id="calendarUpdated"></div>
+          <div class="now-next-later" id="nowNextLater"></div>
         </div>
 
-        <div id="weatherCurrent"></div>
-
-        <hr class="weather-divider">
-
-        <div id="weatherHourly"></div>
-
-        <hr class="weather-divider">
-
-        <div id="weatherDaily"></div>
-
-        <div class="insight" id="weatherInsight"></div>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div class="right-col">
-      <div class="card">
-        <div class="card-header">
-          <i data-feather="calendar"></i>
-          <span>Today’s Schedule</span>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header"><i data-feather="list"></i><span>All Events Today & Tomorrow</span></div>
+          <div class="events-list" id="calendarEvents">Loading events…</div>
         </div>
-        <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
-        <div class="calendar-updated" id="calendarUpdated"></div>
-        <div class="now-next-later" id="nowNextLater"></div>
-      </div>
 
-      <div class="card">
-        <div class="card-header">
-          <i data-feather="list"></i>
-          <span>All Events Today & Tomorrow</span>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header"><i data-feather="zap"></i><span>Shortcuts</span></div>
+          <div class="shortcuts">
+            <button class="shortcut-btn" onclick="window.location.href='https://us83.tribalwars.us/game.php?village=2878&screen=main'"><i data-feather="target"></i> Game</button>
+            <button class="shortcut-btn" onclick="window.location.href='https://dash.tessie.com/'"><i data-feather="cpu"></i> Tessie</button>
+            <button class="shortcut-btn"><i data-feather="star"></i> Coming Soon</button>
+          </div>
         </div>
-        <div class="events-list" id="calendarEvents">Loading events…</div>
       </div>
     </div>
   </div>
-
-  <div class="card shortcuts-card">
-    <div class="card-header">
-      <i data-feather="zap"></i>
-      <span>Shortcuts</span>
-    </div>
-    <div class="shortcuts">
-      <button class="shortcut-btn" onclick="window.location.href='https://us83.tribalwars.us/game.php?village=2878&screen=main'">
-        <i data-feather='target'></i> Game
-      </button>
-
-      <button class="shortcut-btn" onclick="window.location.href='https://dash.tessie.com/'">
-        <i data-feather='cpu'></i> Tessie
-      </button>
-
-      <button class="shortcut-btn">
-        <i data-feather='star'></i> Coming Soon
-      </button>
-    </div>
-  </div>
-</div>
 
 <script>
 feather.replace();
 
-// CLOCK
-function updateTime() {
+// Clock
+function updateTime(){
   const now = new Date();
-
-  const dateStr = now.toLocaleDateString([], {
-    weekday: "long",
-    month: "long",
-    day: "numeric"
-  });
-
-  const timeStr = now.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit"
-  });
-
-  const banner = `${dateStr} | ${timeStr}`;
-
-  document.getElementById("topTime").textContent = banner;
-
-  document.getElementById("timeDisplay").innerHTML =
-    '<i data-feather="clock"></i><span>' + timeStr + "</span>";
-
+  document.getElementById('topTime').textContent = now.toLocaleDateString([], { weekday:'long', month:'short', day:'numeric' }) + ' | ' + now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
   feather.replace();
 }
-setInterval(updateTime, 1000);
+setInterval(updateTime,1000);
 updateTime();
 
-// OPENWEATHER CONFIG
+/* CONFIG */
 const OPENWEATHER_API_KEY = "89c3522f7c542a2f0aaa7cacf8d6ef28";
 const LAT = 42.2043;
 const LON = -72.6162;
 const UNITS = "imperial";
 
-// Meteocons mapping
-function getMeteocon(iconCode) {
+/* ICON HELPERS
+   - Animated for current + hourly: /production/animated/{key}.svg
+   - Static colorful for daily: /production/fill/all/{key}.svg
+*/
+function meteoconAnimated(iconCode){
   const map = {
-    "01d": "clear-day",
-    "01n": "clear-night",
-    "02d": "partly-cloudy-day",
-    "02n": "partly-cloudy-night",
-    "03d": "cloudy",
-    "03n": "cloudy",
-    "04d": "overcast",
-    "04n": "overcast",
-    "09d": "rain",
-    "09n": "rain",
-    "10d": "rain",
-    "10n": "rain",
-    "11d": "thunderstorms",
-    "11n": "thunderstorms",
-    "13d": "snow",
-    "13n": "snow",
-    "50d": "mist",
-    "50n": "mist"
+    "01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night",
+    "03d":"cloudy","03n":"cloudy","04d":"overcast","04n":"overcast",
+    "09d":"rain","09n":"rain","10d":"rain","10n":"rain",
+    "11d":"thunderstorms","11n":"thunderstorms","13d":"snow","13n":"snow",
+    "50d":"mist","50n":"mist"
   };
-
+  const key = map[iconCode] || "cloudy";
+  return `https://basmilius.github.io/weather-icons/production/animated/${key}.svg`;
+}
+function meteoconStatic(iconCode){
+  const map = {
+    "01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night",
+    "03d":"cloudy","03n":"cloudy","04d":"overcast","04n":"overcast",
+    "09d":"rain","09n":"rain","10d":"rain","10n":"rain",
+    "11d":"thunderstorms","11n":"thunderstorms","13d":"snow","13n":"snow",
+    "50d":"mist","50n":"mist"
+  };
   const key = map[iconCode] || "cloudy";
   return `https://basmilius.github.io/weather-icons/production/fill/all/${key}.svg`;
 }
 
-function generateWeatherNarrative(current, forecast) {
-  const descMain = current.weather[0].main.toLowerCase();
+/* Wind icon helpers (animated for hourly, static small for daily) */
+function windIconAnimated(speed){
+  // Beaufort-like bucket
+  const b = Math.min(12, Math.max(0, Math.round(speed / 5)));
+  return `https://basmilius.github.io/weather-icons/production/animated/wind-beaufort-${b}.svg`;
+}
+function windIconStatic(speed){
+  const b = Math.min(12, Math.max(0, Math.round(speed / 5)));
+  return `https://basmilius.github.io/weather-icons/production/fill/all/wind-beaufort-${b}.svg`;
+}
+
+/* Narrative */
+function generateWeatherNarrative(current, forecast){
+  const desc = current.weather[0].description;
   const temp = Math.round(current.main.temp);
+  let narrative = `It’s ${temp}°F and ${desc}.`;
 
-  let narrative = `It’s currently ${temp}°F with ${descMain}.`;
+  if (desc.toLowerCase().includes('snow')) narrative += ' Roads may be slick — allow extra travel time.';
+  if (desc.toLowerCase().includes('rain')) narrative += ' Expect wet conditions and reduced visibility.';
+  if (desc.toLowerCase().includes('wind')) narrative += ' Gusty winds possible — secure loose items.';
+  if (desc.toLowerCase().includes('storm')) narrative += ' Thunderstorms possible — stay alert.';
 
-  if (descMain.includes("snow")) narrative += " Roads may be slick — allow extra travel time.";
-  if (descMain.includes("rain")) narrative += " Expect wet conditions — visibility may be reduced.";
-  if (descMain.includes("wind")) narrative += " Strong winds could impact driving.";
-  if (descMain.includes("storm")) narrative += " Thunderstorms possible — stay alert.";
-
-  const next12 = forecast.list.slice(0, 4).map(f => f.weather[0].main.toLowerCase());
-  if (next12.some(w => w.includes("snow"))) narrative += " Snow is expected later today.";
-  if (next12.some(w => w.includes("rain"))) narrative += " Rain is likely in the next few hours.";
-  if (next12.some(w => w.includes("wind"))) narrative += " Windy conditions are expected soon.";
-
+  const next8 = forecast.list.slice(0,8).map(f=>f.weather[0].main.toLowerCase());
+  if (next8.some(w=>w.includes('snow'))) narrative += ' Snow is expected soon.';
+  if (next8.some(w=>w.includes('rain'))) narrative += ' Rain likely in the next hours.';
   return narrative;
 }
 
-// WEATHER + FORECAST
-async function loadWeather() {
-  try {
-    const currentUrl =
-      `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
-    const forecastUrl =
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
+/* Temperature color helper */
+function colorTempStyle(t, isLow=false){
+  if(isLow){
+    if(t < 32) return "color:#4fa3ff"; // deep cold
+    if(t < 50) return "color:#7fbaff";
+    return "color:#cfcfcf";
+  } else {
+    if(t >= 85) return "color:#ff6b6b";
+    if(t >= 70) return "color:#ffa94d";
+    if(t >= 50) return "color:#ffd43b";
+    return "color:#4fa3ff";
+  }
+}
 
-    const [currentRes, forecastRes] = await Promise.all([
-      fetch(currentUrl),
-      fetch(forecastUrl)
-    ]);
+/* Fetch weather */
+async function loadWeather(){
+  try{
+    const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
+    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
 
-    const current = await currentRes.json();
-    const forecast = await forecastRes.json();
+    const [curRes, fRes] = await Promise.all([fetch(currentUrl), fetch(forecastUrl)]);
+    const current = await curRes.json();
+    const forecast = await fRes.json();
 
     renderCurrentWeather(current);
     renderHourly(forecast);
     renderForecast(forecast);
 
-    document.getElementById("topUpdated").textContent =
-      "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
-    document.getElementById("weatherInsight").textContent =
-      generateWeatherNarrative(current, forecast);
-  } catch (e) {
-    console.error("Weather error", e);
-    document.getElementById("weatherCurrent").textContent = "Weather unavailable";
+    document.getElementById('topUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+    document.getElementById('weatherInsight').textContent = generateWeatherNarrative(current, forecast);
+  }catch(err){
+    console.error('Weather load error', err);
+    document.getElementById('weatherCurrent').textContent = 'Weather unavailable';
   }
 }
 
-function renderCurrentWeather(data) {
+/* Render current */
+function renderCurrentWeather(data){
   const temp = Math.round(data.main.temp);
   const feels = Math.round(data.main.feels_like);
   const desc = data.weather[0].description;
   const city = data.name;
   const iconCode = data.weather[0].icon;
 
-  const sunrise = new Date(data.sys.sunrise * 1000)
-    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+  const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
 
-  const sunset = new Date(data.sys.sunset * 1000)
-    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const iconUrl = meteoconAnimated(iconCode);
 
-  const iconUrl = getMeteocon(iconCode);
-
-  document.getElementById("weatherCurrent").innerHTML = `
+  document.getElementById('weatherCurrent').innerHTML = `
     <div class="weather-main">
-      <img src="${iconUrl}" class="weather-icon-big" />
+      <img src="${iconUrl}" class="weather-icon-big" alt="${desc}" />
       <div>
         <div class="weather-temp">${temp}°F</div>
         <div class="weather-sub">${city} • ${desc}</div>
         <div class="weather-sub">Feels like ${feels}°F</div>
         <div class="weather-sub">
-          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunrise.svg" class="sunrise-icon">
-          ${sunrise}
+          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunrise.svg" class="sunrise-icon" alt="sunrise"> ${sunrise}
           &nbsp;&nbsp;
-          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunset.svg" class="sunset-icon">
-          ${sunset}
+          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunset.svg" class="sunset-icon" alt="sunset"> ${sunset}
         </div>
       </div>
     </div>
   `;
 }
 
-function renderHourly(data) {
-  const container = document.getElementById("weatherHourly");
+/* Render hourly (animated icons, larger) */
+function renderHourly(data){
+  const container = document.getElementById('weatherHourly');
   container.innerHTML = `
-    <div class="card-header" style="margin-bottom:8px; padding:0;">
-      <i data-feather="clock"></i>
-      <span>Next 8 Hours</span>
-    </div>
-    <div class="hourly-container">
-      <div class="hourly-strip" id="hourlyStrip"></div>
-    </div>
+    <div class="card-header" style="margin:0; padding:0 0 8px 0;"><i data-feather="clock"></i><span>Next 8 Hours</span></div>
+    <div class="hourly-container"><div class="hourly-strip" id="hourlyStrip"></div></div>
   `;
   feather.replace();
 
-  const strip = document.getElementById("hourlyStrip");
-  strip.innerHTML = "";
+  const strip = document.getElementById('hourlyStrip');
+  strip.innerHTML = '';
 
   const now = Date.now();
-  const upcoming = data.list.filter(entry => entry.dt * 1000 > now).slice(0, 8);
+  const upcoming = data.list.filter(e => e.dt * 1000 > now).slice(0,8);
 
   upcoming.forEach(entry => {
     const dt = new Date(entry.dt * 1000);
-    const timeLabel = dt.toLocaleTimeString([], { hour: "numeric" });
+    const timeLabel = dt.toLocaleTimeString([], { hour:'numeric' });
     const temp = Math.round(entry.main.temp);
-    const iconCode = entry.weather[0].icon;
-    const iconUrl = getMeteocon(iconCode);
+    const iconUrl = meteoconAnimated(entry.weather[0].icon);
+    const pop = Math.round((entry.pop || 0) * 100);
+    const wind = Math.round(entry.wind?.speed || 0);
 
-    const div = document.createElement("div");
-    div.className = "hourly-item";
+    const div = document.createElement('div');
+    div.className = 'hourly-item';
     div.innerHTML = `
       <div class="hourly-time">${timeLabel}</div>
       <img src="${iconUrl}" alt="${entry.weather[0].description}" />
       <div class="hourly-temp">${temp}°</div>
+      <div class="hourly-pop">${pop}%</div>
+      <div class="hourly-wind"><img src="${windIconAnimated(wind)}" class="wind-icon" alt="wind">${wind} mph</div>
     `;
     strip.appendChild(div);
   });
 
-  if (upcoming.length === 0) {
-    strip.textContent = "No upcoming hours available.";
-  }
+  if(upcoming.length === 0) strip.textContent = 'No upcoming hours available.';
 }
 
-function renderForecast(data) {
-  const container = document.getElementById("weatherDaily");
+/* Render 5-day (static icons, condensed, trend arrows, colors, wind, pop) */
+function renderForecast(data){
+  const container = document.getElementById('weatherDaily');
   container.innerHTML = `
-    <div class="card-header" style="margin-bottom:8px; padding:0;">
-      <i data-feather="cloud-snow"></i>
-      <span>5-Day Forecast</span>
-    </div>
+    <div class="card-header" style="margin:0; padding:0 0 8px 0;"><i data-feather="cloud-snow"></i><span id="forecastHeader">5‑Day Forecast</span></div>
     <div id="forecastContainer"></div>
   `;
   feather.replace();
 
-  const fc = document.getElementById("forecastContainer");
-  fc.innerHTML = "";
+  const fc = document.getElementById('forecastContainer');
+  fc.innerHTML = '';
 
+  // group by day (prefer midday sample)
   const byDay = {};
   data.list.forEach(entry => {
     const dt = new Date(entry.dt * 1000);
-    const dayKey = dt.toISOString().slice(0, 10);
-    if (!byDay[dayKey] || dt.getHours() === 12) {
-      byDay[dayKey] = entry;
+    const key = dt.toISOString().slice(0,10);
+    if(!byDay[key] || Math.abs(dt.getHours() - 12) < Math.abs(new Date(byDay[key].dt * 1000).getHours() - 12)){
+      byDay[key] = entry;
     }
   });
 
-  const days = Object.keys(byDay).slice(0, 5);
+  const days = Object.keys(byDay).slice(0,5);
+
+  // compute trend arrow between day 0 and day 1 (if available)
+  let trendSymbol = '';
+  if(days.length >= 2){
+    const d0 = Math.round(byDay[days[0]].main.temp_max || byDay[days[0]].main.temp);
+    const d1 = Math.round(byDay[days[1]].main.temp_max || byDay[days[1]].main.temp);
+    trendSymbol = d1 > d0 ? '↑' : (d1 < d0 ? '↓' : '→');
+    document.getElementById('forecastHeader').textContent = `5‑Day Forecast ${trendSymbol}`;
+  }
 
   days.forEach(dayKey => {
     const entry = byDay[dayKey];
     const dt = new Date(entry.dt * 1000);
-    const label = dt.toLocaleDateString([], { weekday: "short" });
-    const min = Math.round(entry.main.temp_min);
-    const max = Math.round(entry.main.temp_max);
-    const iconCode = entry.weather[0].icon;
-    const iconUrl = getMeteocon(iconCode);
+    const label = dt.toLocaleDateString([], { weekday:'short' });
+    const min = Math.round(entry.main.temp_min || entry.main.temp);
+    const max = Math.round(entry.main.temp_max || entry.main.temp);
+    const iconUrl = meteoconStatic(entry.weather[0].icon);
+    const pop = Math.round((entry.pop || 0) * 100);
+    const wind = Math.round(entry.wind?.speed || 0);
 
-    const row = document.createElement("div");
-    row.className = "forecast-row";
+    const row = document.createElement('div');
+    row.className = 'forecast-row';
     row.innerHTML = `
       <div class="forecast-day">${label}</div>
-      <div class="forecast-icon"><img src="${iconUrl}" alt="${entry.weather[0].description}" /></div>
-      <div class="forecast-temps">${min}° / ${max}°</div>
+      <div class="forecast-icon"><img src="${iconUrl}" alt="${entry.weather[0].description}"></div>
+      <div class="forecast-temps">
+        <span style="${colorTempStyle(max,false)}">${max}°</span>
+        &nbsp;/&nbsp;
+        <span style="${colorTempStyle(min,true)}">${min}°</span>
+      </div>
+      <div class="forecast-wind"><img src="${windIconStatic(wind)}" class="wind-icon-small" alt="wind">${wind} mph</div>
+      <div class="forecast-pop">${pop}%</div>
     `;
     fc.appendChild(row);
   });
 }
 
-// CALENDAR SOURCES
+/* --- Calendar code (unchanged from previous working version) --- */
 const CALENDARS = [
-  {
-    name: "Personal",
-    key: "personal",
-    url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/private-3f860a04fb0570102688170b52564c42/basic.ics",
-    color: "#4f9cff"
-  },
-  {
-    name: "Kenyon",
-    key: "kenyon",
-    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics",
-    color: "#9b59b6"
-  },
-  {
-    name: "Family",
-    key: "family",
-    url: "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/private-6aa24b9fdb6c890da5038ca012dfd501/basic.ics",
-    color: "#27ae60"
-  }
+  { name: "Personal", key: "personal", url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/private-3f860a04fb0570102688170b52564c42/basic.ics", color: "#4f9cff" },
+  { name: "Kenyon", key: "kenyon", url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics", color: "#9b59b6" },
+  { name: "Family", key: "family", url: "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/private-6aa24b9fdb6c890da5038ca012dfd501/basic.ics", color: "#27ae60" }
 ];
 
-// ICS DATE PARSER
-function parseICalDate(value) {
-  const raw = value.split(":").pop();
-
-  if (!raw.includes("T")) {
-    const year = Number(raw.slice(0, 4));
-    const month = Number(raw.slice(4, 6)) - 1;
-    const day = Number(raw.slice(6, 8));
-    return new Date(year, month, day);
+function parseICalDate(value){
+  const raw = value.split(':').pop();
+  if(!raw.includes('T')){
+    const y=Number(raw.slice(0,4)), m=Number(raw.slice(4,6))-1, d=Number(raw.slice(6,8));
+    return new Date(y,m,d);
   }
-
-  const [datePart, timePartRaw] = raw.split("T");
-  const timePart = timePartRaw.replace("Z", "");
-
-  const year = Number(datePart.slice(0, 4));
-  const month = Number(datePart.slice(4, 6)) - 1;
-  const day = Number(datePart.slice(6, 8));
-
-  const hour = Number(timePart.slice(0, 2));
-  const minute = Number(timePart.slice(2, 4));
-  const second = Number(timePart.slice(4, 6) || "0");
-
-  const isUTC = timePartRaw.endsWith("Z");
-
-  return isUTC
-    ? new Date(Date.UTC(year, month, day, hour, minute, second))
-    : new Date(year, month, day, hour, minute, second);
+  const [datePart,timePartRaw] = raw.split('T');
+  const timePart = timePartRaw.replace('Z','');
+  const y=Number(datePart.slice(0,4)), m=Number(datePart.slice(4,6))-1, d=Number(datePart.slice(6,8));
+  const hh=Number(timePart.slice(0,2)), mm=Number(timePart.slice(2,4)), ss=Number(timePart.slice(4,6) || '0');
+  const isUTC = timePartRaw.endsWith('Z');
+  return isUTC ? new Date(Date.UTC(y,m,d,hh,mm,ss)) : new Date(y,m,d,hh,mm,ss);
 }
 
-// ICS PARSER
-function parseICS(text, sourceKey) {
-  const events = [];
+function parseICS(text, sourceKey){
+  const events=[];
   const lines = text.split(/\r?\n/);
-  let current = null;
-
-  for (let line of lines) {
-    if (line.startsWith("BEGIN:VEVENT")) {
-      current = {};
-    } else if (line.startsWith("END:VEVENT")) {
-      if (current.DTSTART && current.SUMMARY) {
-        events.push({
-          title: current.SUMMARY,
-          start: parseICalDate(current.DTSTART),
-          end: current.DTEND ? parseICalDate(current.DTEND) : null,
-          sourceKey
-        });
+  let current=null;
+  for(let line of lines){
+    if(line.startsWith('BEGIN:VEVENT')) current={};
+    else if(line.startsWith('END:VEVENT')){
+      if(current && current.DTSTART && current.SUMMARY){
+        events.push({ title: current.SUMMARY, start: parseICalDate(current.DTSTART), end: current.DTEND ? parseICalDate(current.DTEND) : null, sourceKey });
       }
-      current = null;
-    } else if (current) {
-      const [key, ...rest] = line.split(":");
-      const value = rest.join(":");
-      if (key.startsWith("DTSTART")) current.DTSTART = value;
-      if (key.startsWith("DTEND")) current.DTEND = value;
-      if (key === "SUMMARY") current.SUMMARY = value;
+      current=null;
+    } else if(current){
+      const [key,...rest] = line.split(':');
+      const value = rest.join(':');
+      if(key.startsWith('DTSTART')) current.DTSTART = value;
+      if(key.startsWith('DTEND')) current.DTEND = value;
+      if(key === 'SUMMARY') current.SUMMARY = value;
     }
   }
-
   return events;
 }
 
-// LOAD ALL CALENDARS
-async function loadAllEvents() {
-  const all = [];
-  for (const cal of CALENDARS) {
-    try {
-      const res = await fetch(cal.url + "?t=" + Date.now());
+async function loadAllEvents(){
+  const all=[];
+  for(const cal of CALENDARS){
+    try{
+      const res = await fetch(cal.url + '?t=' + Date.now());
       const text = await res.text();
       const events = parseICS(text, cal.key);
       all.push(...events);
-    } catch (e) {
-      console.error("Error loading", cal.name, e);
+    }catch(e){
+      console.error('Error loading', cal.name, e);
     }
   }
   return all;
 }
 
-// TODAY + TOMORROW
-function eventsForTodayAndTomorrow(events) {
+function eventsForTodayAndTomorrow(events){
   const today = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
-
-  function isSameDay(dateA, dateB) {
-    return (
-      dateA.getFullYear() === dateB.getFullYear() &&
-      dateA.getMonth() === dateB.getMonth() &&
-      dateA.getDate() === dateB.getDate()
-    );
-  }
-
-  const todayEvents = events.filter(ev => isSameDay(ev.start, today));
-  const tomorrowEvents = events.filter(ev => isSameDay(ev.start, tomorrow));
-
-  return { todayEvents, tomorrowEvents };
+  const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
+  function isSameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+  return { todayEvents: events.filter(ev => isSameDay(ev.start,today)), tomorrowEvents: events.filter(ev => isSameDay(ev.start,tomorrow)) };
 }
 
-// NOW / NEXT / LATER
-function computeNowNextLater(events) {
+function computeNowNextLater(events){
   const now = new Date();
-  let current = null;
-  let next = null;
-  const later = [];
-
-  const sorted = [...events].sort((a, b) => a.start - b.start);
-
-  for (const ev of sorted) {
+  let current=null, next=null; const later=[];
+  const sorted = [...events].sort((a,b)=>a.start-b.start);
+  for(const ev of sorted){
     const start = ev.start;
-    const end = ev.end || new Date(start.getTime() + 60 * 60 * 1000);
-
-    if (start <= now && now <= end) {
-      current = current || ev;
-    } else if (start > now) {
-      if (!next) next = ev;
-      else later.push(ev);
-    }
+    const end = ev.end || new Date(start.getTime() + 60*60*1000);
+    if(start <= now && now <= end) current = current || ev;
+    else if(start > now){ if(!next) next = ev; else later.push(ev); }
   }
-
-  if (!current && sorted.length > 0 && sorted[0].start > now) {
-    next = sorted[0];
-    later.push(...sorted.slice(1));
-  }
-
+  if(!current && sorted.length>0 && sorted[0].start > now){ next = sorted[0]; later.push(...sorted.slice(1)); }
   return { current, next, later };
 }
 
-function renderNowNextLater(events) {
-  const container = document.getElementById("nowNextLater");
-  container.innerHTML = "";
-
-  if (events.length === 0) {
-    container.textContent = "No events today — enjoy the open space.";
-    return;
-  }
-
+function renderNowNextLater(events){
+  const container = document.getElementById('nowNextLater');
+  container.innerHTML = '';
+  if(events.length === 0){ container.textContent = 'No events today — enjoy the open space.'; return; }
   const { current, next, later } = computeNowNextLater(events);
-
-  function formatEvent(ev) {
-    if (!ev) return "None.";
-    const time = ev.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    return `${time} • ${ev.title}`;
-  }
-
-  const sections = [];
-
-  sections.push(`
-    <div class="nnl-section">
-      <span class="nnl-label">Now:</span>
-      <span class="nnl-text">${current ? formatEvent(current) : "Nothing happening right now."}</span>
-    </div>
-  `);
-
-  sections.push(`
-    <div class="nnl-section">
-      <span class="nnl-label">Next:</span>
-      <span class="nnl-text">${next ? formatEvent(next) : "No upcoming events."}</span>
-    </div>
-  `);
-
-  if (later.length > 0) {
-    const laterText = later
-      .map(ev => {
-        const t = ev.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-        return `${t} ${ev.title}`;
-      })
-      .join(" • ");
-    sections.push(`
-      <div class="nnl-section">
-        <span class="nnl-label">Later:</span>
-        <span class="nnl-text">${laterText}</span>
-      </div>
-    `);
-  }
-
-  container.innerHTML = sections.join("");
+  function fmt(ev){ if(!ev) return 'None.'; return ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) + ' • ' + ev.title; }
+  container.innerHTML = `
+    <div class="nnl-section"><span class="nnl-label">Now:</span> <span class="nnl-text">${current ? fmt(current) : 'Nothing happening right now.'}</span></div>
+    <div class="nnl-section"><span class="nnl-label">Next:</span> <span class="nnl-text">${next ? fmt(next) : 'No upcoming events.'}</span></div>
+    ${later.length ? `<div class="nnl-section"><span class="nnl-label">Later:</span> <span class="nnl-text">${later.map(ev => ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) + ' ' + ev.title).join(' • ')}</span></div>` : ''}
+  `;
 }
 
-// RENDER CALENDAR (Today + Tomorrow)
-function renderCalendar(events) {
-  const container = document.getElementById("calendarEvents");
-  const summaryEl = document.getElementById("calendarSummary");
-  const updatedEl = document.getElementById("calendarUpdated");
-  container.innerHTML = "";
-
-  updatedEl.textContent =
-    "Calendar updated " +
-    new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+function renderCalendar(events){
+  const container = document.getElementById('calendarEvents');
+  const summaryEl = document.getElementById('calendarSummary');
+  const updatedEl = document.getElementById('calendarUpdated');
+  container.innerHTML = '';
+  updatedEl.textContent = 'Calendar updated ' + new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
 
   const { todayEvents, tomorrowEvents } = eventsForTodayAndTomorrow(events);
-
   const total = todayEvents.length + tomorrowEvents.length;
-  summaryEl.textContent =
-    `${total} event${total !== 1 ? "s" : ""} across today and tomorrow`;
+  summaryEl.textContent = `${total} event${total !== 1 ? 's' : ''} across today and tomorrow`;
 
   renderNowNextLater(todayEvents);
 
-  function renderSection(title, list) {
-    const header = document.createElement("div");
-    header.style.margin = "12px 0 6px";
-    header.style.fontWeight = "600";
-    header.style.opacity = "0.85";
+  function renderSection(title, list){
+    const header = document.createElement('div');
+    header.style.margin = '12px 0 6px';
+    header.style.fontWeight = '600';
+    header.style.opacity = '0.85';
     header.textContent = title;
     container.appendChild(header);
 
-    if (list.length === 0) {
-      const empty = document.createElement("div");
-      empty.style.opacity = "0.6";
-      empty.style.fontSize = "0.9rem";
-      empty.textContent = "No events.";
+    if(list.length === 0){
+      const empty = document.createElement('div');
+      empty.style.opacity = '0.6';
+      empty.style.fontSize = '0.9rem';
+      empty.textContent = 'No events.';
       container.appendChild(empty);
       return;
     }
 
-    list.sort((a, b) => a.start - b.start);
-
+    list.sort((a,b)=>a.start-b.start);
     list.forEach(ev => {
       const cal = CALENDARS.find(c => c.key === ev.sourceKey);
-      const timeLabel = ev.start.toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit"
-      });
-
-      const div = document.createElement("div");
-      div.className = "event";
+      const timeLabel = ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+      const div = document.createElement('div');
+      div.className = 'event';
       div.innerHTML = `
         <div class="event-main">
-          <span class="event-dot" style="background:${cal ? cal.color : "#fff"}"></span>
+          <span class="event-dot" style="background:${cal ? cal.color : '#fff'}"></span>
           <span class="event-time">${timeLabel}</span>
           <span class="event-title">${ev.title}</span>
         </div>
-        <div class="event-source">${cal ? cal.name : ""}</div>
-        <div class="event-details">
-          ${ev.end ? "Ends at " + ev.end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}
-        </div>
+        <div class="event-source">${cal ? cal.name : ''}</div>
+        <div class="event-details">${ev.end ? 'Ends at ' + ev.end.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : ''}</div>
       `;
-
-      div.addEventListener("click", () => {
-        div.classList.toggle("expanded");
-      });
-
+      div.addEventListener('click', ()=> div.classList.toggle('expanded'));
       container.appendChild(div);
     });
   }
 
-  renderSection("Today", todayEvents);
-  renderSection("Tomorrow", tomorrowEvents);
+  renderSection('Today', todayEvents);
+  renderSection('Tomorrow', tomorrowEvents);
 }
 
-// INIT
-async function init() {
+/* INIT */
+async function init(){
   await loadWeather();
   const events = await loadAllEvents();
   renderCalendar(events);
 }
-
 init();
 </script>
 </body>
