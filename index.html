@@ -23,7 +23,7 @@
     color: #eaeaea;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-size: 18px; /* large base for car screen */
+    font-size: 18px;
   }
 
   .page{
@@ -48,7 +48,7 @@
   /* Date/time and vehicle label */
   #topTime {
     font-weight:700;
-    font-size:2.2rem; /* slightly smaller so it stays on one line in partial browser */
+    font-size:2.2rem; /* tuned to stay on one line in partial browser */
     line-height:1;
     letter-spacing:0.4px;
   }
@@ -99,14 +99,14 @@
   }
 
   .weather-icon-big{
-    width:140px; /* reduced from earlier extremes */
+    width:140px;
     height:140px;
     flex:0 0 140px;
     filter: drop-shadow(0 8px 28px rgba(0,0,0,0.6));
   }
 
   .weather-temp{
-    font-size:3.6rem; /* reduced */
+    font-size:3.6rem;
     font-weight:700;
     line-height:1;
   }
@@ -114,7 +114,7 @@
   .weather-sub{
     margin-top:6px;
     color:var(--muted);
-    font-size:1.2rem; /* reduced */
+    font-size:1.2rem;
   }
 
   .sunrise-icon, .sunset-icon{
@@ -132,7 +132,7 @@
   /* Radar map */
   .radar-wrap{
     width:100%;
-    height:240px; /* comfortable height for car screen */
+    height:240px;
     border-radius:12px;
     overflow:hidden;
     border:1px solid rgba(255,255,255,0.06);
@@ -203,7 +203,7 @@
   .temp-low-deep{ color:#4fa3ff; }
   .muted { color:var(--muted); }
 
-  /* Calendar & events */
+  /* Calendar & events (Today only) */
   .calendar-summary{ font-size:1.2rem; opacity:0.95; margin-bottom:8px; }
   .now-next-later{ margin-top:8px; font-size:1.05rem; }
   .nnl-label{ font-weight:700; font-size:1.05rem; }
@@ -241,13 +241,13 @@
 
           <div class="weather-divider"></div>
 
-          <!-- Radar map centered on ZIP 01075 (South Hadley, MA) -->
+          <!-- Radar map centered on New England (approx center lat/lon) -->
           <div class="radar-wrap" id="radarWrap" aria-hidden="false">
-            <!-- RainViewer embed centered on 42.2481415,-72.5796331 with zoom focused on MA/CT region -->
+            <!-- RainViewer embed centered on New England (approx 42.0,-71.5) with zoom focused on MA/CT region -->
             <iframe
               class="radar-iframe"
-              src="https://www.rainviewer.com/map.html?loc=42.2481415,-72.5796331&z=8&overlay=radar&product=radar&opacity=0.75&play=true"
-              title="Radar map centered on 01075"
+              src="https://www.rainviewer.com/map.html?loc=42.0,-71.5&z=7&overlay=radar&product=radar&opacity=0.75&play=true"
+              title="Radar map centered on New England"
               loading="lazy"
               referrerpolicy="no-referrer"
             ></iframe>
@@ -265,16 +265,11 @@
         </div>
       </div>
 
-      <!-- RIGHT: Calendar -->
+      <!-- RIGHT: Calendar (Today only) -->
       <div>
         <div class="card">
-          <div class="card-header"><i data-feather="calendar"></i><span>Today’s Schedule</span></div>
-          <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
-          <div class="now-next-later" id="nowNextLater"></div>
-        </div>
-
-        <div class="card" style="margin-top:18px;">
-          <div class="card-header"><i data-feather="list"></i><span>All Events Today & Tomorrow</span></div>
+          <div class="card-header"><i data-feather="list"></i><span>All Events Today</span></div>
+          <div class="calendar-summary" id="calendarSummary">Loading today…</div>
           <div class="events-list" id="calendarEvents">Loading events…</div>
         </div>
 
@@ -293,7 +288,7 @@
 <script>
 feather.replace();
 
-// Clock — slightly smaller so it stays on one line in partial browser width
+// Clock — tuned to stay on one line in partial browser width
 function updateTime(){
   const now = new Date();
   const dateStr = now.toLocaleDateString([], { weekday:'long', month:'long', day:'numeric' });
@@ -394,7 +389,7 @@ async function loadWeather(){
     const current = await curRes.json();
     const forecast = await fRes.json();
     renderCurrentWeather(current);
-    renderHourly(forecast);   // now every 3 hours, 6 entries
+    renderHourly(forecast);   // every 3 hours, 6 entries
     renderForecast(forecast);
     document.getElementById('weatherInsight').textContent = generateWeatherNarrative(current, forecast);
   }catch(err){
@@ -562,7 +557,7 @@ function renderForecast(data){
   });
 }
 
-/* --- Calendar code (unchanged) --- */
+/* --- Calendar code (Today only) --- */
 const CALENDARS = [
   { name: "Personal", key: "personal", url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/private-3f860a04fb0570102688170b52564c42/basic.ics", color: "#4f9cff" },
   { name: "Kenyon", key: "kenyon", url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics", color: "#9b59b6" },
@@ -620,11 +615,10 @@ async function loadAllEvents(){
   return all;
 }
 
-function eventsForTodayAndTomorrow(events){
+function eventsForToday(events){
   const today = new Date();
-  const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
   function isSameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
-  return { todayEvents: events.filter(ev => isSameDay(ev.start,today)), tomorrowEvents: events.filter(ev => isSameDay(ev.start,tomorrow)) };
+  return events.filter(ev => isSameDay(ev.start,today));
 }
 
 function computeNowNextLater(events){
@@ -642,69 +636,53 @@ function computeNowNextLater(events){
 }
 
 function renderNowNextLater(events){
-  const container = document.getElementById('nowNextLater');
+  const container = document.getElementById('calendarSummary');
   container.innerHTML = '';
   if(events.length === 0){ container.textContent = 'No events today — enjoy the open space.'; return; }
   const { current, next, later } = computeNowNextLater(events);
   function fmt(ev){ if(!ev) return 'None.'; return ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) + ' • ' + ev.title; }
   container.innerHTML = `
-    <div class="nnl-section"><span class="nnl-label">Now:</span> <span class="nnl-text">${current ? fmt(current) : 'Nothing happening right now.'}</span></div>
-    <div class="nnl-section"><span class="nnl-label">Next:</span> <span class="nnl-text">${next ? fmt(next) : 'No upcoming events.'}</span></div>
-    ${later.length ? `<div class="nnl-section"><span class="nnl-label">Later:</span> <span class="nnl-text">${later.map(ev => ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) + ' ' + ev.title).join(' • ')}</span></div>` : ''}
+    <div style="font-weight:700; font-size:1.2rem;">Now: <span style="font-weight:500; color:var(--muted)">${current ? fmt(current) : 'Nothing happening right now.'}</span></div>
+    <div style="margin-top:6px; font-weight:700; font-size:1.2rem;">Next: <span style="font-weight:500; color:var(--muted)">${next ? fmt(next) : 'No upcoming events.'}</span></div>
   `;
 }
 
 function renderCalendar(events){
   const container = document.getElementById('calendarEvents');
-  const summaryEl = document.getElementById('calendarSummary');
   container.innerHTML = '';
 
-  const { todayEvents, tomorrowEvents } = eventsForTodayAndTomorrow(events);
-  const total = todayEvents.length + tomorrowEvents.length;
-  summaryEl.textContent = `${total} event${total !== 1 ? 's' : ''} across today and tomorrow`;
-
+  const todayEvents = eventsForToday(events);
+  const total = todayEvents.length;
+  // summary handled by renderNowNextLater
   renderNowNextLater(todayEvents);
 
-  function renderSection(title, list){
-    const header = document.createElement('div');
-    header.style.margin = '12px 0 6px';
-    header.style.fontWeight = '700';
-    header.style.opacity = '0.95';
-    header.style.fontSize = '1.4rem';
-    header.textContent = title;
-    container.appendChild(header);
-
-    if(list.length === 0){
-      const empty = document.createElement('div');
-      empty.style.opacity = '0.6';
-      empty.style.fontSize = '1.2rem';
-      empty.textContent = 'No events.';
-      container.appendChild(empty);
-      return;
-    }
-
-    list.sort((a,b)=>a.start-b.start);
-    list.forEach(ev => {
-      const cal = CALENDARS.find(c => c.key === ev.sourceKey);
-      const timeLabel = ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
-      const div = document.createElement('div');
-      div.className = 'event';
-      div.innerHTML = `
-        <div class="event-main">
-          <span class="event-dot" style="background:${cal ? cal.color : '#fff'}"></span>
-          <span class="event-time">${timeLabel}</span>
-          <span class="event-title">${ev.title}</span>
-        </div>
-        <div class="event-source" style="font-size:1rem; opacity:0.8;">${cal ? cal.name : ''}</div>
-        <div class="event-details">${ev.end ? 'Ends at ' + ev.end.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : ''}</div>
-      `;
-      div.addEventListener('click', ()=> div.classList.toggle('expanded'));
-      container.appendChild(div);
-    });
+  if(todayEvents.length === 0){
+    const empty = document.createElement('div');
+    empty.style.opacity = '0.6';
+    empty.style.fontSize = '1.2rem';
+    empty.textContent = 'No events.';
+    container.appendChild(empty);
+    return;
   }
 
-  renderSection('Today', todayEvents);
-  renderSection('Tomorrow', tomorrowEvents);
+  todayEvents.sort((a,b)=>a.start-b.start);
+  todayEvents.forEach(ev => {
+    const cal = CALENDARS.find(c => c.key === ev.sourceKey);
+    const timeLabel = ev.start.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+    const div = document.createElement('div');
+    div.className = 'event';
+    div.innerHTML = `
+      <div class="event-main">
+        <span class="event-dot" style="background:${cal ? cal.color : '#fff'}"></span>
+        <span class="event-time">${timeLabel}</span>
+        <span class="event-title">${ev.title}</span>
+      </div>
+      <div class="event-source" style="font-size:1rem; opacity:0.8;">${cal ? cal.name : ''}</div>
+      <div class="event-details">${ev.end ? 'Ends at ' + ev.end.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : ''}</div>
+    `;
+    div.addEventListener('click', ()=> div.classList.toggle('expanded'));
+    container.appendChild(div);
+  });
 }
 
 /* INIT */
