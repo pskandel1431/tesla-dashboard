@@ -100,26 +100,49 @@
   }
 
   .weather-main {
-    font-size: 2.2rem;
-    font-weight: 400;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    margin-bottom: 10px;
   }
 
-  .weather-main img {
-    width: 52px;
-    height: 52px;
+  .weather-icon-big {
+    width: 80px;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+  }
+
+  .weather-temp {
+    font-size: 2.4rem;
+    font-weight: 500;
   }
 
   .weather-sub {
-    margin-top: 8px;
-    opacity: 0.75;
-    font-size: 1.05rem;
+    margin-top: 2px;
+    opacity: 0.8;
+    font-size: 1rem;
+  }
+
+  .sunrise-icon,
+  .sunset-icon {
+    width: 22px;
+    vertical-align: middle;
+  }
+
+  .sunrise-icon {
+    filter: drop-shadow(0 0 4px rgba(255,200,0,0.6));
+  }
+
+  .sunset-icon {
+    filter: drop-shadow(0 0 4px rgba(255,120,0,0.6));
+  }
+
+  .weather-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    margin: 14px 0;
   }
 
   .hourly-container {
-    margin-top: 10px;
     overflow-x: auto;
     padding-bottom: 4px;
   }
@@ -141,7 +164,6 @@
 
   .hourly-item img {
     width: 32px;
-    height: 32px;
   }
 
   .hourly-time {
@@ -156,9 +178,9 @@
   .forecast-row {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid rgba(255,255,255,0.12);
-    font-size: 1rem;
+    font-size: 0.95rem;
     align-items: center;
   }
 
@@ -177,8 +199,12 @@
   }
 
   .forecast-icon img {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+  }
+
+  .forecast-temps {
+    width: 110px;
+    text-align: right;
   }
 
   .insight {
@@ -314,12 +340,6 @@
     width: 20px;
     height: 20px;
   }
-
-  .weather-main img,
-  .hourly-item img,
-  .forecast-icon img {
-    filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
-  }
 </style>
 </head>
 
@@ -343,36 +363,23 @@
         <span>--:--</span>
       </div>
 
-      <div class="card">
+      <!-- Unified Weather Hub -->
+      <div class="card" id="weatherHub">
         <div class="card-header">
           <i data-feather="cloud"></i>
-          <span>Current Weather</span>
+          <span>Weather</span>
         </div>
-        <div class="weather-main" id="weatherMain">
-          <img src="" alt="" id="weatherIcon" style="display:none;" />
-          <span id="weatherTemp">--°F</span>
-        </div>
-        <div class="weather-sub" id="weatherSub">Loading weather…</div>
-      </div>
 
-      <div class="card">
-        <div class="card-header">
-          <i data-feather="clock"></i>
-          <span>Next 8 Hours</span>
-        </div>
-        <div class="hourly-container">
-          <div class="hourly-strip" id="hourlyStrip">
-            Loading hourly forecast…
-          </div>
-        </div>
-      </div>
+        <div id="weatherCurrent"></div>
 
-      <div class="card">
-        <div class="card-header">
-          <i data-feather="cloud-snow"></i>
-          <span>5-Day Forecast</span>
-        </div>
-        <div id="forecastContainer">Loading forecast…</div>
+        <hr class="weather-divider">
+
+        <div id="weatherHourly"></div>
+
+        <hr class="weather-divider">
+
+        <div id="weatherDaily"></div>
+
         <div class="insight" id="weatherInsight"></div>
       </div>
     </div>
@@ -392,7 +399,7 @@
       <div class="card">
         <div class="card-header">
           <i data-feather="list"></i>
-          <span>All Events Today</span>
+          <span>All Events Today & Tomorrow</span>
         </div>
         <div class="events-list" id="calendarEvents">Loading events…</div>
       </div>
@@ -456,6 +463,33 @@ const LAT = 42.2043;
 const LON = -72.6162;
 const UNITS = "imperial";
 
+// Meteocons mapping
+function getMeteocon(iconCode) {
+  const map = {
+    "01d": "clear-day",
+    "01n": "clear-night",
+    "02d": "partly-cloudy-day",
+    "02n": "partly-cloudy-night",
+    "03d": "cloudy",
+    "03n": "cloudy",
+    "04d": "overcast",
+    "04n": "overcast",
+    "09d": "rain",
+    "09n": "rain",
+    "10d": "rain",
+    "10n": "rain",
+    "11d": "thunderstorms",
+    "11n": "thunderstorms",
+    "13d": "snow",
+    "13n": "snow",
+    "50d": "mist",
+    "50n": "mist"
+  };
+
+  const key = map[iconCode] || "cloudy";
+  return `https://basmilius.github.io/weather-icons/production/fill/all/${key}.svg`;
+}
+
 function generateWeatherNarrative(current, forecast) {
   const descMain = current.weather[0].main.toLowerCase();
   const temp = Math.round(current.main.temp);
@@ -502,7 +536,7 @@ async function loadWeather() {
       generateWeatherNarrative(current, forecast);
   } catch (e) {
     console.error("Weather error", e);
-    document.getElementById("weatherMain").textContent = "Weather unavailable";
+    document.getElementById("weatherCurrent").textContent = "Weather unavailable";
   }
 }
 
@@ -513,25 +547,46 @@ function renderCurrentWeather(data) {
   const city = data.name;
   const iconCode = data.weather[0].icon;
 
-  const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-  const iconImg = document.getElementById("weatherIcon");
-  iconImg.src = iconUrl;
-  iconImg.alt = desc;
-  iconImg.style.display = "block";
-
   const sunrise = new Date(data.sys.sunrise * 1000)
     .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
   const sunset = new Date(data.sys.sunset * 1000)
     .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-  document.getElementById("weatherTemp").textContent = `${temp}°F`;
-  document.getElementById("weatherSub").innerHTML =
-    `${city} • ${desc.charAt(0).toUpperCase() + desc.slice(1)} • Feels like ${feels}°F<br>
-     Sunrise: ${sunrise} • Sunset: ${sunset}`;
+  const iconUrl = getMeteocon(iconCode);
+
+  document.getElementById("weatherCurrent").innerHTML = `
+    <div class="weather-main">
+      <img src="${iconUrl}" class="weather-icon-big" />
+      <div>
+        <div class="weather-temp">${temp}°F</div>
+        <div class="weather-sub">${city} • ${desc}</div>
+        <div class="weather-sub">Feels like ${feels}°F</div>
+        <div class="weather-sub">
+          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunrise.svg" class="sunrise-icon">
+          ${sunrise}
+          &nbsp;&nbsp;
+          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunset.svg" class="sunset-icon">
+          ${sunset}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderHourly(data) {
+  const container = document.getElementById("weatherHourly");
+  container.innerHTML = `
+    <div class="card-header" style="margin-bottom:8px; padding:0;">
+      <i data-feather="clock"></i>
+      <span>Next 8 Hours</span>
+    </div>
+    <div class="hourly-container">
+      <div class="hourly-strip" id="hourlyStrip"></div>
+    </div>
+  `;
+  feather.replace();
+
   const strip = document.getElementById("hourlyStrip");
   strip.innerHTML = "";
 
@@ -543,7 +598,7 @@ function renderHourly(data) {
     const timeLabel = dt.toLocaleTimeString([], { hour: "numeric" });
     const temp = Math.round(entry.main.temp);
     const iconCode = entry.weather[0].icon;
-    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    const iconUrl = getMeteocon(iconCode);
 
     const div = document.createElement("div");
     div.className = "hourly-item";
@@ -561,8 +616,18 @@ function renderHourly(data) {
 }
 
 function renderForecast(data) {
-  const container = document.getElementById("forecastContainer");
-  container.innerHTML = "";
+  const container = document.getElementById("weatherDaily");
+  container.innerHTML = `
+    <div class="card-header" style="margin-bottom:8px; padding:0;">
+      <i data-feather="cloud-snow"></i>
+      <span>5-Day Forecast</span>
+    </div>
+    <div id="forecastContainer"></div>
+  `;
+  feather.replace();
+
+  const fc = document.getElementById("forecastContainer");
+  fc.innerHTML = "";
 
   const byDay = {};
   data.list.forEach(entry => {
@@ -582,7 +647,7 @@ function renderForecast(data) {
     const min = Math.round(entry.main.temp_min);
     const max = Math.round(entry.main.temp_max);
     const iconCode = entry.weather[0].icon;
-    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    const iconUrl = getMeteocon(iconCode);
 
     const row = document.createElement("div");
     row.className = "forecast-row";
@@ -591,7 +656,7 @@ function renderForecast(data) {
       <div class="forecast-icon"><img src="${iconUrl}" alt="${entry.weather[0].description}" /></div>
       <div class="forecast-temps">${min}° / ${max}°</div>
     `;
-    container.appendChild(row);
+    fc.appendChild(row);
   });
 }
 
@@ -600,7 +665,7 @@ const CALENDARS = [
   {
     name: "Personal",
     key: "personal",
-    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/personal.ics",
+    url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/private-3f860a04fb0570102688170b52564c42/basic.ics",
     color: "#4f9cff"
   },
   {
@@ -612,7 +677,7 @@ const CALENDARS = [
   {
     name: "Family",
     key: "family",
-    url: "https://pskandel1431.github.io/tesla-dashboard/calendars/family.ics",
+    url: "https://calendar.google.com/calendar/ical/eiusan2qer3qb66dragfdqv6n4%40group.calendar.google.com/private-6aa24b9fdb6c890da5038ca012dfd501/basic.ics",
     color: "#27ae60"
   }
 ];
@@ -693,16 +758,24 @@ async function loadAllEvents() {
   return all;
 }
 
-// FILTER FOR TODAY
-function eventsForToday(events) {
+// TODAY + TOMORROW
+function eventsForTodayAndTomorrow(events) {
   const today = new Date();
-  return events.filter(ev => {
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  function isSameDay(dateA, dateB) {
     return (
-      ev.start.getFullYear() === today.getFullYear() &&
-      ev.start.getMonth() === today.getMonth() &&
-      ev.start.getDate() === today.getDate()
+      dateA.getFullYear() === dateB.getFullYear() &&
+      dateA.getMonth() === dateB.getMonth() &&
+      dateA.getDate() === dateB.getDate()
     );
-  });
+  }
+
+  const todayEvents = events.filter(ev => isSameDay(ev.start, today));
+  const tomorrowEvents = events.filter(ev => isSameDay(ev.start, tomorrow));
+
+  return { todayEvents, tomorrowEvents };
 }
 
 // NOW / NEXT / LATER
@@ -785,7 +858,7 @@ function renderNowNextLater(events) {
   container.innerHTML = sections.join("");
 }
 
-// RENDER CALENDAR
+// RENDER CALENDAR (Today + Tomorrow)
 function renderCalendar(events) {
   const container = document.getElementById("calendarEvents");
   const summaryEl = document.getElementById("calendarSummary");
@@ -796,59 +869,71 @@ function renderCalendar(events) {
     "Calendar updated " +
     new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-  if (events.length === 0) {
-    summaryEl.textContent = "No events today — enjoy the open space.";
-    container.textContent = "";
-    document.getElementById("nowNextLater").textContent = "";
-    return;
+  const { todayEvents, tomorrowEvents } = eventsForTodayAndTomorrow(events);
+
+  const total = todayEvents.length + tomorrowEvents.length;
+  summaryEl.textContent =
+    `${total} event${total !== 1 ? "s" : ""} across today and tomorrow`;
+
+  renderNowNextLater(todayEvents);
+
+  function renderSection(title, list) {
+    const header = document.createElement("div");
+    header.style.margin = "12px 0 6px";
+    header.style.fontWeight = "600";
+    header.style.opacity = "0.85";
+    header.textContent = title;
+    container.appendChild(header);
+
+    if (list.length === 0) {
+      const empty = document.createElement("div");
+      empty.style.opacity = "0.6";
+      empty.style.fontSize = "0.9rem";
+      empty.textContent = "No events.";
+      container.appendChild(empty);
+      return;
+    }
+
+    list.sort((a, b) => a.start - b.start);
+
+    list.forEach(ev => {
+      const cal = CALENDARS.find(c => c.key === ev.sourceKey);
+      const timeLabel = ev.start.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit"
+      });
+
+      const div = document.createElement("div");
+      div.className = "event";
+      div.innerHTML = `
+        <div class="event-main">
+          <span class="event-dot" style="background:${cal ? cal.color : "#fff"}"></span>
+          <span class="event-time">${timeLabel}</span>
+          <span class="event-title">${ev.title}</span>
+        </div>
+        <div class="event-source">${cal ? cal.name : ""}</div>
+        <div class="event-details">
+          ${ev.end ? "Ends at " + ev.end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}
+        </div>
+      `;
+
+      div.addEventListener("click", () => {
+        div.classList.toggle("expanded");
+      });
+
+      container.appendChild(div);
+    });
   }
 
-  events.sort((a, b) => a.start - b.start);
-
-  const first = events[0];
-  const last = events[events.length - 1];
-  const firstTime = first.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  const lastTime = last.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  summaryEl.textContent =
-    `${events.length} event${events.length > 1 ? "s" : ""} today, from ${firstTime} to ${lastTime}.`;
-
-  renderNowNextLater(events);
-
-  events.forEach(ev => {
-    const cal = CALENDARS.find(c => c.key === ev.sourceKey);
-    const timeLabel = ev.start.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit"
-    });
-
-    const div = document.createElement("div");
-    div.className = "event";
-    div.innerHTML = `
-      <div class="event-main">
-        <span class="event-dot" style="background:${cal ? cal.color : "#fff"}"></span>
-        <span class="event-time">${timeLabel}</span>
-        <span class="event-title">${ev.title}</span>
-      </div>
-      <div class="event-source">${cal ? cal.name : ""}</div>
-      <div class="event-details">
-        ${ev.end ? "Ends at " + ev.end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}
-      </div>
-    `;
-
-    div.addEventListener("click", () => {
-      div.classList.toggle("expanded");
-    });
-
-    container.appendChild(div);
-  });
+  renderSection("Today", todayEvents);
+  renderSection("Tomorrow", tomorrowEvents);
 }
 
 // INIT
 async function init() {
   await loadWeather();
   const events = await loadAllEvents();
-  const todaysEvents = eventsForToday(events);
-  renderCalendar(todaysEvents);
+  renderCalendar(events);
 }
 
 init();
