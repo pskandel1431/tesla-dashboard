@@ -48,7 +48,7 @@
   /* Date/time and vehicle label */
   #topTime {
     font-weight:700;
-    font-size:2.6rem; /* slightly smaller so it stays on one line in partial browser */
+    font-size:2.2rem; /* slightly smaller so it stays on one line in partial browser */
     line-height:1;
     letter-spacing:0.4px;
   }
@@ -99,14 +99,14 @@
   }
 
   .weather-icon-big{
-    width:160px; /* slightly reduced from previous very large */
-    height:160px;
-    flex:0 0 160px;
+    width:140px; /* reduced from earlier extremes */
+    height:140px;
+    flex:0 0 140px;
     filter: drop-shadow(0 8px 28px rgba(0,0,0,0.6));
   }
 
   .weather-temp{
-    font-size:4.2rem; /* reduced from 5.2 */
+    font-size:3.6rem; /* reduced */
     font-weight:700;
     line-height:1;
   }
@@ -114,12 +114,12 @@
   .weather-sub{
     margin-top:6px;
     color:var(--muted);
-    font-size:1.4rem; /* reduced */
+    font-size:1.2rem; /* reduced */
   }
 
   .sunrise-icon, .sunset-icon{
-    width:34px;
-    height:34px;
+    width:30px;
+    height:30px;
     vertical-align:middle;
   }
 
@@ -132,7 +132,7 @@
   /* Radar map */
   .radar-wrap{
     width:100%;
-    height:260px; /* comfortable height for car screen */
+    height:240px; /* comfortable height for car screen */
     border-radius:12px;
     overflow:hidden;
     border:1px solid rgba(255,255,255,0.06);
@@ -145,27 +145,27 @@
     display:block;
   }
 
-  /* Hourly */
+  /* Hourly (every 3 hours, 6 entries) */
   .hourly-container{ overflow-x:auto; padding-bottom:8px; }
   .hourly-strip{ display:flex; gap:12px; min-width:max-content; align-items:flex-start; }
   .hourly-item{
-    min-width:160px;
+    min-width:150px;
     padding:10px;
     border-radius:12px;
     background:rgba(255,255,255,0.03);
     text-align:center;
-    font-size:1.3rem;
+    font-size:1.2rem;
     display:flex;
     flex-direction:column;
     gap:8px;
     align-items:center;
   }
-  .hourly-item img{ width:76px; height:76px; }
-  .hourly-time{ opacity:0.9; font-size:1.3rem; }
-  .hourly-temp{ font-weight:700; font-size:1.4rem; }
-  .hourly-pop{ font-size:1.05rem; color:var(--muted); }
-  .hourly-wind{ font-size:1.05rem; color:var(--muted); display:flex; gap:8px; align-items:center; }
-  .wind-icon{ width:30px; height:30px; opacity:0.95; }
+  .hourly-item img{ width:72px; height:72px; }
+  .hourly-time{ opacity:0.9; font-size:1.2rem; }
+  .hourly-temp{ font-weight:700; font-size:1.25rem; }
+  .hourly-pop{ font-size:1rem; color:var(--muted); }
+  .hourly-wind{ font-size:1rem; color:var(--muted); display:flex; gap:8px; align-items:center; }
+  .wind-icon{ width:28px; height:28px; opacity:0.95; }
 
   /* 5-day condensed */
   #weatherDaily{ margin-top:10px; }
@@ -175,23 +175,23 @@
     gap:12px;
     padding:8px 0;
     border-bottom:1px solid rgba(255,255,255,0.06);
-    font-size:1.2rem; /* reduced from previous very large */
+    font-size:1.1rem;
     line-height:1.05;
   }
   .forecast-row:last-child{ border-bottom:none; }
-  .forecast-day{ width:72px; opacity:0.95; font-weight:700; font-size:1.25rem; }
+  .forecast-day{ width:72px; opacity:0.95; font-weight:700; font-size:1.15rem; }
   .forecast-icon{ width:64px; flex:0 0 64px; text-align:center; }
   .forecast-icon img{ width:56px; height:56px; }
-  .forecast-temps{ width:130px; text-align:right; font-weight:700; font-size:1.2rem; }
-  .forecast-pop{ width:72px; text-align:right; color:var(--muted); font-size:1.05rem; }
-  .forecast-wind{ width:120px; text-align:right; color:var(--muted); font-size:1.05rem; display:flex; gap:8px; justify-content:flex-end; align-items:center; }
-  .wind-icon-small{ width:24px; height:24px; opacity:0.9; }
+  .forecast-temps{ width:130px; text-align:right; font-weight:700; font-size:1.1rem; }
+  .forecast-pop{ width:72px; text-align:right; color:var(--muted); font-size:1rem; }
+  .forecast-wind{ width:120px; text-align:right; color:var(--muted); font-size:1rem; display:flex; gap:8px; justify-content:flex-end; align-items:center; }
+  .wind-icon-small{ width:22px; height:22px; opacity:0.9; }
 
   /* Trend arrow */
   .trend {
     display:inline-block;
     margin-left:12px;
-    font-size:1.4rem;
+    font-size:1.2rem;
     opacity:0.95;
   }
 
@@ -204,22 +204,22 @@
   .muted { color:var(--muted); }
 
   /* Calendar & events */
-  .calendar-summary{ font-size:1.4rem; opacity:0.95; margin-bottom:8px; }
-  .now-next-later{ margin-top:8px; font-size:1.25rem; }
-  .nnl-label{ font-weight:700; font-size:1.2rem; }
-  .nnl-text{ font-size:1.2rem; color:var(--muted); }
+  .calendar-summary{ font-size:1.2rem; opacity:0.95; margin-bottom:8px; }
+  .now-next-later{ margin-top:8px; font-size:1.05rem; }
+  .nnl-label{ font-weight:700; font-size:1.05rem; }
+  .nnl-text{ font-size:1.05rem; color:var(--muted); }
 
   .events-list{ margin-top:12px; }
-  .event{ padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; font-size:1.25rem; }
+  .event{ padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; font-size:1.1rem; }
   .event-main{ display:flex; gap:12px; align-items:center; }
   .event-dot{ width:12px; height:12px; border-radius:50%; }
-  .event-time{ min-width:90px; font-weight:700; font-size:1.15rem; }
-  .event-details{ display:none; padding-left:36px; opacity:0.85; font-size:1.05rem; }
+  .event-time{ min-width:90px; font-weight:700; font-size:1.05rem; }
+  .event-details{ display:none; padding-left:36px; opacity:0.85; font-size:1rem; }
   .event.expanded .event-details{ display:block; }
 
   /* shortcuts */
   .shortcuts{ display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
-  .shortcut-btn{ min-width:220px; padding:14px 18px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:12px; align-items:center; justify-content:center; font-size:1.2rem; }
+  .shortcut-btn{ min-width:220px; padding:14px 18px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:12px; align-items:center; justify-content:center; font-size:1.05rem; }
 </style>
 </head>
 <body>
@@ -241,13 +241,13 @@
 
           <div class="weather-divider"></div>
 
-          <!-- Radar map inserted here -->
+          <!-- Radar map centered on ZIP 01075 (South Hadley, MA) -->
           <div class="radar-wrap" id="radarWrap" aria-hidden="false">
-            <!-- RainViewer embed (centered on your lat/lon). If you prefer a different provider, replace the URL below. -->
+            <!-- RainViewer embed centered on 42.2481415,-72.5796331 with zoom focused on MA/CT region -->
             <iframe
               class="radar-iframe"
-              src="https://www.rainviewer.com/map.html?loc=42.2043,-72.6162&z=7&overlay=radar&product=radar&opacity=0.7&play=true"
-              title="Radar map"
+              src="https://www.rainviewer.com/map.html?loc=42.2481415,-72.5796331&z=8&overlay=radar&product=radar&opacity=0.75&play=true"
+              title="Radar map centered on 01075"
               loading="lazy"
               referrerpolicy="no-referrer"
             ></iframe>
@@ -261,7 +261,7 @@
 
           <div id="weatherDaily"></div>
 
-          <div class="insight" id="weatherInsight" style="font-size:1.25rem; margin-top:12px;"></div>
+          <div class="insight" id="weatherInsight" style="font-size:1.05rem; margin-top:12px;"></div>
         </div>
       </div>
 
@@ -365,9 +365,9 @@ function generateWeatherNarrative(current, forecast){
   if (desc.toLowerCase().includes('rain')) narrative += ' Expect wet conditions and reduced visibility.';
   if (desc.toLowerCase().includes('wind')) narrative += ' Gusty winds possible — secure loose items.';
   if (desc.toLowerCase().includes('storm')) narrative += ' Thunderstorms possible — stay alert.';
-  const next8 = forecast.list.slice(0,8).map(f=>f.weather[0].main.toLowerCase());
-  if (next8.some(w=>w.includes('snow'))) narrative += ' Snow is expected soon.';
-  if (next8.some(w=>w.includes('rain'))) narrative += ' Rain likely in the next hours.';
+  const next6 = forecast.list.slice(0,6).map(f=>f.weather[0].main.toLowerCase());
+  if (next6.some(w=>w.includes('snow'))) narrative += ' Snow is expected soon.';
+  if (next6.some(w=>w.includes('rain'))) narrative += ' Rain likely in the next hours.';
   return narrative;
 }
 
@@ -394,7 +394,7 @@ async function loadWeather(){
     const current = await curRes.json();
     const forecast = await fRes.json();
     renderCurrentWeather(current);
-    renderHourly(forecast);
+    renderHourly(forecast);   // now every 3 hours, 6 entries
     renderForecast(forecast);
     document.getElementById('weatherInsight').textContent = generateWeatherNarrative(current, forecast);
   }catch(err){
@@ -447,11 +447,11 @@ function renderCurrentWeather(data){
   sunTimes.insertAdjacentHTML('beforeend', ` ${sunset}`);
 }
 
-/* Render hourly */
+/* Render hourly (every 3 hours, 6 entries) */
 function renderHourly(data){
   const container = document.getElementById('weatherHourly');
   container.innerHTML = `
-    <div class="card-header" style="margin:0; padding:0 0 8px 0;"><i data-feather="clock"></i><span>Next 8 Hours</span></div>
+    <div class="card-header" style="margin:0; padding:0 0 8px 0;"><i data-feather="clock"></i><span>Every 3 Hours (6 updates)</span></div>
     <div class="hourly-container"><div class="hourly-strip" id="hourlyStrip"></div></div>
   `;
   feather.replace();
@@ -460,7 +460,8 @@ function renderHourly(data){
   strip.innerHTML = '';
 
   const now = Date.now();
-  const upcoming = data.list.filter(e => e.dt * 1000 > now).slice(0,8);
+  // OpenWeather 3-hourly forecast; take the next 6 entries (each is 3 hours apart)
+  const upcoming = data.list.filter(e => e.dt * 1000 > now).slice(0,6);
 
   upcoming.forEach(entry => {
     const dt = new Date(entry.dt * 1000);
@@ -492,7 +493,7 @@ function renderHourly(data){
     strip.appendChild(div);
   });
 
-  if(upcoming.length === 0) strip.textContent = 'No upcoming hours available.';
+  if(upcoming.length === 0) strip.textContent = 'No upcoming 3-hour entries available.';
 }
 
 /* Render 5-day */
