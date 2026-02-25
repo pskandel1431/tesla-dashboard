@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tesla Dashboard — Model 3 Performance</title>
+<title>Paul's Tesla M3P — Dashboard</title>
 
 <script src="https://unpkg.com/feather-icons"></script>
 
@@ -14,7 +14,7 @@
     --divider: rgba(255,255,255,0.12);
   }
 
-  /* Increase base sizing for large-screen / car display */
+  /* Base / large-screen sizing */
   html, body {
     margin: 0;
     padding: 0;
@@ -23,8 +23,7 @@
     color: #eaeaea;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Make base text larger for car screen */
-    font-size: 20px; /* roughly double typical 10-12pt on screen */
+    font-size: 18px; /* large base for car screen */
   }
 
   .page{
@@ -38,7 +37,7 @@
     justify-content:flex-start;
     align-items:center;
     gap:18px;
-    padding:18px 22px;
+    padding:16px 22px;
     background:var(--bg-card);
     border-radius:14px;
     margin-bottom:20px;
@@ -46,16 +45,16 @@
     backdrop-filter: blur(8px);
   }
 
-  /* Prominent date/time and vehicle label */
+  /* Date/time and vehicle label */
   #topTime {
     font-weight:700;
-    font-size:3.6rem; /* large and prominent */
+    font-size:2.6rem; /* slightly smaller so it stays on one line in partial browser */
     line-height:1;
-    letter-spacing:0.6px;
+    letter-spacing:0.4px;
   }
 
   #vehicleLabel {
-    font-size:1.4rem;
+    font-size:1.25rem;
     opacity:0.9;
     margin-left:12px;
     padding:6px 10px;
@@ -76,8 +75,8 @@
 
   .card{
     background:var(--bg-card);
-    padding:28px; /* increased */
-    border-radius:18px;
+    padding:22px;
+    border-radius:16px;
     border:1px solid rgba(255,255,255,0.06);
     box-shadow: 0 10px 28px rgba(0,0,0,0.6), inset 0 0 14px rgba(255,255,255,0.03);
   }
@@ -87,70 +86,86 @@
     align-items:center;
     gap:12px;
     font-weight:700;
-    margin-bottom:14px;
+    margin-bottom:12px;
     opacity:0.98;
-    font-size:1.8rem; /* larger */
+    font-size:1.6rem;
   }
 
   /* Weather Hub */
   #weatherHub .weather-main{
     display:flex;
-    gap:22px;
+    gap:18px;
     align-items:center;
   }
 
   .weather-icon-big{
-    width:192px; /* doubled */
-    height:192px;
-    flex:0 0 192px;
+    width:160px; /* slightly reduced from previous very large */
+    height:160px;
+    flex:0 0 160px;
     filter: drop-shadow(0 8px 28px rgba(0,0,0,0.6));
   }
 
   .weather-temp{
-    font-size:5.2rem; /* doubled */
+    font-size:4.2rem; /* reduced from 5.2 */
     font-weight:700;
     line-height:1;
   }
 
   .weather-sub{
-    margin-top:8px;
+    margin-top:6px;
     color:var(--muted);
-    font-size:1.9rem; /* larger */
+    font-size:1.4rem; /* reduced */
   }
 
   .sunrise-icon, .sunset-icon{
-    width:40px;
-    height:40px;
+    width:34px;
+    height:34px;
     vertical-align:middle;
   }
 
   .weather-divider{
     border:none;
     border-top:1px solid var(--divider);
-    margin:18px 0;
+    margin:14px 0;
+  }
+
+  /* Radar map */
+  .radar-wrap{
+    width:100%;
+    height:260px; /* comfortable height for car screen */
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.06);
+    background:linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.06));
+  }
+  .radar-iframe{
+    width:100%;
+    height:100%;
+    border:0;
+    display:block;
   }
 
   /* Hourly */
-  .hourly-container{ overflow-x:auto; padding-bottom:10px; }
-  .hourly-strip{ display:flex; gap:14px; min-width:max-content; align-items:flex-start; }
+  .hourly-container{ overflow-x:auto; padding-bottom:8px; }
+  .hourly-strip{ display:flex; gap:12px; min-width:max-content; align-items:flex-start; }
   .hourly-item{
-    min-width:180px; /* wider for larger text */
-    padding:12px;
+    min-width:160px;
+    padding:10px;
     border-radius:12px;
     background:rgba(255,255,255,0.03);
     text-align:center;
-    font-size:1.6rem; /* larger */
+    font-size:1.3rem;
     display:flex;
     flex-direction:column;
-    gap:10px;
+    gap:8px;
     align-items:center;
   }
-  .hourly-item img{ width:88px; height:88px; } /* larger icons */
-  .hourly-time{ opacity:0.9; font-size:1.6rem; }
-  .hourly-temp{ font-weight:700; font-size:1.8rem; }
-  .hourly-pop{ font-size:1.2rem; color:var(--muted); }
-  .hourly-wind{ font-size:1.2rem; color:var(--muted); display:flex; gap:8px; align-items:center; }
-  .wind-icon{ width:36px; height:36px; opacity:0.95; }
+  .hourly-item img{ width:76px; height:76px; }
+  .hourly-time{ opacity:0.9; font-size:1.3rem; }
+  .hourly-temp{ font-weight:700; font-size:1.4rem; }
+  .hourly-pop{ font-size:1.05rem; color:var(--muted); }
+  .hourly-wind{ font-size:1.05rem; color:var(--muted); display:flex; gap:8px; align-items:center; }
+  .wind-icon{ width:30px; height:30px; opacity:0.95; }
 
   /* 5-day condensed */
   #weatherDaily{ margin-top:10px; }
@@ -160,52 +175,51 @@
     gap:12px;
     padding:8px 0;
     border-bottom:1px solid rgba(255,255,255,0.06);
-    font-size:1.4rem; /* larger */
+    font-size:1.2rem; /* reduced from previous very large */
     line-height:1.05;
   }
   .forecast-row:last-child{ border-bottom:none; }
-  .forecast-day{ width:80px; opacity:0.95; font-weight:700; font-size:1.5rem; }
-  .forecast-icon{ width:72px; flex:0 0 72px; text-align:center; }
-  .forecast-icon img{ width:64px; height:64px; }
-  .forecast-temps{ width:150px; text-align:right; font-weight:700; font-size:1.4rem; }
-  .forecast-pop{ width:80px; text-align:right; color:var(--muted); font-size:1.2rem; }
-  .forecast-wind{ width:140px; text-align:right; color:var(--muted); font-size:1.2rem; display:flex; gap:8px; justify-content:flex-end; align-items:center; }
-  .wind-icon-small{ width:28px; height:28px; opacity:0.9; }
+  .forecast-day{ width:72px; opacity:0.95; font-weight:700; font-size:1.25rem; }
+  .forecast-icon{ width:64px; flex:0 0 64px; text-align:center; }
+  .forecast-icon img{ width:56px; height:56px; }
+  .forecast-temps{ width:130px; text-align:right; font-weight:700; font-size:1.2rem; }
+  .forecast-pop{ width:72px; text-align:right; color:var(--muted); font-size:1.05rem; }
+  .forecast-wind{ width:120px; text-align:right; color:var(--muted); font-size:1.05rem; display:flex; gap:8px; justify-content:flex-end; align-items:center; }
+  .wind-icon-small{ width:24px; height:24px; opacity:0.9; }
 
   /* Trend arrow */
   .trend {
     display:inline-block;
     margin-left:12px;
-    font-size:1.6rem;
+    font-size:1.4rem;
     opacity:0.95;
   }
 
-  /* temp color helpers (fallback) */
+  /* temp color helpers */
   .temp-hot{ color:#ff6b6b; }
   .temp-warm{ color:#ffa94d; }
   .temp-mild{ color:#ffd43b; }
   .temp-cool{ color:#4fa3ff; }
-  .temp-low-deep{ color:#4fa3ff; } /* low <32 */
+  .temp-low-deep{ color:#4fa3ff; }
   .muted { color:var(--muted); }
 
   /* Calendar & events */
-  .calendar-summary{ font-size:1.6rem; opacity:0.95; margin-bottom:8px; }
-  .calendar-updated{ display:none; } /* removed per request */
-  .now-next-later{ margin-top:8px; font-size:1.5rem; }
-  .nnl-label{ font-weight:700; font-size:1.4rem; }
-  .nnl-text{ font-size:1.4rem; color:var(--muted); }
+  .calendar-summary{ font-size:1.4rem; opacity:0.95; margin-bottom:8px; }
+  .now-next-later{ margin-top:8px; font-size:1.25rem; }
+  .nnl-label{ font-weight:700; font-size:1.2rem; }
+  .nnl-text{ font-size:1.2rem; color:var(--muted); }
 
   .events-list{ margin-top:12px; }
-  .event{ padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; font-size:1.5rem; }
+  .event{ padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; font-size:1.25rem; }
   .event-main{ display:flex; gap:12px; align-items:center; }
-  .event-dot{ width:14px; height:14px; border-radius:50%; }
-  .event-time{ min-width:100px; font-weight:700; font-size:1.4rem; }
-  .event-details{ display:none; padding-left:36px; opacity:0.85; font-size:1.3rem; }
+  .event-dot{ width:12px; height:12px; border-radius:50%; }
+  .event-time{ min-width:90px; font-weight:700; font-size:1.15rem; }
+  .event-details{ display:none; padding-left:36px; opacity:0.85; font-size:1.05rem; }
   .event.expanded .event-details{ display:block; }
 
   /* shortcuts */
   .shortcuts{ display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
-  .shortcut-btn{ min-width:220px; padding:16px 18px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:12px; align-items:center; justify-content:center; font-size:1.4rem; }
+  .shortcut-btn{ min-width:220px; padding:14px 18px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:12px; align-items:center; justify-content:center; font-size:1.2rem; }
 </style>
 </head>
 <body>
@@ -213,7 +227,7 @@
     <div class="top-banner">
       <div>
         <div id="topTime">--</div>
-        <div id="vehicleLabel">Tesla Model 3 Performance</div>
+        <div id="vehicleLabel">Paul's Tesla M3P</div>
       </div>
     </div>
 
@@ -227,13 +241,27 @@
 
           <div class="weather-divider"></div>
 
+          <!-- Radar map inserted here -->
+          <div class="radar-wrap" id="radarWrap" aria-hidden="false">
+            <!-- RainViewer embed (centered on your lat/lon). If you prefer a different provider, replace the URL below. -->
+            <iframe
+              class="radar-iframe"
+              src="https://www.rainviewer.com/map.html?loc=42.2043,-72.6162&z=7&overlay=radar&product=radar&opacity=0.7&play=true"
+              title="Radar map"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            ></iframe>
+          </div>
+
+          <div class="weather-divider"></div>
+
           <div id="weatherHourly"></div>
 
           <div class="weather-divider"></div>
 
           <div id="weatherDaily"></div>
 
-          <div class="insight" id="weatherInsight" style="font-size:1.6rem; margin-top:12px;"></div>
+          <div class="insight" id="weatherInsight" style="font-size:1.25rem; margin-top:12px;"></div>
         </div>
       </div>
 
@@ -242,7 +270,6 @@
         <div class="card">
           <div class="card-header"><i data-feather="calendar"></i><span>Today’s Schedule</span></div>
           <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
-          <div class="calendar-updated" id="calendarUpdated" style="display:none;"></div>
           <div class="now-next-later" id="nowNextLater"></div>
         </div>
 
@@ -266,7 +293,7 @@
 <script>
 feather.replace();
 
-// Clock — larger and prominent
+// Clock — slightly smaller so it stays on one line in partial browser width
 function updateTime(){
   const now = new Date();
   const dateStr = now.toLocaleDateString([], { weekday:'long', month:'long', day:'numeric' });
@@ -282,15 +309,13 @@ const LAT = 42.2043;
 const LON = -72.6162;
 const UNITS = "imperial";
 
-/* Robust icon loader: tries primary, then fallback1, then fallback2 */
+/* Robust icon loader */
 function createIconImg(primary, fallback1, fallback2, className = "", alt = "") {
   const img = document.createElement("img");
   img.src = primary;
   if (className) img.className = className;
   img.alt = alt || "";
-
   img.dataset._tried = "0";
-
   img.onerror = function () {
     if (img.dataset._tried === "0") {
       img.dataset._tried = "1";
@@ -305,40 +330,23 @@ function createIconImg(primary, fallback1, fallback2, className = "", alt = "") 
       img.style.display = "none";
     }
   };
-
   return img;
 }
-
-/* OpenWeather icon fallback */
 function openWeatherIconUrl(iconCode) {
   return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
 }
 
 /* ICON HELPERS */
 function meteoconAnimated(iconCode){
-  const map = {
-    "01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night",
-    "03d":"cloudy","03n":"cloudy","04d":"overcast","04n":"overcast",
-    "09d":"rain","09n":"rain","10d":"rain","10n":"rain",
-    "11d":"thunderstorms","11n":"thunderstorms","13d":"snow","13n":"snow",
-    "50d":"mist","50n":"mist"
-  };
+  const map = {"01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night","03d":"cloudy","03n":"cloudy","04d":"overcast","04n":"overcast","09d":"rain","09n":"rain","10d":"rain","10n":"rain","11d":"thunderstorms","11n":"thunderstorms","13d":"snow","13n":"snow","50d":"mist","50n":"mist"};
   const key = map[iconCode] || "cloudy";
   return `https://basmilius.github.io/weather-icons/production/animated/${key}.svg`;
 }
 function meteoconStatic(iconCode){
-  const map = {
-    "01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night",
-    "03d":"cloudy","03n":"cloudy","04d":"overcast","04n":"overcast",
-    "09d":"rain","09n":"rain","10d":"rain","10n":"rain",
-    "11d":"thunderstorms","11n":"thunderstorms","13d":"snow","13n":"snow",
-    "50d":"mist","50n":"mist"
-  };
+  const map = {"01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night","03d":"cloudy","03n":"cloudy","04d":"overcast","04n":"overcast","09d":"rain","09n":"rain","10d":"rain","10n":"rain","11d":"thunderstorms","11n":"thunderstorms","13d":"snow","13n":"snow","50d":"mist","50n":"mist"};
   const key = map[iconCode] || "cloudy";
   return `https://basmilius.github.io/weather-icons/production/fill/all/${key}.svg`;
 }
-
-/* Wind icon helpers */
 function windIconAnimated(speed){
   const b = Math.min(12, Math.max(0, Math.round(speed / 5)));
   return `https://basmilius.github.io/weather-icons/production/animated/wind-beaufort-${b}.svg`;
@@ -353,12 +361,10 @@ function generateWeatherNarrative(current, forecast){
   const desc = current.weather[0].description;
   const temp = Math.round(current.main.temp);
   let narrative = `It’s ${temp}°F and ${desc}.`;
-
   if (desc.toLowerCase().includes('snow')) narrative += ' Roads may be slick — allow extra travel time.';
   if (desc.toLowerCase().includes('rain')) narrative += ' Expect wet conditions and reduced visibility.';
   if (desc.toLowerCase().includes('wind')) narrative += ' Gusty winds possible — secure loose items.';
   if (desc.toLowerCase().includes('storm')) narrative += ' Thunderstorms possible — stay alert.';
-
   const next8 = forecast.list.slice(0,8).map(f=>f.weather[0].main.toLowerCase());
   if (next8.some(w=>w.includes('snow'))) narrative += ' Snow is expected soon.';
   if (next8.some(w=>w.includes('rain'))) narrative += ' Rain likely in the next hours.';
@@ -384,16 +390,12 @@ async function loadWeather(){
   try{
     const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
     const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=${UNITS}&appid=${OPENWEATHER_API_KEY}`;
-
     const [curRes, fRes] = await Promise.all([fetch(currentUrl), fetch(forecastUrl)]);
     const current = await curRes.json();
     const forecast = await fRes.json();
-
     renderCurrentWeather(current);
     renderHourly(forecast);
     renderForecast(forecast);
-
-    // topUpdated removed per request — no update text on right
     document.getElementById('weatherInsight').textContent = generateWeatherNarrative(current, forecast);
   }catch(err){
     console.error('Weather load error', err);
@@ -408,7 +410,6 @@ function renderCurrentWeather(data){
   const desc = data.weather[0].description;
   const city = data.name;
   const iconCode = data.weather[0].icon;
-
   const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
   const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
 
@@ -416,7 +417,6 @@ function renderCurrentWeather(data){
   const staticIcon = meteoconStatic(iconCode);
   const owFallback = openWeatherIconUrl(iconCode);
 
-  // Build structure and append robust icon elements
   document.getElementById('weatherCurrent').innerHTML = `
     <div class="weather-main">
       <div id="weatherIconWrap"></div>
@@ -429,11 +429,9 @@ function renderCurrentWeather(data){
     </div>
   `;
 
-  // icon with fallbacks
   const iconImg = createIconImg(animated, staticIcon, owFallback, "weather-icon-big", desc);
   document.getElementById('weatherIconWrap').appendChild(iconImg);
 
-  // sunrise/sunset with fallbacks
   const sunriseAnimated = 'https://basmilius.github.io/weather-icons/production/animated/sunrise.svg';
   const sunriseStatic = 'https://basmilius.github.io/weather-icons/production/fill/all/sunrise.svg';
   const sunsetAnimated = 'https://basmilius.github.io/weather-icons/production/animated/sunset.svg';
@@ -449,7 +447,7 @@ function renderCurrentWeather(data){
   sunTimes.insertAdjacentHTML('beforeend', ` ${sunset}`);
 }
 
-/* Render hourly (animated icons, larger) */
+/* Render hourly */
 function renderHourly(data){
   const container = document.getElementById('weatherHourly');
   container.innerHTML = `
@@ -476,9 +474,7 @@ function renderHourly(data){
     const wind = Math.round(entry.wind?.speed || 0);
 
     const iconElement = createIconImg(animatedIcon, staticIcon, owIcon, '', entry.weather[0].description);
-    const windAnim = windIconAnimated(wind);
-    const windStatic = windIconStatic(wind);
-    const windImg = createIconImg(windAnim, windStatic, '', 'wind-icon', 'wind');
+    const windImg = createIconImg(windIconAnimated(wind), windIconStatic(wind), '', 'wind-icon', 'wind');
 
     const div = document.createElement('div');
     div.className = 'hourly-item';
@@ -499,7 +495,7 @@ function renderHourly(data){
   if(upcoming.length === 0) strip.textContent = 'No upcoming hours available.';
 }
 
-/* Render 5-day (static icons, condensed, trend arrows, colors, wind, pop) */
+/* Render 5-day */
 function renderForecast(data){
   const container = document.getElementById('weatherDaily');
   container.innerHTML = `
@@ -511,7 +507,6 @@ function renderForecast(data){
   const fc = document.getElementById('forecastContainer');
   fc.innerHTML = '';
 
-  // group by day (prefer midday sample)
   const byDay = {};
   data.list.forEach(entry => {
     const dt = new Date(entry.dt * 1000);
@@ -523,7 +518,6 @@ function renderForecast(data){
 
   const days = Object.keys(byDay).slice(0,5);
 
-  // compute trend arrow between day 0 and day 1 (if available)
   let trendSymbol = '';
   if(days.length >= 2){
     const d0 = Math.round(byDay[days[0]].main.temp_max || byDay[days[0]].main.temp);
@@ -662,9 +656,7 @@ function renderNowNextLater(events){
 function renderCalendar(events){
   const container = document.getElementById('calendarEvents');
   const summaryEl = document.getElementById('calendarSummary');
-  const updatedEl = document.getElementById('calendarUpdated');
   container.innerHTML = '';
-  updatedEl.textContent = 'Calendar updated ' + new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
 
   const { todayEvents, tomorrowEvents } = eventsForTodayAndTomorrow(events);
   const total = todayEvents.length + tomorrowEvents.length;
@@ -677,14 +669,14 @@ function renderCalendar(events){
     header.style.margin = '12px 0 6px';
     header.style.fontWeight = '700';
     header.style.opacity = '0.95';
-    header.style.fontSize = '1.6rem';
+    header.style.fontSize = '1.4rem';
     header.textContent = title;
     container.appendChild(header);
 
     if(list.length === 0){
       const empty = document.createElement('div');
       empty.style.opacity = '0.6';
-      empty.style.fontSize = '1.4rem';
+      empty.style.fontSize = '1.2rem';
       empty.textContent = 'No events.';
       container.appendChild(empty);
       return;
@@ -702,7 +694,7 @@ function renderCalendar(events){
           <span class="event-time">${timeLabel}</span>
           <span class="event-title">${ev.title}</span>
         </div>
-        <div class="event-source" style="font-size:1.2rem; opacity:0.8;">${cal ? cal.name : ''}</div>
+        <div class="event-source" style="font-size:1rem; opacity:0.8;">${cal ? cal.name : ''}</div>
         <div class="event-details">${ev.end ? 'Ends at ' + ev.end.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : ''}</div>
       `;
       div.addEventListener('click', ()=> div.classList.toggle('expanded'));
