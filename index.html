@@ -249,6 +249,39 @@ const LAT = 42.2043;
 const LON = -72.6162;
 const UNITS = "imperial";
 
+/* Robust icon loader: tries primary, then fallback1, then fallback2 */
+function createIconImg(primary, fallback1, fallback2, className = "", alt = "") {
+  const img = document.createElement("img");
+  img.src = primary;
+  if (className) img.className = className;
+  img.alt = alt || "";
+
+  img.dataset._tried = "0";
+
+  img.onerror = function () {
+    // first failure -> try fallback1
+    if (img.dataset._tried === "0") {
+      img.dataset._tried = "1";
+      if (fallback1) img.src = fallback1;
+      else if (fallback2) img.src = fallback2;
+      else img.style.display = "none";
+    } else if (img.dataset._tried === "1") {
+      img.dataset._tried = "2";
+      if (fallback2) img.src = fallback2;
+      else img.style.display = "none";
+    } else {
+      img.style.display = "none";
+    }
+  };
+
+  return img;
+}
+
+/* OpenWeather icon fallback */
+function openWeatherIconUrl(iconCode) {
+  return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+}
+
 /* ICON HELPERS
    - Animated for current + hourly: /production/animated/{key}.svg
    - Static colorful for daily: /production/fill/all/{key}.svg
@@ -278,7 +311,6 @@ function meteoconStatic(iconCode){
 
 /* Wind icon helpers (animated for hourly, static small for daily) */
 function windIconAnimated(speed){
-  // Beaufort-like bucket
   const b = Math.min(12, Math.max(0, Math.round(speed / 5)));
   return `https://basmilius.github.io/weather-icons/production/animated/wind-beaufort-${b}.svg`;
 }
@@ -307,7 +339,7 @@ function generateWeatherNarrative(current, forecast){
 /* Temperature color helper */
 function colorTempStyle(t, isLow=false){
   if(isLow){
-    if(t < 32) return "color:#4fa3ff"; // deep cold
+    if(t < 32) return "color:#4fa3ff";
     if(t < 50) return "color:#7fbaff";
     return "color:#cfcfcf";
   } else {
@@ -351,23 +383,41 @@ function renderCurrentWeather(data){
   const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
   const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
 
-  const iconUrl = meteoconAnimated(iconCode);
+  const animated = meteoconAnimated(iconCode);
+  const staticIcon = meteoconStatic(iconCode);
+  const owFallback = openWeatherIconUrl(iconCode);
 
+  // Build structure and append robust icon elements
   document.getElementById('weatherCurrent').innerHTML = `
     <div class="weather-main">
-      <img src="${iconUrl}" class="weather-icon-big" alt="${desc}" />
+      <div id="weatherIconWrap"></div>
       <div>
         <div class="weather-temp">${temp}°F</div>
         <div class="weather-sub">${city} • ${desc}</div>
         <div class="weather-sub">Feels like ${feels}°F</div>
-        <div class="weather-sub">
-          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunrise.svg" class="sunrise-icon" alt="sunrise"> ${sunrise}
-          &nbsp;&nbsp;
-          <img src="https://basmilius.github.io/weather-icons/production/fill/all/sunset.svg" class="sunset-icon" alt="sunset"> ${sunset}
-        </div>
+        <div class="weather-sub" id="sunTimes"></div>
       </div>
     </div>
   `;
+
+  // icon with fallbacks
+  const iconImg = createIconImg(animated, staticIcon, owFallback, "weather-icon-big", desc);
+  document.getElementById('weatherIconWrap').appendChild(iconImg);
+
+  // sunrise/sunset with fallbacks
+  const sunriseAnimated = 'https://basmilius.github.io/weather-icons/production/animated/sunrise.svg';
+  const sunriseStatic = 'https://basmilius.github.io/weather-icons/production/fill/all/sunrise.svg';
+  const sunsetAnimated = 'https://basmilius.github.io/weather-icons/production/animated/sunset.svg';
+  const sunsetStatic = 'https://basmilius.github.io/weather-icons/production/fill/all/sunset.svg';
+
+  const sunriseImg = createIconImg(sunriseAnimated, sunriseStatic, '', 'sunrise-icon', 'sunrise');
+  const sunsetImg  = createIconImg(sunsetAnimated, sunsetStatic, '', 'sunset-icon', 'sunset');
+
+  const sunTimes = document.getElementById('sunTimes');
+  sunTimes.appendChild(sunriseImg);
+  sunTimes.insertAdjacentHTML('beforeend', ` ${sunrise} &nbsp;&nbsp;`);
+  sunTimes.appendChild(sunsetImg);
+  sunTimes.insertAdjacentHTML('beforeend', ` ${sunset}`);
 }
 
 /* Render hourly (animated icons, larger) */
@@ -389,19 +439,31 @@ function renderHourly(data){
     const dt = new Date(entry.dt * 1000);
     const timeLabel = dt.toLocaleTimeString([], { hour:'numeric' });
     const temp = Math.round(entry.main.temp);
-    const iconUrl = meteoconAnimated(entry.weather[0].icon);
+    const iconCode = entry.weather[0].icon;
+    const animatedIcon = meteoconAnimated(iconCode);
+    const staticIcon = meteoconStatic(iconCode);
+    const owIcon = openWeatherIconUrl(iconCode);
     const pop = Math.round((entry.pop || 0) * 100);
     const wind = Math.round(entry.wind?.speed || 0);
+
+    const iconElement = createIconImg(animatedIcon, staticIcon, owIcon, '', entry.weather[0].description);
+    const windAnim = windIconAnimated(wind);
+    const windStatic = windIconStatic(wind);
+    const windImg = createIconImg(windAnim, windStatic, '', 'wind-icon', 'wind');
 
     const div = document.createElement('div');
     div.className = 'hourly-item';
     div.innerHTML = `
       <div class="hourly-time">${timeLabel}</div>
-      <img src="${iconUrl}" alt="${entry.weather[0].description}" />
+      <div class="hourly-icon-wrap"></div>
       <div class="hourly-temp">${temp}°</div>
       <div class="hourly-pop">${pop}%</div>
-      <div class="hourly-wind"><img src="${windIconAnimated(wind)}" class="wind-icon" alt="wind">${wind} mph</div>
+      <div class="hourly-wind"></div>
     `;
+    div.querySelector('.hourly-icon-wrap').appendChild(iconElement);
+    const windWrap = div.querySelector('.hourly-wind');
+    windWrap.appendChild(windImg);
+    windWrap.insertAdjacentHTML('beforeend', `${wind} mph`);
     strip.appendChild(div);
   });
 
@@ -447,23 +509,32 @@ function renderForecast(data){
     const label = dt.toLocaleDateString([], { weekday:'short' });
     const min = Math.round(entry.main.temp_min || entry.main.temp);
     const max = Math.round(entry.main.temp_max || entry.main.temp);
-    const iconUrl = meteoconStatic(entry.weather[0].icon);
+    const iconCode = entry.weather[0].icon;
+    const staticIcon = meteoconStatic(iconCode);
+    const owIcon = openWeatherIconUrl(iconCode);
     const pop = Math.round((entry.pop || 0) * 100);
     const wind = Math.round(entry.wind?.speed || 0);
 
+    const iconEl = createIconImg(staticIcon, owIcon, '', '', entry.weather[0].description);
+    const windImg = createIconImg(windIconStatic(wind), '', '', 'wind-icon-small', 'wind');
+
     const row = document.createElement('div');
     row.className = 'forecast-row';
-    row.innerHTML = `
-      <div class="forecast-day">${label}</div>
-      <div class="forecast-icon"><img src="${iconUrl}" alt="${entry.weather[0].description}"></div>
-      <div class="forecast-temps">
-        <span style="${colorTempStyle(max,false)}">${max}°</span>
-        &nbsp;/&nbsp;
-        <span style="${colorTempStyle(min,true)}">${min}°</span>
-      </div>
-      <div class="forecast-wind"><img src="${windIconStatic(wind)}" class="wind-icon-small" alt="wind">${wind} mph</div>
-      <div class="forecast-pop">${pop}%</div>
-    `;
+
+    // build inner structure and append elements to avoid broken img markup
+    const dayDiv = document.createElement('div'); dayDiv.className = 'forecast-day'; dayDiv.textContent = label;
+    const iconDiv = document.createElement('div'); iconDiv.className = 'forecast-icon'; iconDiv.appendChild(iconEl);
+    const tempsDiv = document.createElement('div'); tempsDiv.className = 'forecast-temps';
+    tempsDiv.innerHTML = `<span style="${colorTempStyle(max,false)}">${max}°</span>&nbsp;/&nbsp;<span style="${colorTempStyle(min,true)}">${min}°</span>`;
+    const windDiv = document.createElement('div'); windDiv.className = 'forecast-wind'; windDiv.appendChild(windImg); windDiv.insertAdjacentHTML('beforeend', `${wind} mph`);
+    const popDiv = document.createElement('div'); popDiv.className = 'forecast-pop'; popDiv.textContent = `${pop}%`;
+
+    row.appendChild(dayDiv);
+    row.appendChild(iconDiv);
+    row.appendChild(tempsDiv);
+    row.appendChild(windDiv);
+    row.appendChild(popDiv);
+
     fc.appendChild(row);
   });
 }
