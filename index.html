@@ -259,7 +259,6 @@ function createIconImg(primary, fallback1, fallback2, className = "", alt = "") 
   img.dataset._tried = "0";
 
   img.onerror = function () {
-    // first failure -> try fallback1
     if (img.dataset._tried === "0") {
       img.dataset._tried = "1";
       if (fallback1) img.src = fallback1;
@@ -521,7 +520,6 @@ function renderForecast(data){
     const row = document.createElement('div');
     row.className = 'forecast-row';
 
-    // build inner structure and append elements to avoid broken img markup
     const dayDiv = document.createElement('div'); dayDiv.className = 'forecast-day'; dayDiv.textContent = label;
     const iconDiv = document.createElement('div'); iconDiv.className = 'forecast-icon'; iconDiv.appendChild(iconEl);
     const tempsDiv = document.createElement('div'); tempsDiv.className = 'forecast-temps';
