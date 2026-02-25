@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tesla Dashboard</title>
+<title>Tesla Dashboard — Model 3 Performance</title>
 
 <script src="https://unpkg.com/feather-icons"></script>
 
@@ -14,37 +14,60 @@
     --divider: rgba(255,255,255,0.12);
   }
 
-  body{
-    margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  /* Increase base sizing for large-screen / car display */
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: radial-gradient(circle at center,#070707 0%, #000 70%);
-    color:#eaeaea;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
+    color: #eaeaea;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Make base text larger for car screen */
+    font-size: 20px; /* roughly double typical 10-12pt on screen */
   }
 
   .page{
-    max-width:1300px;
+    max-width:1400px;
     margin:28px auto;
-    padding:0 20px 60px;
+    padding:0 24px 60px;
   }
 
   .top-banner{
     display:flex;
-    justify-content:space-between;
+    justify-content:flex-start;
     align-items:center;
-    padding:12px 18px;
+    gap:18px;
+    padding:18px 22px;
     background:var(--bg-card);
-    border-radius:12px;
-    margin-bottom:18px;
+    border-radius:14px;
+    margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.06);
     backdrop-filter: blur(8px);
+  }
+
+  /* Prominent date/time and vehicle label */
+  #topTime {
+    font-weight:700;
+    font-size:3.6rem; /* large and prominent */
+    line-height:1;
+    letter-spacing:0.6px;
+  }
+
+  #vehicleLabel {
+    font-size:1.4rem;
+    opacity:0.9;
+    margin-left:12px;
+    padding:6px 10px;
+    border-radius:8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.04);
   }
 
   .grid{
     display:grid;
     grid-template-columns: 1.1fr 1fr;
-    gap:20px;
+    gap:22px;
   }
 
   @media (max-width:1200px){
@@ -53,106 +76,107 @@
 
   .card{
     background:var(--bg-card);
-    padding:18px;
-    border-radius:16px;
+    padding:28px; /* increased */
+    border-radius:18px;
     border:1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 8px 22px rgba(0,0,0,0.6), inset 0 0 12px rgba(255,255,255,0.03);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.6), inset 0 0 14px rgba(255,255,255,0.03);
   }
 
   .card-header{
     display:flex;
     align-items:center;
-    gap:10px;
-    font-weight:600;
-    margin-bottom:10px;
-    opacity:0.95;
+    gap:12px;
+    font-weight:700;
+    margin-bottom:14px;
+    opacity:0.98;
+    font-size:1.8rem; /* larger */
   }
 
   /* Weather Hub */
   #weatherHub .weather-main{
     display:flex;
-    gap:18px;
+    gap:22px;
     align-items:center;
   }
 
   .weather-icon-big{
-    width:96px;
-    height:96px;
-    flex:0 0 96px;
-    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6));
+    width:192px; /* doubled */
+    height:192px;
+    flex:0 0 192px;
+    filter: drop-shadow(0 8px 28px rgba(0,0,0,0.6));
   }
 
   .weather-temp{
-    font-size:2.6rem;
-    font-weight:600;
+    font-size:5.2rem; /* doubled */
+    font-weight:700;
     line-height:1;
   }
 
   .weather-sub{
-    margin-top:6px;
+    margin-top:8px;
     color:var(--muted);
-    font-size:0.98rem;
+    font-size:1.9rem; /* larger */
   }
 
   .sunrise-icon, .sunset-icon{
-    width:26px;
-    height:26px;
+    width:40px;
+    height:40px;
     vertical-align:middle;
   }
 
   .weather-divider{
     border:none;
     border-top:1px solid var(--divider);
-    margin:12px 0;
+    margin:18px 0;
   }
 
   /* Hourly */
-  .hourly-container{ overflow-x:auto; padding-bottom:6px; }
-  .hourly-strip{ display:flex; gap:10px; min-width:max-content; align-items:flex-start; }
+  .hourly-container{ overflow-x:auto; padding-bottom:10px; }
+  .hourly-strip{ display:flex; gap:14px; min-width:max-content; align-items:flex-start; }
   .hourly-item{
-    min-width:92px;
-    padding:8px;
-    border-radius:10px;
+    min-width:180px; /* wider for larger text */
+    padding:12px;
+    border-radius:12px;
     background:rgba(255,255,255,0.03);
     text-align:center;
-    font-size:0.92rem;
+    font-size:1.6rem; /* larger */
     display:flex;
     flex-direction:column;
-    gap:6px;
+    gap:10px;
     align-items:center;
   }
-  .hourly-item img{ width:44px; height:44px; }
-  .hourly-time{ opacity:0.85; font-size:0.9rem; }
-  .hourly-temp{ font-weight:600; }
-  .hourly-pop{ font-size:0.78rem; color:var(--muted); }
-  .hourly-wind{ font-size:0.78rem; color:var(--muted); display:flex; gap:6px; align-items:center; }
-  .wind-icon{ width:22px; height:22px; opacity:0.9; }
+  .hourly-item img{ width:88px; height:88px; } /* larger icons */
+  .hourly-time{ opacity:0.9; font-size:1.6rem; }
+  .hourly-temp{ font-weight:700; font-size:1.8rem; }
+  .hourly-pop{ font-size:1.2rem; color:var(--muted); }
+  .hourly-wind{ font-size:1.2rem; color:var(--muted); display:flex; gap:8px; align-items:center; }
+  .wind-icon{ width:36px; height:36px; opacity:0.95; }
 
   /* 5-day condensed */
-  #weatherDaily{ margin-top:6px; }
+  #weatherDaily{ margin-top:10px; }
   .forecast-row{
     display:flex;
     align-items:center;
-    gap:8px;
-    padding:4px 0;
+    gap:12px;
+    padding:8px 0;
     border-bottom:1px solid rgba(255,255,255,0.06);
-    font-size:0.88rem;
+    font-size:1.4rem; /* larger */
     line-height:1.05;
   }
   .forecast-row:last-child{ border-bottom:none; }
-  .forecast-day{ width:48px; opacity:0.9; font-weight:600; }
-  .forecast-icon{ width:44px; flex:0 0 44px; text-align:center; }
-  .forecast-icon img{ width:36px; height:36px; }
-  .forecast-temps{ width:86px; text-align:right; font-weight:600; }
-  .forecast-pop{ width:44px; text-align:right; color:var(--muted); font-size:0.82rem; }
-  .forecast-wind{ width:72px; text-align:right; color:var(--muted); font-size:0.82rem; display:flex; gap:6px; justify-content:flex-end; align-items:center; }
-  .wind-icon-small{ width:18px; height:18px; opacity:0.85; }
+  .forecast-day{ width:80px; opacity:0.95; font-weight:700; font-size:1.5rem; }
+  .forecast-icon{ width:72px; flex:0 0 72px; text-align:center; }
+  .forecast-icon img{ width:64px; height:64px; }
+  .forecast-temps{ width:150px; text-align:right; font-weight:700; font-size:1.4rem; }
+  .forecast-pop{ width:80px; text-align:right; color:var(--muted); font-size:1.2rem; }
+  .forecast-wind{ width:140px; text-align:right; color:var(--muted); font-size:1.2rem; display:flex; gap:8px; justify-content:flex-end; align-items:center; }
+  .wind-icon-small{ width:28px; height:28px; opacity:0.9; }
 
   /* Trend arrow */
   .trend {
     display:inline-block;
-    margin-left:8px;
-    font-size:1.05rem;
+    margin-left:12px;
+    font-size:1.6rem;
     opacity:0.95;
   }
 
@@ -164,25 +188,33 @@
   .temp-low-deep{ color:#4fa3ff; } /* low <32 */
   .muted { color:var(--muted); }
 
-  /* Calendar & events (unchanged) */
-  .events-list{ margin-top:10px; }
-  .event{ padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
-  .event-main{ display:flex; gap:8px; align-items:center; }
-  .event-dot{ width:10px; height:10px; border-radius:50%; }
-  .event-time{ min-width:70px; font-weight:600; }
-  .event-details{ display:none; padding-left:26px; opacity:0.8; font-size:0.9rem; }
+  /* Calendar & events */
+  .calendar-summary{ font-size:1.6rem; opacity:0.95; margin-bottom:8px; }
+  .calendar-updated{ display:none; } /* removed per request */
+  .now-next-later{ margin-top:8px; font-size:1.5rem; }
+  .nnl-label{ font-weight:700; font-size:1.4rem; }
+  .nnl-text{ font-size:1.4rem; color:var(--muted); }
+
+  .events-list{ margin-top:12px; }
+  .event{ padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; font-size:1.5rem; }
+  .event-main{ display:flex; gap:12px; align-items:center; }
+  .event-dot{ width:14px; height:14px; border-radius:50%; }
+  .event-time{ min-width:100px; font-weight:700; font-size:1.4rem; }
+  .event-details{ display:none; padding-left:36px; opacity:0.85; font-size:1.3rem; }
   .event.expanded .event-details{ display:block; }
 
   /* shortcuts */
-  .shortcuts{ display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
-  .shortcut-btn{ min-width:180px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:8px; align-items:center; justify-content:center; }
+  .shortcuts{ display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
+  .shortcut-btn{ min-width:220px; padding:16px 18px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; display:flex; gap:12px; align-items:center; justify-content:center; font-size:1.4rem; }
 </style>
 </head>
 <body>
   <div class="page">
     <div class="top-banner">
-      <div><i data-feather="clock"></i> <span id="topTime">--</span></div>
-      <div><i data-feather="refresh-cw"></i> <span id="topUpdated">--</span></div>
+      <div>
+        <div id="topTime">--</div>
+        <div id="vehicleLabel">Tesla Model 3 Performance</div>
+      </div>
     </div>
 
     <div class="grid">
@@ -201,7 +233,7 @@
 
           <div id="weatherDaily"></div>
 
-          <div class="insight" id="weatherInsight"></div>
+          <div class="insight" id="weatherInsight" style="font-size:1.6rem; margin-top:12px;"></div>
         </div>
       </div>
 
@@ -210,16 +242,16 @@
         <div class="card">
           <div class="card-header"><i data-feather="calendar"></i><span>Today’s Schedule</span></div>
           <div class="calendar-summary" id="calendarSummary">Loading your day…</div>
-          <div class="calendar-updated" id="calendarUpdated"></div>
+          <div class="calendar-updated" id="calendarUpdated" style="display:none;"></div>
           <div class="now-next-later" id="nowNextLater"></div>
         </div>
 
-        <div class="card" style="margin-top:16px;">
+        <div class="card" style="margin-top:18px;">
           <div class="card-header"><i data-feather="list"></i><span>All Events Today & Tomorrow</span></div>
           <div class="events-list" id="calendarEvents">Loading events…</div>
         </div>
 
-        <div class="card" style="margin-top:16px;">
+        <div class="card" style="margin-top:18px;">
           <div class="card-header"><i data-feather="zap"></i><span>Shortcuts</span></div>
           <div class="shortcuts">
             <button class="shortcut-btn" onclick="window.location.href='https://us83.tribalwars.us/game.php?village=2878&screen=main'"><i data-feather="target"></i> Game</button>
@@ -234,11 +266,12 @@
 <script>
 feather.replace();
 
-// Clock
+// Clock — larger and prominent
 function updateTime(){
   const now = new Date();
-  document.getElementById('topTime').textContent = now.toLocaleDateString([], { weekday:'long', month:'short', day:'numeric' }) + ' | ' + now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
-  feather.replace();
+  const dateStr = now.toLocaleDateString([], { weekday:'long', month:'long', day:'numeric' });
+  const timeStr = now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+  document.getElementById('topTime').textContent = `${dateStr}  |  ${timeStr}`;
 }
 setInterval(updateTime,1000);
 updateTime();
@@ -281,10 +314,7 @@ function openWeatherIconUrl(iconCode) {
   return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
 }
 
-/* ICON HELPERS
-   - Animated for current + hourly: /production/animated/{key}.svg
-   - Static colorful for daily: /production/fill/all/{key}.svg
-*/
+/* ICON HELPERS */
 function meteoconAnimated(iconCode){
   const map = {
     "01d":"clear-day","01n":"clear-night","02d":"partly-cloudy-day","02n":"partly-cloudy-night",
@@ -308,7 +338,7 @@ function meteoconStatic(iconCode){
   return `https://basmilius.github.io/weather-icons/production/fill/all/${key}.svg`;
 }
 
-/* Wind icon helpers (animated for hourly, static small for daily) */
+/* Wind icon helpers */
 function windIconAnimated(speed){
   const b = Math.min(12, Math.max(0, Math.round(speed / 5)));
   return `https://basmilius.github.io/weather-icons/production/animated/wind-beaufort-${b}.svg`;
@@ -363,7 +393,7 @@ async function loadWeather(){
     renderHourly(forecast);
     renderForecast(forecast);
 
-    document.getElementById('topUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+    // topUpdated removed per request — no update text on right
     document.getElementById('weatherInsight').textContent = generateWeatherNarrative(current, forecast);
   }catch(err){
     console.error('Weather load error', err);
@@ -537,7 +567,7 @@ function renderForecast(data){
   });
 }
 
-/* --- Calendar code (unchanged from previous working version) --- */
+/* --- Calendar code (unchanged) --- */
 const CALENDARS = [
   { name: "Personal", key: "personal", url: "https://calendar.google.com/calendar/ical/pskandelmail%40gmail.com/private-3f860a04fb0570102688170b52564c42/basic.ics", color: "#4f9cff" },
   { name: "Kenyon", key: "kenyon", url: "https://pskandel1431.github.io/tesla-dashboard/calendars/kenyon.ics", color: "#9b59b6" },
@@ -645,15 +675,16 @@ function renderCalendar(events){
   function renderSection(title, list){
     const header = document.createElement('div');
     header.style.margin = '12px 0 6px';
-    header.style.fontWeight = '600';
-    header.style.opacity = '0.85';
+    header.style.fontWeight = '700';
+    header.style.opacity = '0.95';
+    header.style.fontSize = '1.6rem';
     header.textContent = title;
     container.appendChild(header);
 
     if(list.length === 0){
       const empty = document.createElement('div');
       empty.style.opacity = '0.6';
-      empty.style.fontSize = '0.9rem';
+      empty.style.fontSize = '1.4rem';
       empty.textContent = 'No events.';
       container.appendChild(empty);
       return;
@@ -671,7 +702,7 @@ function renderCalendar(events){
           <span class="event-time">${timeLabel}</span>
           <span class="event-title">${ev.title}</span>
         </div>
-        <div class="event-source">${cal ? cal.name : ''}</div>
+        <div class="event-source" style="font-size:1.2rem; opacity:0.8;">${cal ? cal.name : ''}</div>
         <div class="event-details">${ev.end ? 'Ends at ' + ev.end.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : ''}</div>
       `;
       div.addEventListener('click', ()=> div.classList.toggle('expanded'));
