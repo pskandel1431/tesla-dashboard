@@ -3,7 +3,7 @@
 <title>Paul's Dashboard</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap">
 <style>
 /* Layout: car-cluster grid. Left = next-up hero + countdowns, center = today's timeline, right = priorities + to-dos. Dark only, by choice (in-car screen). */
 :root{
@@ -142,6 +142,68 @@ button{cursor:pointer;border:0;background:none}
 @media (max-width:700px){.grid{grid-template-columns:minmax(0,1fr)} .clock{font-size:44px} .big .v{font-size:60px} .big .sep{font-size:46px;padding-bottom:18px} .hero .title{font-size:30px} .addform{grid-template-columns:1fr} .ev{grid-template-columns:70px 6px minmax(0,1fr) auto}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+<style>
+/* ===== Glass theme: frosted panels over a deep cabin-dark backdrop, thin type, one cool accent ===== */
+:root{
+  --bg:#07090c; --panel:rgba(255,255,255,.055); --panel-2:rgba(255,255,255,.06); --line:rgba(255,255,255,.09);
+  --fg:#f2f4f7; --dim:rgba(235,240,247,.58); --faint:rgba(235,240,247,.32);
+  --accent:#4f8cff; --accent-ink:#fff; --blue:#4f8cff; --red:#ff5a5f; --green:#43d19e; --amber:#ffb547;
+  --display:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:22px; --glass:blur(22px) saturate(150%);
+}
+body{
+  background:
+    radial-gradient(1100px 700px at 12% -10%,rgba(79,140,255,.16),transparent 60%),
+    radial-gradient(900px 600px at 100% 110%,rgba(120,90,255,.10),transparent 60%),
+    linear-gradient(180deg,#0b0e13 0%,#06070a 100%) fixed;
+  font-weight:400;letter-spacing:.005em;
+}
+.panel,.wx,.hero{
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+  border:1px solid var(--line);border-top-color:rgba(255,255,255,.16);
+  -webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.7);border-radius:var(--r);
+}
+.hero{background:linear-gradient(160deg,rgba(79,140,255,.16),rgba(255,255,255,.04) 55%)}
+.label{font:500 12px/1 var(--body);letter-spacing:.16em;color:var(--dim)}
+.prihead{color:var(--red)}
+/* type: big and thin */
+.greet{font:400 18px/1.2 var(--body);color:var(--dim);letter-spacing:.01em}
+.clock{font:200 64px/1 var(--display);letter-spacing:-.02em}
+.date{font-weight:300}
+.hero .when{font:500 15px/1.2 var(--body);color:var(--accent);letter-spacing:.06em}
+.hero .title{font:400 34px/1.15 var(--display);letter-spacing:-.01em}
+.big .v{font:200 92px/.9 var(--display);letter-spacing:-.03em}
+.big .sep{font:200 64px/1 var(--display);color:var(--faint)}
+.wx .temp{font:200 60px/1 var(--display);letter-spacing:-.03em}
+.sun .row,.fd .hl,.ev .tm,.cd .t{font-family:var(--display);font-weight:300}
+.cd .t{font-size:32px;letter-spacing:-.01em}
+.ev .tm{font-size:22px}
+.ev .nm{font-weight:500}
+.task .tt{font-weight:500}
+/* surfaces inside panels */
+.ev,.task,.cd,.fd{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.05);border-radius:16px}
+.ev .bar{width:4px;border-radius:2px;opacity:.9}
+.ev.now{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.45)}
+.ev .go{background:rgba(255,255,255,.07);border:0;border-radius:50%}
+.nowline{color:var(--accent)} .nowline::after{background:linear-gradient(90deg,var(--accent),transparent)}
+/* controls: pills */
+.chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);font-weight:500;color:var(--fg)}
+.chip b{font-weight:600}
+.btn{border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.08);font-weight:500}
+.btn.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 8px 24px -8px rgba(79,140,255,.7)}
+.cd.add{background:transparent;border:1px dashed rgba(255,255,255,.14)}
+.addform input{background:rgba(0,0,0,.35);border-color:var(--line);border-radius:14px}
+.task .box{border-width:2px}
+.p2{--p:var(--amber)} .p2 .tag{background:rgba(255,181,71,.16);color:var(--amber)}
+.tag{border-radius:999px;padding:6px 10px}
+.sun .track{background:rgba(255,255,255,.08)} .sun .fill{background:linear-gradient(90deg,#ffd27a,var(--amber))}
+.scrim{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.sheet{background:rgba(22,26,34,.82);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--line);border-radius:26px}
+.sheet h3{font:400 34px/1.15 var(--display)}
+@media (max-width:700px){.clock{font-size:48px}.big .v{font-size:62px}.big .sep{font-size:44px}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,.wx,.hero,.sheet{background:#12161d}}
+</style>
 
 </head><body>
 <div class="wrap">
@@ -205,7 +267,7 @@ import { expandIcs } from "/cal.js";
 const $=s=>document.querySelector(s);
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const NAME="Paul";
-const COLORS={blue:"var(--blue)",green:"var(--green)",orange:"var(--accent)",red:"var(--red)"};
+const COLORS={blue:"var(--blue)",green:"var(--green)",orange:"var(--amber)",red:"var(--red)"};
 
 // ---- state ----
 let EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
