@@ -280,7 +280,7 @@ const NAME="Paul";
 const COLORS={blue:"var(--blue)",green:"var(--green)",orange:"var(--amber)",red:"var(--red)"};
 
 // ---- state ----
-let EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
+let GEO=null,EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
 const yr=new Date().getFullYear();
 let cds=store.get("cds",[
   {id:"a",n:"Thanksgiving",d:new Date(yr,10,26,15,0).toISOString()},
@@ -320,7 +320,8 @@ async function load(){
     }));
     EVENTS=lists.flat().sort((a,b)=>a.start.localeCompare(b.start)).map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
     TASKS=j.tasks;errors=errs;lastLoad=new Date();
-    if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx();setRadar()}
+    const want=GEO||j.place;
+    if(!PLACE||PLACE.lat!==want.lat||PLACE.lon!==want.lon){PLACE=want;loadWx();setRadar()}
   }catch(e){errors=[navigator.onLine===false?"Offline, showing last data":(e.message||"Couldn't load data")]}
   heroSig="";wxSig="";renderAll();
 }
@@ -336,6 +337,16 @@ async function loadWx(){
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
   }catch{}
   wxSig="";
+}
+// Use the car's GPS when the browser allows it; fall back to the server's PLACE
+function km(a,b){const r=Math.PI/180,x=(b.lon-a.lon)*r*Math.cos((a.lat+b.lat)*r/2),y=(b.lat-a.lat)*r;return Math.hypot(x,y)*6371}
+function locate(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(p=>{
+    const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
+    if(GEO&&km(GEO,g)<5)return;
+    GEO=g;if(!PLACE||km(PLACE,g)>=5){PLACE=g;loadWx();setRadar()}
+  },()=>{},{maximumAge:5*60e3,timeout:15e3});
 }
 // Animated radar (RainViewer) centered on PLACE
 function setRadar(){
@@ -514,7 +525,7 @@ function tick(){const n=new Date();
   if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderStatus()}
 }
 renderAll();setInterval(tick,1000);
-load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
+locate();setInterval(locate,10*60e3);load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
 (async()=>{try{await navigator.wakeLock?.request("screen")}catch{}})();
 })();
