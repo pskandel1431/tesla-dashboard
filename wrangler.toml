@@ -9,9 +9,9 @@ run_worker_first = true
 
 [vars]
 # Location for weather + sunrise/sunset
-LAT = "42.2043"
-LON = "-72.6162"
-PLACE = "Western Mass."
+LAT = "42.2587"
+LON = "-72.5743"
+PLACE = "South Hadley"
 TZ = "America/New_York"
 
 # Secrets (set with `npx wrangler secret put NAME`, never commit):

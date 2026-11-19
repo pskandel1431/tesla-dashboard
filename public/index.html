@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap">
 <style>
-/* Layout: car-cluster grid. Left = next-up hero + countdowns, center = today's timeline, right = priorities + to-dos. Dark only, by choice (in-car screen). */
+/* Layout: car-cluster grid. Left = next-countdown hero + other countdowns, center = today's timeline, right = priorities + to-dos. Dark only, by choice (in-car screen). */
 :root{
   --bg:#0b0e13; --panel:#141922; --panel-2:#1b2230; --line:#262f40;
   --fg:#e9edf3; --dim:#8a96aa; --faint:#5b6578;
@@ -208,9 +208,41 @@ body{
 #radarOpen{color:var(--accent);text-decoration:none}
 @media (max-width:700px){.clock{font-size:48px}.big .v{font-size:62px}.big .sep{font-size:44px}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,.wx,.hero,.sheet{background:#12161d}}
+
+/* ===== Live sky: backdrop follows time of day (sun position) and current weather ===== */
+#sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#0b1226,#05070d);transition:background 3s}
+#sky .l{position:absolute;inset:0;opacity:0;transition:opacity 3s}
+#sky .stars{background:
+  radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 27% 42%,#fff,transparent),
+  radial-gradient(1.5px 1.5px at 41% 12%,#fff,transparent),radial-gradient(1px 1px at 58% 30%,#fff,transparent),
+  radial-gradient(1px 1px at 69% 8%,#fff,transparent),radial-gradient(1.5px 1.5px at 83% 24%,#fff,transparent),
+  radial-gradient(1px 1px at 92% 46%,#fff,transparent),radial-gradient(1px 1px at 6% 55%,#fff,transparent),
+  radial-gradient(1px 1px at 35% 62%,#fff,transparent),radial-gradient(1.5px 1.5px at 76% 58%,#fff,transparent);
+  background-size:600px 400px}
+#sky .glow{background:radial-gradient(900px 500px at var(--sx,80%) var(--sy,100%),var(--sun,rgba(255,170,90,.35)),transparent 70%)}
+#sky .clouds{background:
+  radial-gradient(600px 160px at 20% 20%,rgba(200,210,225,.20),transparent 70%),
+  radial-gradient(700px 180px at 70% 12%,rgba(200,210,225,.18),transparent 70%),
+  radial-gradient(800px 220px at 45% 40%,rgba(200,210,225,.12),transparent 70%),
+  linear-gradient(180deg,rgba(110,120,135,.45),rgba(60,66,78,.35))}
+#sky .rain::before,#sky .snow::before{content:"";position:absolute;left:0;right:0;top:-240px;bottom:0;animation:fall .7s linear infinite}
+#sky .rain::before{background:repeating-linear-gradient(100deg,transparent 0 22px,rgba(190,210,240,.30) 22px 24px);background-size:240px 240px}
+#sky .snow::before{background:
+  radial-gradient(2px 2px at 20px 30px,rgba(255,255,255,.8),transparent),radial-gradient(2.5px 2.5px at 120px 90px,rgba(255,255,255,.7),transparent),
+  radial-gradient(2px 2px at 200px 170px,rgba(255,255,255,.8),transparent),radial-gradient(1.5px 1.5px at 70px 200px,rgba(255,255,255,.7),transparent);
+  background-size:240px 240px;animation-duration:6s}
+#sky .fog{background:linear-gradient(180deg,rgba(180,185,195,.10),rgba(180,185,195,.30))}
+#sky .flash{background:rgba(220,230,255,.5);animation:flash 9s infinite}
+#sky .scrim{background:rgba(4,6,10,var(--scrim,.0));opacity:1}
+#sky.stars .stars,#sky.glow .glow,#sky.clouds .clouds,#sky.rain .rain,#sky.snow .snow,#sky.fog .fog{opacity:1}
+#sky.storm .flash{opacity:1}
+@keyframes fall{to{transform:translateY(240px)}}
+@keyframes flash{0%,93%,95%,97%,100%{opacity:0}94%,96%{opacity:1}}
+@media (prefers-reduced-motion:reduce){#sky *,#sky *::before{animation:none!important}}
 </style>
 
 </head><body>
+<div id="sky" aria-hidden="true"><div class="l glow"></div><div class="l stars"></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l scrim"></div></div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -222,8 +254,6 @@ body{
       <span class="chip"><b id="evCount">0</b> events today</span>
       <span class="chip"><b id="taskCount">0</b> open to-dos</span>
       <a class="chip" href="https://claude.ai/artifact/BnXgH6d4iX7XVEZwdoz3Ei" target="_blank" rel="noopener">Chief of Staff</a>
-      <a class="chip" href="https://dash.tessie.com/" target="_blank" rel="noopener">Tessie</a>
-      <a class="chip" href="https://us83.tribalwars.us/game.php?village=2878&amp;screen=main" target="_blank" rel="noopener">Game</a>
       <button class="chip" id="status" title="Tap to refresh">Loading…</button>
     </div>
   </header>
@@ -280,7 +310,7 @@ const NAME="Paul";
 const COLORS={blue:"var(--blue)",green:"var(--green)",orange:"var(--amber)",red:"var(--red)"};
 
 // ---- state ----
-let EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
+let GEO=null,EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
 const yr=new Date().getFullYear();
 let cds=store.get("cds",[
   {id:"a",n:"Thanksgiving",d:new Date(yr,10,26,15,0).toISOString()},
@@ -320,7 +350,8 @@ async function load(){
     }));
     EVENTS=lists.flat().sort((a,b)=>a.start.localeCompare(b.start)).map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
     TASKS=j.tasks;errors=errs;lastLoad=new Date();
-    if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx();setRadar()}
+    const want=GEO||j.place;
+    if(!PLACE||PLACE.lat!==want.lat||PLACE.lon!==want.lon){PLACE=want;loadWx();setRadar()}
   }catch(e){errors=[navigator.onLine===false?"Offline, showing last data":(e.message||"Couldn't load data")]}
   heroSig="";wxSig="";renderAll();
 }
@@ -336,6 +367,16 @@ async function loadWx(){
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
   }catch{}
   wxSig="";
+}
+// Use the car's GPS when the browser allows it; fall back to the server's PLACE
+function km(a,b){const r=Math.PI/180,x=(b.lon-a.lon)*r*Math.cos((a.lat+b.lat)*r/2),y=(b.lat-a.lat)*r;return Math.hypot(x,y)*6371}
+function locate(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(p=>{
+    const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
+    if(GEO&&km(GEO,g)<5)return;
+    GEO=g;if(!PLACE||km(PLACE,g)>=5){PLACE=g;loadWx();setRadar()}
+  },()=>{},{maximumAge:5*60e3,timeout:15e3});
 }
 // Animated radar (RainViewer) centered on PLACE
 function setRadar(){
@@ -388,24 +429,45 @@ function renderWx(n){
   <div class="fc">${WX?WX.days.map((d,i)=>`<div class="fd"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join(""):""}</div>`;
 }
 
-// ---- hero: next appointment ----
+// ---- live sky background ----
+const SKY={night:["#0a1124","#05070d",0,"rgba(90,110,180,.12)"],dawn:["#2a2f5c","#b8667a",.30,"rgba(255,160,110,.45)"],
+  day:["#2563b0","#7fb0de",.5,"rgba(255,240,200,.30)"],dusk:["#2a1f4a","#c8604a",.30,"rgba(255,140,80,.50)"]};
+let skySig="";
+function setSky(n){
+  let ph;
+  if(PLACE){const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon),m=45*60e3;
+    ph=Math.abs(n-rise)<m?"dawn":Math.abs(n-set)<m?"dusk":(n>rise&&n<set)?"day":"night";}
+  else{const h=n.getHours();ph=h<6||h>=19?"night":h<8?"dawn":h>=17?"dusk":"day"}
+  const ic=WX?.icon||"",cond=WX?.cond||"";
+  const wet=ic==="rain",snow=ic==="snow",fog=cond==="Fog",cloudy=ic==="cloud"||wet||snow||fog;
+  const cls=[cloudy||ic==="pcloud"?"clouds":"",wet?"rain":"",snow?"snow":"",fog?"fog":"",cond==="Thunderstorms"?"storm":"",
+    ph==="night"&&!cloudy?"stars":"",ph!=="night"&&!cloudy?"glow":""].filter(Boolean).join(" ");
+  const sig=ph+cls;if(sig===skySig)return;skySig=sig;
+  const [top,bot,scrim,sun]=SKY[ph],el=$("#sky");
+  el.className=cls;
+  el.style.background=`linear-gradient(180deg,${top} 0%,${bot} 100%)`;
+  el.style.setProperty("--scrim",cloudy&&ph==="day"?scrim+.08:scrim);
+  el.style.setProperty("--sun",sun);
+  el.style.setProperty("--sx",ph==="dawn"?"15%":ph==="dusk"?"85%":"50%");
+  el.style.setProperty("--sy",ph==="day"?"-10%":"105%");
+}
+// ---- hero: soonest upcoming custom countdown ----
 const timed=()=>EVENTS.filter(e=>!e.allDay);
-function nextEvent(n){return timed().filter(e=>e.e>n).sort((a,b)=>a.s-b.s)[0]}
-let heroSig="";
+let heroSig="",heroId=null;
 function renderHero(n){
-  const ev=nextEvent(n);const h=$("#hero");
-  if(!ev){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next up</div><p class="title">${lastLoad?"Nothing else scheduled":"Loading calendar…"}</p>`}return}
-  const live=ev.s<=n,x=split((live?ev.e:ev.s)-n);
-  const sig=[EVENTS.indexOf(ev),live,!!x.d].join();
+  const h=$("#hero");
+  const c=cds.filter(c=>new Date(c.d)>n).sort((a,b)=>new Date(a.d)-new Date(b.d))[0];
+  heroId=c?c.id:null;
+  if(!c){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next countdown</div><p class="title">No upcoming countdowns</p>`}return}
+  const d=new Date(c.d),x=split(d-n);
+  const sig=[c.id,c.n,c.d,!!x.d].join();
   // With days left, show D:HH:MM so it fits on one line; otherwise HH:MM:SS.
   const segs=x.d?[[x.d,"days"],[pad(x.h),"hrs"],[pad(x.m),"min"]]:[[pad(x.h),"hrs"],[pad(x.m),"min"],[pad(x.s),"sec"]];
   if(sig===heroSig){h.querySelectorAll(".v").forEach((el,i)=>el.textContent=segs[i][0]);return}
   heroSig=sig;
-  h.innerHTML=`<div class="label">${live?"Happening now · ends in":"Next appointment in"}</div>
+  h.innerHTML=`<div class="label">Next countdown</div>
   <div class="big">${segs.map(([v,u])=>`<div class="seg"><span class="v">${v}</span><span class="u">${u}</span></div>`).join('<span class="sep">:</span>')}</div>
-  <div><div class="when">${x.d||ev.s.toDateString()!==n.toDateString()?ev.s.toLocaleDateString([], {weekday:"short"})+" ":""}${fmtT(ev.s)} – ${fmtT(ev.e)}</div><p class="title">${esc(ev.title)}</p>${ev.location?`<div class="loc">${esc(ev.location)}</div>`:""}</div>
-  <div class="btnrow">${ev.location?`<a class="btn primary" href="${gmaps(ev.location)}" target="_blank" rel="noopener">${PIN}Open in Maps</a>`:""}
-  <button class="btn" data-ev="${EVENTS.indexOf(ev)}">Details</button></div>`;
+  <div><p class="title">${esc(c.n)}</p><div class="when">${d.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${fmtT(d)}</div></div>`;
 }
 
 // ---- timeline (today + tomorrow) ----
@@ -459,7 +521,7 @@ async function toggleTask(id){
 // ---- countdowns ----
 let cdSig="";
 function renderCds(n){
-  const list=[...cds].sort((a,b)=>new Date(a.d)-new Date(b.d));
+  const list=cds.filter(c=>c.id!==heroId).sort((a,b)=>new Date(a.d)-new Date(b.d));
   const sig=list.map(c=>c.id).join();
   if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
   cdSig=sig;
@@ -510,11 +572,11 @@ function tick(){const n=new Date();
   $("#clock").textContent=n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
   const hr=n.getHours();$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`;
   $("#date").textContent=n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
-  renderHero(n);renderCds(n);renderWx(n);
+  renderHero(n);renderCds(n);renderWx(n);setSky(n);
   if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderStatus()}
 }
 renderAll();setInterval(tick,1000);
-load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
+locate();setInterval(locate,10*60e3);load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
 (async()=>{try{await navigator.wakeLock?.request("screen")}catch{}})();
 })();
