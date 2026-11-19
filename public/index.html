@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap">
 <style>
-/* Layout: car-cluster grid. Left = next-up hero + countdowns, center = today's timeline, right = priorities + to-dos. Dark only, by choice (in-car screen). */
+/* Layout: car-cluster grid. Left = next-countdown hero + other countdowns, center = today's timeline, right = priorities + to-dos. Dark only, by choice (in-car screen). */
 :root{
   --bg:#0b0e13; --panel:#141922; --panel-2:#1b2230; --line:#262f40;
   --fg:#e9edf3; --dim:#8a96aa; --faint:#5b6578;
@@ -397,24 +397,23 @@ function renderWx(n){
   <div class="fc">${WX?WX.days.map((d,i)=>`<div class="fd"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join(""):""}</div>`;
 }
 
-// ---- hero: next appointment ----
+// ---- hero: soonest upcoming custom countdown ----
 const timed=()=>EVENTS.filter(e=>!e.allDay);
-function nextEvent(n){return timed().filter(e=>e.e>n).sort((a,b)=>a.s-b.s)[0]}
-let heroSig="";
+let heroSig="",heroId=null;
 function renderHero(n){
-  const ev=nextEvent(n);const h=$("#hero");
-  if(!ev){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next up</div><p class="title">${lastLoad?"Nothing else scheduled":"Loading calendar…"}</p>`}return}
-  const live=ev.s<=n,x=split((live?ev.e:ev.s)-n);
-  const sig=[EVENTS.indexOf(ev),live,!!x.d].join();
+  const h=$("#hero");
+  const c=cds.filter(c=>new Date(c.d)>n).sort((a,b)=>new Date(a.d)-new Date(b.d))[0];
+  heroId=c?c.id:null;
+  if(!c){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next countdown</div><p class="title">No upcoming countdowns</p>`}return}
+  const d=new Date(c.d),x=split(d-n);
+  const sig=[c.id,c.n,c.d,!!x.d].join();
   // With days left, show D:HH:MM so it fits on one line; otherwise HH:MM:SS.
   const segs=x.d?[[x.d,"days"],[pad(x.h),"hrs"],[pad(x.m),"min"]]:[[pad(x.h),"hrs"],[pad(x.m),"min"],[pad(x.s),"sec"]];
   if(sig===heroSig){h.querySelectorAll(".v").forEach((el,i)=>el.textContent=segs[i][0]);return}
   heroSig=sig;
-  h.innerHTML=`<div class="label">${live?"Happening now · ends in":"Next appointment in"}</div>
+  h.innerHTML=`<div class="label">Next countdown</div>
   <div class="big">${segs.map(([v,u])=>`<div class="seg"><span class="v">${v}</span><span class="u">${u}</span></div>`).join('<span class="sep">:</span>')}</div>
-  <div><div class="when">${x.d||ev.s.toDateString()!==n.toDateString()?ev.s.toLocaleDateString([], {weekday:"short"})+" ":""}${fmtT(ev.s)} – ${fmtT(ev.e)}</div><p class="title">${esc(ev.title)}</p>${ev.location?`<div class="loc">${esc(ev.location)}</div>`:""}</div>
-  <div class="btnrow">${ev.location?`<a class="btn primary" href="${gmaps(ev.location)}" target="_blank" rel="noopener">${PIN}Open in Maps</a>`:""}
-  <button class="btn" data-ev="${EVENTS.indexOf(ev)}">Details</button></div>`;
+  <div><p class="title">${esc(c.n)}</p><div class="when">${d.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${fmtT(d)}</div></div>`;
 }
 
 // ---- timeline (today + tomorrow) ----
@@ -468,7 +467,7 @@ async function toggleTask(id){
 // ---- countdowns ----
 let cdSig="";
 function renderCds(n){
-  const list=[...cds].sort((a,b)=>new Date(a.d)-new Date(b.d));
+  const list=cds.filter(c=>c.id!==heroId).sort((a,b)=>new Date(a.d)-new Date(b.d));
   const sig=list.map(c=>c.id).join();
   if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
   cdSig=sig;
