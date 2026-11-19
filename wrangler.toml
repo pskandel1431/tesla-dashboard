@@ -1,0 +1,21 @@
+name = "tesla-dashboard"
+main = "src/worker.js"
+compatibility_date = "2025-06-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[vars]
+# Location for weather + sunrise/sunset
+LAT = "42.2043"
+LON = "-72.6162"
+PLACE = "Western Mass."
+TZ = "America/New_York"
+
+# Secrets (set with `npx wrangler secret put NAME`, never commit):
+#   DASH_PASSWORD   password you type once in the car
+#   SESSION_SECRET  long random string used to sign the login cookie
+#   CALENDARS       JSON: [{"name":"Personal","url":"<private iCal URL>","color":"blue"}, ...]
+#   TODOIST_TOKEN   Todoist > Settings > Integrations > Developer > API token
