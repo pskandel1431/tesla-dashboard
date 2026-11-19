@@ -1,5 +1,3 @@
-import ICAL from "ical.js";
-
 const COOKIE = "dash_session";
 const SESSION_DAYS = 365;
 const enc = new TextEncoder();
@@ -39,67 +37,23 @@ p{color:#ff5d5d;margin:0}</style></head><body><form method="post" action="/login
 <button type="submit">Unlock</button></form></body></html>`, { status: err ? 401 : 200, headers: { "content-type": "text/html; charset=utf-8" } });
 
 // ---------- calendars ----------
-function expandIcs(text, from, to, cal) {
-  const root = new ICAL.Component(ICAL.parse(text));
-  for (const tz of root.getAllSubcomponents("vtimezone")) {
-    try { ICAL.TimezoneService.register(new ICAL.Timezone(tz)); } catch {}
-  }
-  const masters = new Map(), exceptions = [];
-  for (const ve of root.getAllSubcomponents("vevent")) {
-    const ev = new ICAL.Event(ve);
-    if (ev.isRecurrenceException()) exceptions.push(ev); else masters.set(ev.uid, ev);
-  }
-  for (const ex of exceptions) masters.get(ex.uid)?.relateException(ex);
-
-  const out = [];
-  const push = (item, s, e) => {
-    if ((item.component.getFirstPropertyValue("status") || "").toUpperCase() === "CANCELLED") return;
-    const start = s.toJSDate(), end = (e || s).toJSDate();
-    if (end <= from || start >= to) return;
-    const allDay = s.isDate; // all-day: send plain dates so the car shows them on the right local day
-    out.push({
-      title: item.summary || "(No title)",
-      start: allDay ? s.toString() : start.toISOString(),
-      end: allDay ? (e || s).toString() : end.toISOString(), allDay,
-      location: item.location || "", notes: (item.description || "").slice(0, 600),
-      cal: cal.name, color: cal.color || "blue",
-    });
-  };
-  for (const ev of masters.values()) {
-    if (!ev.isRecurring()) { push(ev, ev.startDate, ev.endDate); continue; }
-    const it = ev.iterator();
-    let next, guard = 0;
-    while ((next = it.next()) && guard++ < 20000) {
-      const jd = next.toJSDate();
-      if (jd >= to) break;
-      const d = ev.getOccurrenceDetails(next);
-      push(d.item, d.startDate, d.endDate);
-    }
-  }
-  return out;
-}
-
-async function getEvents(env) {
-  let cals;
+function getCalendars(env) {
   try {
     // Accept phone-typed curly quotes too.
-    cals = JSON.parse((env.CALENDARS || "[]").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2018\u2019]/g, "'"));
-    if (!Array.isArray(cals)) cals = [cals];
+    const raw = (env.CALENDARS || "[]").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2018\u2019]/g, "'");
+    const cals = JSON.parse(raw);
+    return { cals: Array.isArray(cals) ? cals : [cals], errors: [] };
   } catch (e) {
-    return { events: [], errors: [`CALENDARS isn't valid JSON (${e.message})`] };
+    return { cals: [], errors: [`CALENDARS isn't valid JSON (${e.message})`] };
   }
-  const from = new Date(Date.now() - 36 * 36e5), to = new Date(Date.now() + 4 * 864e5);
-  const results = await Promise.all(cals.map(async cal => {
-    try {
-      const r = await fetch(cal.url, { cf: { cacheTtl: 300, cacheEverything: true } });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return { events: expandIcs(await r.text(), from, to, cal) };
-    } catch (e) { return { events: [], error: `${cal.name}: ${e.message}` }; }
-  }));
-  return {
-    events: results.flatMap(r => r.events).sort((a, b) => a.start.localeCompare(b.start)),
-    errors: results.filter(r => r.error).map(r => r.error),
-  };
+}
+// Stream one calendar's iCal feed through, so the secret URL never reaches the browser.
+async function proxyCalendar(env, i) {
+  const cal = getCalendars(env).cals[i];
+  if (!cal?.url) return json({ error: "No such calendar" }, 404);
+  const r = await fetch(cal.url, { cf: { cacheTtl: 300, cacheEverything: true } });
+  if (!r.ok) return json({ error: `${cal.name}: HTTP ${r.status}` }, 502);
+  return new Response(r.body, { headers: { "content-type": "text/calendar; charset=utf-8", "cache-control": "private, max-age=240" } });
 }
 
 // ---------- Todoist ----------
@@ -176,17 +130,16 @@ export default {
     }
 
     if (url.pathname === "/api/data") {
-      let cal, td;
-      try {
-        [cal, td] = await Promise.all([getEvents(env), getTasks(env)]);
-      } catch (e) {
-        return json({ error: `Server error: ${e.message}` }, 500);
-      }
+      const { cals, errors } = getCalendars(env);
+      const td = await getTasks(env);
       return json({
-        events: cal.events, tasks: td.tasks, errors: [...cal.errors, ...td.errors],
+        calendars: cals.map((c, i) => ({ id: i, name: c.name || `Calendar ${i + 1}`, color: c.color || "blue" })),
+        tasks: td.tasks, errors: [...errors, ...td.errors],
         place: { name: env.PLACE, lat: +env.LAT, lon: +env.LON }, generated: new Date().toISOString(),
       });
     }
+    const c = url.pathname.match(/^\/api\/cal\/(\d+)$/);
+    if (c) return proxyCalendar(env, +c[1]);
     const m = url.pathname.match(/^\/api\/tasks\/([\w-]+)\/(close|reopen)$/);
     if (m && req.method === "POST") return setTask(env, m[1], m[2]);
 
@@ -194,4 +147,3 @@ export default {
   },
 };
 
-export { expandIcs }; // for local tests
