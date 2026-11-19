@@ -201,6 +201,11 @@ body{
 .scrim{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .sheet{background:rgba(22,26,34,.82);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--line);border-radius:26px}
 .sheet h3{font:400 34px/1.15 var(--display)}
+/* Long lists scroll inside their panel instead of stretching the page */
+#todos,#pri{max-height:520px;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+.radar-frame{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:rgba(0,0,0,.35)}
+.radar-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#radarOpen{color:var(--accent);text-decoration:none}
 @media (max-width:700px){.clock{font-size:48px}.big .v{font-size:62px}.big .sep{font-size:44px}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,.wx,.hero,.sheet{background:#12161d}}
 </style>
@@ -254,6 +259,10 @@ body{
       <div class="panel">
         <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
         <div class="pri" id="todos"></div>
+      </div>
+      <div class="panel radar">
+        <h2 class="label">Radar <a class="count" id="radarOpen" href="#" target="_blank" rel="noopener">Open full screen</a></h2>
+        <div class="radar-frame"><iframe id="radar" title="Weather radar" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
       </div>
     </section>
   </main>
@@ -310,7 +319,7 @@ async function load(){
     }));
     EVENTS=lists.flat().sort((a,b)=>a.start.localeCompare(b.start)).map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
     TASKS=j.tasks;errors=errs;lastLoad=new Date();
-    if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx()}
+    if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx();setRadar()}
   }catch(e){errors=[navigator.onLine===false?"Offline, showing last data":(e.message||"Couldn't load data")]}
   heroSig="";wxSig="";renderAll();
 }
@@ -326,6 +335,11 @@ async function loadWx(){
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
   }catch{}
   wxSig="";
+}
+// Animated radar (RainViewer) centered on PLACE
+function setRadar(){
+  const u=`https://www.rainviewer.com/map.html?loc=${PLACE.lat.toFixed(2)},${PLACE.lon.toFixed(2)}&z=7&overlay=radar&product=radar&opacity=0.75&play=true`;
+  $("#radar").src=u;$("#radarOpen").href=u;
 }
 function wcode(c){
   if(c===0)return{icon:"sun",cond:"Clear"};
@@ -382,13 +396,12 @@ function renderHero(n){
   if(!ev){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next up</div><p class="title">${lastLoad?"Nothing else scheduled":"Loading calendar…"}</p>`}return}
   const live=ev.s<=n,x=split((live?ev.e:ev.s)-n);
   const sig=[EVENTS.indexOf(ev),live,!!x.d].join();
-  if(sig===heroSig){const vals=(x.d?[x.d]:[]).concat([pad(x.h),pad(x.m),pad(x.s)]);h.querySelectorAll(".v").forEach((el,i)=>el.textContent=vals[i]);return}
+  // With days left, show D:HH:MM so it fits on one line; otherwise HH:MM:SS.
+  const segs=x.d?[[x.d,"days"],[pad(x.h),"hrs"],[pad(x.m),"min"]]:[[pad(x.h),"hrs"],[pad(x.m),"min"],[pad(x.s),"sec"]];
+  if(sig===heroSig){h.querySelectorAll(".v").forEach((el,i)=>el.textContent=segs[i][0]);return}
   heroSig=sig;
   h.innerHTML=`<div class="label">${live?"Happening now · ends in":"Next appointment in"}</div>
-  <div class="big">${x.d?`<div class="seg"><span class="v">${x.d}</span><span class="u">days</span></div><span class="sep">:</span>`:""}
-    <div class="seg"><span class="v">${pad(x.h)}</span><span class="u">hrs</span></div><span class="sep">:</span>
-    <div class="seg"><span class="v">${pad(x.m)}</span><span class="u">min</span></div><span class="sep">:</span>
-    <div class="seg"><span class="v">${pad(x.s)}</span><span class="u">sec</span></div></div>
+  <div class="big">${segs.map(([v,u])=>`<div class="seg"><span class="v">${v}</span><span class="u">${u}</span></div>`).join('<span class="sep">:</span>')}</div>
   <div><div class="when">${x.d||ev.s.toDateString()!==n.toDateString()?ev.s.toLocaleDateString([], {weekday:"short"})+" ":""}${fmtT(ev.s)} – ${fmtT(ev.e)}</div><p class="title">${esc(ev.title)}</p>${ev.location?`<div class="loc">${esc(ev.location)}</div>`:""}</div>
   <div class="btnrow">${ev.location?`<a class="btn primary" href="${gmaps(ev.location)}" target="_blank" rel="noopener">${PIN}Open in Maps</a>`:""}
   <button class="btn" data-ev="${EVENTS.indexOf(ev)}">Details</button></div>`;
@@ -428,12 +441,12 @@ function taskHTML(t){const done=pending.has(t.id);return`<button class="task p${
 function renderTasks(){
   const by=(a,b)=>((dueDays(a)??999)-(dueDays(b)??999))||a.p-b.p;
   const hi=TASKS.filter(t=>t.p===1).sort(by);
-  // To-dos: overdue, due in the next 7 days, or P2; capped to stay glanceable
-  const rest=TASKS.filter(t=>t.p!==1&&((dueDays(t)!=null&&dueDays(t)<=7)||t.p===2)).sort(by);
-  $("#pri").innerHTML=hi.slice(0,8).map(taskHTML).join("")||`<div class="empty">${lastLoad?"No P1 tasks.":"Loading…"}</div>`;
-  $("#todos").innerHTML=rest.slice(0,12).map(taskHTML).join("")||`<div class="empty">${lastLoad?"Nothing due this week.":"Loading…"}</div>`;
+  // To-dos: every open non-P1 task, soonest due first (undated last)
+  const rest=TASKS.filter(t=>t.p!==1).sort(by);
+  $("#pri").innerHTML=hi.map(taskHTML).join("")||`<div class="empty">${lastLoad?"No P1 tasks.":"Loading…"}</div>`;
+  $("#todos").innerHTML=rest.map(taskHTML).join("")||`<div class="empty">${lastLoad?"No open to-dos.":"Loading…"}</div>`;
   $("#priCount").textContent=`${hi.length} open`;
-  $("#todoCount").textContent=rest.length>12?`12 of ${rest.length}`:`${rest.length} open`;
+  $("#todoCount").textContent=`${rest.length} open`;
   $("#taskCount").textContent=TASKS.length-pending.size;
 }
 async function toggleTask(id){
