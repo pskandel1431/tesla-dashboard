@@ -87,6 +87,29 @@ async function setTask(env, id, action) {
   return new Response(null, { status: r.ok ? 204 : 502 });
 }
 
+async function snoozeTask(env, id) {
+  const r = await fetch(`${TD}/tasks/${encodeURIComponent(id)}`, {
+    method: "POST", headers: { Authorization: `Bearer ${env.TODOIST_TOKEN}`, "content-type": "application/json" },
+    body: JSON.stringify({ due_string: "tomorrow" }),
+  });
+  return new Response(null, { status: r.ok ? 204 : 502 });
+}
+
+// ---------- synced countdowns (one Durable Object holds the list) ----------
+export class Store {
+  constructor(state) { this.state = state; }
+  async fetch(req) {
+    if (req.method === "PUT") {
+      const body = await req.text();
+      let v; try { v = JSON.parse(body); } catch { return new Response("bad json", { status: 400 }); }
+      if (!Array.isArray(v) || body.length > 20000) return new Response("bad list", { status: 400 });
+      await this.state.storage.put("cds", v);
+      return new Response(null, { status: 204 });
+    }
+    return Response.json((await this.state.storage.get("cds")) ?? null, { headers: { "cache-control": "no-store" } });
+  }
+}
+
 // ---------- router ----------
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
@@ -142,6 +165,12 @@ export default {
     if (c) return proxyCalendar(env, +c[1]);
     const m = url.pathname.match(/^\/api\/tasks\/([\w-]+)\/(close|reopen)$/);
     if (m && req.method === "POST") return setTask(env, m[1], m[2]);
+    const sz = url.pathname.match(/^\/api\/tasks\/([\w-]+)\/snooze$/);
+    if (sz && req.method === "POST") return snoozeTask(env, sz[1]);
+    if (url.pathname === "/api/cds") {
+      if (!env.STORE) return json(null);
+      return env.STORE.get(env.STORE.idFromName("main")).fetch(req);
+    }
 
     return env.ASSETS.fetch(req);
   },
