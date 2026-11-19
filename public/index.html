@@ -199,7 +199,8 @@ button{cursor:pointer;border:0;background:none}
 
 <div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
-<script>
+<script type="module">
+import { expandIcs } from "/cal.js";
 (()=>{
 const $=s=>document.querySelector(s);
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
@@ -235,8 +236,18 @@ async function load(){
     if(r.status===401){location.href="/login";return}
     let j;try{j=await r.json()}catch{throw new Error(`Server returned ${r.status}`)}
     if(!r.ok||j.error)throw new Error(j.error||`Server returned ${r.status}`);
-    EVENTS=j.events.map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
-    TASKS=j.tasks;errors=j.errors||[];lastLoad=new Date();
+    const errs=[...(j.errors||[])];
+    // Window: yesterday through 4 days out. Parsing happens here, not on the server.
+    const from=new Date(Date.now()-36*36e5),to=new Date(Date.now()+4*864e5);
+    const lists=await Promise.all(j.calendars.map(async c=>{
+      try{
+        const cr=await fetch(`/api/cal/${c.id}`);
+        if(!cr.ok){let m=`${c.name}: HTTP ${cr.status}`;try{m=(await cr.json()).error||m}catch{}throw new Error(m)}
+        return expandIcs(await cr.text(),from,to,c);
+      }catch(e){errs.push(e.message.startsWith(c.name)?e.message:`${c.name}: ${e.message}`);return[]}
+    }));
+    EVENTS=lists.flat().sort((a,b)=>a.start.localeCompare(b.start)).map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
+    TASKS=j.tasks;errors=errs;lastLoad=new Date();
     if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx()}
   }catch(e){errors=[navigator.onLine===false?"Offline, showing last data":(e.message||"Couldn't load data")]}
   heroSig="";wxSig="";renderAll();

@@ -2,14 +2,14 @@
 
 Personal dashboard for the Tesla in-car browser: next-appointment countdown, today/tomorrow calendar with tap-to-Maps, Todoist priorities and to-dos, weather, sunrise/sunset, custom countdowns.
 
-Runs as one Cloudflare Worker (free tier). The Worker serves the page behind a password, fetches Google Calendar (private iCal links) and Todoist server-side, and never stores calendar data in this repo. Weather comes from Open-Meteo (no key).
+Runs as one Cloudflare Worker (free tier). The Worker serves the page behind a password, proxies Google Calendar (private iCal links, never sent to the browser) and Todoist, and never stores calendar data in this repo. Calendar parsing runs in the browser (`public/cal.js`) because the free plan allows ~10 ms CPU per request. Weather comes from Open-Meteo (no key).
 
 ## Setup (one time)
 
 1. **Reset your iCal links.** Google Calendar → Settings → each calendar → *Integrate calendar* → *Reset* next to "Secret address in iCal format". Copy the new links. (The old ones were public in this repo's history.)
 2. **Todoist token.** Todoist → Settings → Integrations → Developer → copy API token.
 3. **Deploy.** Cloudflare dashboard → Workers & Pages → Create → *Import a repository* → pick `tesla-dashboard`, branch `main`. Leave build command empty; deploy command `npx wrangler deploy`.
-4. **Secrets.** In the Worker → Settings → Variables and Secrets, add these as type *Secret*:
+4. **Secrets.** In the Worker → Settings → Build → Variables and secrets, add these (the build uploads them to the Worker; deploy command must be `npm run deploy`):
    - `DASH_PASSWORD`: what you'll type in the car
    - `SESSION_SECRET`: any long random string (e.g. 40+ characters)
    - `TODOIST_TOKEN`: from step 2
