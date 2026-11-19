@@ -37,3 +37,7 @@ npm run dev                      # http://localhost:8787
 - Tapping a to-do completes it in Todoist (tap again to undo). P1 tasks show under High priority; the to-do list shows P2 plus anything due within 7 days.
 - Custom countdowns are saved in the car browser's local storage.
 - The browser can open Google Maps, but can't send a destination to the car's built-in navigation.
+
+## Changing settings later
+
+Secrets live in **Settings → Build → Variables and secrets** and are uploaded on each build. After adding or changing one (e.g. `TODOIST_TOKEN`), push any change to `main` to rebuild; "Retry build" only appears on failed builds.
