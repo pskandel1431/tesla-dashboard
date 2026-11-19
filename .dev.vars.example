@@ -1,0 +1,4 @@
+DASH_PASSWORD=change-me
+SESSION_SECRET=any-long-random-string
+TODOIST_TOKEN=
+CALENDARS=[{"name":"Personal","url":"https://calendar.google.com/calendar/ical/.../basic.ics","color":"blue"}]

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paul's Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: car-cluster grid. Left = next-up hero + countdowns, center = today's timeline, right = priorities + to-dos. Dark only, by choice (in-car screen). */
+:root{
+  --bg:#0b0e13; --panel:#141922; --panel-2:#1b2230; --line:#262f40;
+  --fg:#e9edf3; --dim:#8a96aa; --faint:#5b6578;
+  --accent:#f2a33a; --accent-ink:#1a1206; --blue:#5aa9ff; --red:#ff5d5d; --green:#3fcf8e;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px; --tap:64px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 var(--body);-webkit-tap-highlight-color:transparent}
+.wrap{padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px;min-height:100%}
+button,a{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.label{font:600 13px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+
+/* weather band */
+.wx{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:28px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
+.wx .now{display:flex;align-items:center;gap:14px}
+.wx .now svg{width:56px;height:56px;flex:none}
+.wx .temp{font:700 54px/1 var(--display);font-variant-numeric:tabular-nums}
+.wx .cond{font-weight:600;font-size:17px}
+.wx .sub2{color:var(--dim);font-size:14px;margin-top:2px}
+.sun{display:flex;flex-direction:column;gap:8px;min-width:220px}
+.sun .row{display:flex;justify-content:space-between;gap:16px;font:600 20px/1 var(--display);font-variant-numeric:tabular-nums}
+.sun .row span{display:flex;align-items:center;gap:6px}
+.sun .row small{font:500 12px var(--body);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.sun .track{position:relative;height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden}
+.sun .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#f6c453,var(--accent))}
+.sun .left{font-size:13px;color:var(--dim)}
+.fc{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.fd{background:var(--panel-2);border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.fd .d{font:600 13px var(--body);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.fd svg{width:32px;height:32px}
+.fd .hl{font:600 18px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fd .hl span{color:var(--dim)}
+.fd .pp{font-size:12px;color:var(--blue);min-height:15px}
+@media (max-width:1100px){.wx{grid-template-columns:auto minmax(0,1fr)} .wx .fc{grid-column:1/-1}}
+@media (max-width:700px){.wx{grid-template-columns:minmax(0,1fr)} .fc{grid-template-columns:repeat(5,minmax(56px,1fr));overflow-x:auto}}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.clock{font:700 56px/1 var(--display);letter-spacing:.01em}
+.greet{font:600 22px/1.2 var(--display);color:var(--accent);letter-spacing:.02em;margin-bottom:4px}
+.date{color:var(--dim);font-size:18px;margin-top:4px}
+.weather-ish{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:500;color:var(--dim)}
+.chip b{color:var(--fg)}
+.chip.warn{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+.chip{text-decoration:none}
+.empty{color:var(--faint);font-size:16px;padding:8px 2px}
+.allday{display:flex;flex-wrap:wrap;gap:8px}
+.allday .chip{color:var(--fg);min-height:48px}
+.demo{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.3fr) minmax(0,1fr);gap:18px;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel h2{margin:0;display:flex;justify-content:space-between;align-items:center;gap:12px}
+
+/* hero */
+.hero{background:linear-gradient(160deg,#1d2638 0%,var(--panel) 70%);border-color:#2c3a55}
+.hero .when{font:600 20px/1.2 var(--display);color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.hero .title{font:700 38px/1.1 var(--display);text-wrap:balance;margin:0}
+.big{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.big .seg{display:flex;flex-direction:column;align-items:flex-start}
+.big .v{font:700 84px/0.9 var(--display);font-variant-numeric:tabular-nums}
+.big .u{font:600 13px/1 var(--body);letter-spacing:.12em;color:var(--dim);margin-top:6px;text-transform:uppercase}
+.big .sep{font:700 64px/1 var(--display);color:var(--faint);padding-bottom:22px}
+.hero .loc{color:var(--dim);font-size:17px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:var(--tap);padding:0 22px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);font-weight:600;font-size:18px;text-decoration:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn svg{width:22px;height:22px;flex:none}
+.leave{font-size:16px;color:var(--fg);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);padding:10px 14px;border-radius:10px}
+
+/* countdowns */
+.cds{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cd{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:96px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;text-align:left;position:relative}
+.cd .n{font-weight:600;font-size:15px;color:var(--dim);padding-right:28px}
+.cd .t{font:700 34px/1 var(--display);font-variant-numeric:tabular-nums}
+.cd .t small{font:600 15px var(--body);color:var(--dim);margin-left:4px}
+.cd .x{position:absolute;top:4px;right:4px;width:40px;height:40px;border-radius:8px;color:var(--faint);font-size:22px}
+.cd.add{align-items:center;justify-content:center;border-style:dashed;color:var(--dim);font-weight:600;font-size:17px}
+.addform{display:grid;grid-template-columns:1fr 1fr auto;gap:10px}
+.addform input{min-height:56px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:500 17px var(--body);min-width:0}
+
+/* timeline */
+.tl{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.ev{display:grid;grid-template-columns:86px 6px minmax(0,1fr) auto;gap:14px;align-items:center;min-height:var(--tap);padding:12px 14px;border-radius:12px;background:var(--panel-2);border:1px solid transparent;text-align:left;width:100%}
+.ev .tm{font:600 22px/1 var(--display);font-variant-numeric:tabular-nums}
+.ev .tm small{display:block;font:500 13px var(--body);color:var(--dim);margin-top:4px}
+.ev .bar{align-self:stretch;border-radius:3px;background:var(--c,var(--blue))}
+.ev .nm{font-weight:600;font-size:18px;overflow-wrap:anywhere}
+.ev .sub{color:var(--dim);font-size:14px;margin-top:2px;overflow-wrap:anywhere}
+.ev.past{opacity:.45}
+.ev.now{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel-2))}
+.ev .go{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:var(--bg);border:1px solid var(--line)}
+.ev .go svg{width:24px;height:24px}
+.daysep{margin-top:6px}
+.nowline{display:flex;align-items:center;gap:10px;color:var(--accent);font:600 13px var(--body);letter-spacing:.1em}
+.nowline::after{content:"";flex:1;height:2px;background:var(--accent);opacity:.6}
+
+/* tasks */
+.pri{display:flex;flex-direction:column;gap:10px}
+.task{display:flex;align-items:center;gap:14px;min-height:var(--tap);padding:10px 14px;border-radius:12px;background:var(--panel-2);width:100%;text-align:left}
+.task .box{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--p,var(--faint));flex:none;display:grid;place-items:center}
+.task.done .box{background:var(--p,var(--faint))}
+.task.done .box::after{content:"";width:12px;height:7px;border:3px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.task .tx{flex:1;min-width:0}
+.task .tt{font-weight:600;font-size:17px;overflow-wrap:anywhere}
+.task.done .tt{text-decoration:line-through;color:var(--faint)}
+.task .meta{font-size:13px;color:var(--dim);margin-top:2px}
+.task .meta .od{color:var(--red);font-weight:600}
+.tag{font:700 12px/1 var(--body);padding:6px 8px;border-radius:6px;letter-spacing:.06em;flex:none}
+.p1{--p:var(--red)} .p2{--p:var(--accent)} .p3{--p:var(--blue)}
+.p1 .tag{background:color-mix(in srgb,var(--red) 20%,transparent);color:var(--red)}
+.p2 .tag{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.prihead{color:var(--red)}
+.count{font:600 14px var(--body);color:var(--dim);letter-spacing:0;text-transform:none}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:min(720px,100%);max-height:90%;overflow:auto;padding:28px;display:flex;flex-direction:column;gap:16px}
+.sheet h3{font:700 36px/1.1 var(--display);margin:0;text-wrap:balance}
+.kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px 16px;font-size:17px}
+.kv dt{color:var(--dim)} .kv dd{margin:0;overflow-wrap:anywhere}
+
+@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .col.c3{grid-column:1/-1}}
+@media (max-width:700px){.grid{grid-template-columns:minmax(0,1fr)} .clock{font-size:44px} .big .v{font-size:60px} .big .sep{font-size:46px;padding-bottom:18px} .hero .title{font-size:30px} .addform{grid-template-columns:1fr} .ev{grid-template-columns:70px 6px minmax(0,1fr) auto}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head><body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="greet" id="greet">Hello, Paul</div>
+      <div class="clock num" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="weather-ish">
+      <span class="chip"><b id="evCount">0</b> events today</span>
+      <span class="chip"><b id="taskCount">0</b> open to-dos</span>
+      <a class="chip" href="https://dash.tessie.com/" target="_blank" rel="noopener">Tessie</a>
+      <a class="chip" href="https://us83.tribalwars.us/game.php?village=2878&amp;screen=main" target="_blank" rel="noopener">Game</a>
+      <button class="chip" id="status" title="Tap to refresh">Loading…</button>
+    </div>
+  </header>
+
+  <section class="wx" id="wx" aria-label="Weather"></section>
+
+  <main class="grid">
+    <section class="col">
+      <div class="panel hero" id="hero"></div>
+      <div class="panel">
+        <h2 class="label">Countdowns</h2>
+        <div class="cds" id="cds"></div>
+        <form class="addform" id="addform" hidden>
+          <input id="cdName" placeholder="Name (e.g. Vacation)" required>
+          <input id="cdDate" type="datetime-local" required>
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="panel" style="flex:1">
+        <h2 class="label">Today &amp; tomorrow</h2>
+        <div class="allday" id="allday"></div>
+        <div class="tl" id="tl"></div>
+      </div>
+    </section>
+
+    <section class="col c3">
+      <div class="panel">
+        <h2 class="label prihead">High priority <span class="count" id="priCount"></span></h2>
+        <div class="pri" id="pri"></div>
+      </div>
+      <div class="panel">
+        <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
+        <div class="pri" id="todos"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const NAME="Paul";
+const COLORS={blue:"var(--blue)",green:"var(--green)",orange:"var(--accent)",red:"var(--red)"};
+
+// ---- state ----
+let EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
+const yr=new Date().getFullYear();
+let cds=store.get("cds",[
+  {id:"a",n:"Thanksgiving",d:new Date(yr,10,26,15,0).toISOString()},
+  {id:"b",n:"Christmas",d:new Date(yr,11,25,8,0).toISOString()},
+]);
+
+// ---- helpers ----
+const fmtT=d=>d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+const pad=n=>String(n).padStart(2,"0");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const gmaps=q=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+const PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+const localDate=s=>{const [y,m,d]=s.slice(0,10).split("-").map(Number);return new Date(y,m-1,d)};
+const dayStart=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+function split(ms){ms=Math.max(0,ms);const s=Math.floor(ms/1000);return{d:Math.floor(s/86400),h:Math.floor(s%86400/3600),m:Math.floor(s%3600/60),s:s%60}}
+function short(ms){const x=split(ms);if(x.d>0)return`${x.d}<small>d</small> ${x.h}<small>h</small>`;if(x.h>0)return`${x.h}<small>h</small> ${x.m}<small>m</small>`;return`${x.m}<small>m</small> ${pad(x.s)}<small>s</small>`}
+const dueDays=t=>t.due==null?null:Math.round((localDate(t.due)-dayStart(new Date()))/864e5);
+const dueTxt=t=>{const d=dueDays(t);let s=d==null?"No date":d<0?`<span class="od">Overdue ${-d}d</span>`:d===0?"Today":d===1?"Tomorrow":`In ${d} days`;
+  if(t.due&&t.due.length>10)s+=` · ${fmtT(new Date(t.due))}`;return s};
+
+// ---- data ----
+async function load(){
+  try{
+    const r=await fetch("/api/data",{cache:"no-store"});
+    if(r.status===401){location.href="/login";return}
+    const j=await r.json();
+    EVENTS=j.events.map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
+    TASKS=j.tasks;errors=j.errors||[];lastLoad=new Date();
+    if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx()}
+  }catch(e){errors=["Offline, showing last data"]}
+  heroSig="";wxSig="";renderAll();
+}
+async function loadWx(){
+  if(!PLACE)return;
+  try{
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
+    const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
+    const dirs=["N","NE","E","SE","S","SW","W","NW"];
+    WX={temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),hum:c.relative_humidity_2m,
+      wind:`${dirs[Math.round(c.wind_direction_10m/45)%8]} ${Math.round(c.wind_speed_10m)} mph`,
+      ...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
+      days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
+  }catch{}
+  wxSig="";
+}
+function wcode(c){
+  if(c===0)return{icon:"sun",cond:"Clear"};
+  if(c<=2)return{icon:"pcloud",cond:c===1?"Mostly clear":"Partly cloudy"};
+  if(c===3)return{icon:"cloud",cond:"Overcast"};
+  if(c===45||c===48)return{icon:"cloud",cond:"Fog"};
+  if((c>=71&&c<=77)||c===85||c===86)return{icon:"snow",cond:"Snow"};
+  if(c>=95)return{icon:"rain",cond:"Thunderstorms"};
+  if(c>=51&&c<=57)return{icon:"rain",cond:"Drizzle"};
+  return{icon:"rain",cond:c>=80?"Showers":"Rain"};
+}
+
+// ---- weather + sun ----
+const IC={
+ sun:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="#f6c453"/><g stroke="#f6c453" stroke-width="3" stroke-linecap="round"><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.6 10.6l4.2 4.2M33.2 33.2l4.2 4.2M10.6 37.4l4.2-4.2M33.2 14.8l4.2-4.2"/></g></svg>',
+ pcloud:'<svg viewBox="0 0 48 48"><circle cx="18" cy="18" r="8" fill="#f6c453"/><path d="M16 38h20a8 8 0 0 0 0-16 11 11 0 0 0-20.6 4A6 6 0 0 0 16 38z" fill="#c9d3e3"/></svg>',
+ cloud:'<svg viewBox="0 0 48 48"><path d="M14 36h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 36z" fill="#a9b5c8"/></svg>',
+ rain:'<svg viewBox="0 0 48 48"><path d="M14 30h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 30z" fill="#a9b5c8"/><g stroke="#5aa9ff" stroke-width="3" stroke-linecap="round"><path d="M17 35l-2 6M25 35l-2 6M33 35l-2 6"/></g></svg>',
+ snow:'<svg viewBox="0 0 48 48"><path d="M14 30h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 30z" fill="#a9b5c8"/><g fill="#e9edf3"><circle cx="16" cy="38" r="2.5"/><circle cx="24" cy="41" r="2.5"/><circle cx="32" cy="38" r="2.5"/></g></svg>'};
+const SUNUP='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6c453" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 3v5M9 6l3-3 3 3"/></svg>';
+const SUNDN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f2a33a" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 3v5M9 5l3 3 3-3"/></svg>';
+// NOAA solar calc
+function sunTimes(date,lat,lon){
+  const rad=Math.PI/180,start=Date.UTC(date.getFullYear(),0,0),doy=Math.floor((Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())-start)/864e5);
+  const g=2*Math.PI/365*(doy-1);
+  const eqt=229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
+  const dec=0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g);
+  const ha=Math.acos(Math.cos(90.833*rad)/(Math.cos(lat*rad)*Math.cos(dec))-Math.tan(lat*rad)*Math.tan(dec))/rad;
+  const mk=min=>new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())+min*60000);
+  return{rise:mk(720-4*(lon+ha)-eqt),set:mk(720-4*(lon-ha)-eqt)};
+}
+let wxSig="";
+function renderWx(n){
+  if(!PLACE)return;
+  const sig=[n.getMinutes(),n.getDate(),!!WX].join(); if(sig===wxSig)return; wxSig=sig;
+  const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon);
+  const day=n>=rise&&n<set,pct=Math.min(100,Math.max(0,(n-rise)/(set-rise)*100));
+  const left=day?split(set-n):split((n<rise?rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise)-n);
+  const dn=(t,i)=>i===0?"Today":localDate(t).toLocaleDateString([], {weekday:"short"});
+  $("#wx").innerHTML=`${WX?`<div class="now">${IC[WX.icon]}<div><div class="temp">${WX.temp}°</div></div>
+    <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">${esc(PLACE.name)}</div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
+  <div class="sun"><div class="row"><span>${SUNUP}${fmtT(rise)}</span><span>${fmtT(set)}${SUNDN}</span></div>
+    <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+    <div class="left">${day?`Sunset in ${left.h}h ${left.m}m`:`Sunrise in ${left.h}h ${left.m}m`} · ${Math.round((set-rise)/36e5*10)/10}h of daylight</div></div>
+  <div class="fc">${WX?WX.days.map((d,i)=>`<div class="fd"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join(""):""}</div>`;
+}
+
+// ---- hero: next appointment ----
+const timed=()=>EVENTS.filter(e=>!e.allDay);
+function nextEvent(n){return timed().filter(e=>e.e>n).sort((a,b)=>a.s-b.s)[0]}
+let heroSig="";
+function renderHero(n){
+  const ev=nextEvent(n);const h=$("#hero");
+  if(!ev){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next up</div><p class="title">${lastLoad?"Nothing else scheduled":"Loading calendar…"}</p>`}return}
+  const live=ev.s<=n,x=split((live?ev.e:ev.s)-n);
+  const sig=[EVENTS.indexOf(ev),live,!!x.d].join();
+  if(sig===heroSig){const vals=(x.d?[x.d]:[]).concat([pad(x.h),pad(x.m),pad(x.s)]);h.querySelectorAll(".v").forEach((el,i)=>el.textContent=vals[i]);return}
+  heroSig=sig;
+  h.innerHTML=`<div class="label">${live?"Happening now · ends in":"Next appointment in"}</div>
+  <div class="big">${x.d?`<div class="seg"><span class="v">${x.d}</span><span class="u">days</span></div><span class="sep">:</span>`:""}
+    <div class="seg"><span class="v">${pad(x.h)}</span><span class="u">hrs</span></div><span class="sep">:</span>
+    <div class="seg"><span class="v">${pad(x.m)}</span><span class="u">min</span></div><span class="sep">:</span>
+    <div class="seg"><span class="v">${pad(x.s)}</span><span class="u">sec</span></div></div>
+  <div><div class="when">${x.d||ev.s.toDateString()!==n.toDateString()?ev.s.toLocaleDateString([], {weekday:"short"})+" ":""}${fmtT(ev.s)} – ${fmtT(ev.e)}</div><p class="title">${esc(ev.title)}</p>${ev.location?`<div class="loc">${esc(ev.location)}</div>`:""}</div>
+  <div class="btnrow">${ev.location?`<a class="btn primary" href="${gmaps(ev.location)}" target="_blank" rel="noopener">${PIN}Open in Maps</a>`:""}
+  <button class="btn" data-ev="${EVENTS.indexOf(ev)}">Details</button></div>`;
+}
+
+// ---- timeline (today + tomorrow) ----
+function renderTimeline(n){
+  const t0=dayStart(n),t2=new Date(t0.getTime()+2*864e5);
+  const inWin=e=>e.e>t0&&e.s<t2;
+  const all=EVENTS.filter(e=>e.allDay&&inWin(e)&&e.e>t0&&e.s<new Date(t0.getTime()+864e5));
+  $("#allday").innerHTML=all.map(e=>`<button class="chip" data-ev="${EVENTS.indexOf(e)}" style="border-color:${e.c}">${esc(e.title)}</button>`).join("");
+  const list=timed().filter(inWin).sort((a,b)=>a.s-b.s);
+  const today=n.toDateString();let html="",nowPlaced=false,lastDay=today;
+  list.forEach(ev=>{
+    const day=ev.s.toDateString();
+    if(day!==lastDay){if(!nowPlaced&&lastDay===today){html+=`<div class="nowline">NOW ${fmtT(n)}</div>`;nowPlaced=true}
+      html+=`<div class="label daysep">${ev.s.toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"})}</div>`;lastDay=day}
+    if(!nowPlaced&&ev.s>n&&day===today){html+=`<div class="nowline">NOW ${fmtT(n)}</div>`;nowPlaced=true}
+    const cls=ev.e<n?"past":ev.s<=n?"now":"";const t=fmtT(ev.s);
+    html+=`<div class="ev ${cls}" style="--c:${ev.c}" role="button" tabindex="0" data-ev="${EVENTS.indexOf(ev)}">
+      <div class="tm">${t.replace(/\s?[AP]M/i,"")}<small>${t.match(/[AP]M/i)?.[0]||""} · ${Math.round((ev.e-ev.s)/60000)}m</small></div>
+      <div class="bar"></div>
+      <div><div class="nm">${esc(ev.title)}</div>${ev.location?`<div class="sub">${esc(ev.location)}</div>`:`<div class="sub">${esc(ev.cal)}</div>`}</div>
+      ${ev.location?`<a class="go" href="${gmaps(ev.location)}" target="_blank" rel="noopener" aria-label="Open ${esc(ev.location)} in Maps">${PIN}</a>`:"<span></span>"}
+    </div>`;
+  });
+  if(!list.length)html=`<div class="empty">${lastLoad?"No timed events today or tomorrow.":"Loading…"}</div>`;
+  $("#tl").innerHTML=html;
+  $("#evCount").textContent=EVENTS.filter(e=>!e.allDay&&e.s.toDateString()===today).length;
+}
+
+// ---- tasks ----
+const pending=new Set();
+function taskHTML(t){const done=pending.has(t.id);return`<button class="task p${t.p} ${done?"done":""}" data-task="${t.id}">
+  <span class="box"></span><span class="tx"><div class="tt">${esc(t.title)}</div><div class="meta">${dueTxt(t)}</div></span>
+  ${t.p<3?`<span class="tag">P${t.p}</span>`:""}</button>`}
+function renderTasks(){
+  const by=(a,b)=>((dueDays(a)??999)-(dueDays(b)??999))||a.p-b.p;
+  const hi=TASKS.filter(t=>t.p===1).sort(by);
+  // To-dos: overdue, due in the next 7 days, or P2; capped to stay glanceable
+  const rest=TASKS.filter(t=>t.p!==1&&((dueDays(t)!=null&&dueDays(t)<=7)||t.p===2)).sort(by);
+  $("#pri").innerHTML=hi.slice(0,8).map(taskHTML).join("")||`<div class="empty">${lastLoad?"No P1 tasks.":"Loading…"}</div>`;
+  $("#todos").innerHTML=rest.slice(0,12).map(taskHTML).join("")||`<div class="empty">${lastLoad?"Nothing due this week.":"Loading…"}</div>`;
+  $("#priCount").textContent=`${hi.length} open`;
+  $("#todoCount").textContent=rest.length>12?`12 of ${rest.length}`:`${rest.length} open`;
+  $("#taskCount").textContent=TASKS.length-pending.size;
+}
+async function toggleTask(id){
+  const done=pending.has(id);done?pending.delete(id):pending.add(id);renderTasks();
+  try{const r=await fetch(`/api/tasks/${id}/${done?"reopen":"close"}`,{method:"POST"});if(!r.ok)throw 0}
+  catch{done?pending.add(id):pending.delete(id);errors=["Couldn't update Todoist"];renderTasks();renderStatus()}
+}
+
+// ---- countdowns ----
+let cdSig="";
+function renderCds(n){
+  const list=[...cds].sort((a,b)=>new Date(a.d)-new Date(b.d));
+  const sig=list.map(c=>c.id).join();
+  if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
+  cdSig=sig;
+  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;return`<div class="cd"><div class="n">${esc(c.n)}</div><div class="t">${ms>0?short(ms):"Now"}</div>
+    <button class="x" data-del="${c.id}" aria-label="Remove ${esc(c.n)}">×</button></div>`}).join("")+
+    `<button class="cd add" id="addBtn">+ Add countdown</button>`;
+}
+
+// ---- status ----
+function renderStatus(){
+  const el=$("#status");
+  if(errors.length){el.className="chip warn";el.textContent=errors[0]}
+  else{el.className="chip";el.textContent=lastLoad?`Updated ${fmtT(lastLoad)}`:"Loading…"}
+}
+
+// ---- detail sheet ----
+function openEvent(i){
+  const ev=EVENTS[i];
+  const when=ev.allDay?"All day":`${fmtT(ev.s)} – ${fmtT(ev.e)}`;
+  $("#sheet").innerHTML=`<div class="label">${ev.s.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"})} · ${esc(ev.cal)}</div>
+  <h3>${esc(ev.title)}</h3>
+  <dl class="kv"><dt>Time</dt><dd class="num">${when}</dd>
+  ${ev.location?`<dt>Where</dt><dd>${esc(ev.location)}</dd>`:""}
+  ${ev.notes?`<dt>Notes</dt><dd style="white-space:pre-line">${esc(ev.notes)}</dd>`:""}</dl>
+  <div class="btnrow">${ev.location?`<a class="btn primary" href="${gmaps(ev.location)}" target="_blank" rel="noopener">${PIN}Open in Maps</a>`:""}
+  <button class="btn" id="closeSheet">Close</button></div>`;
+  $("#scrim").hidden=false;
+}
+
+// ---- events ----
+document.addEventListener("click",e=>{
+  if(e.target.closest("a"))return;
+  const ev=e.target.closest("[data-ev]"); if(ev){openEvent(+ev.dataset.ev);return}
+  const tk=e.target.closest("[data-task]"); if(tk){toggleTask(tk.dataset.task);return}
+  const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);store.set("cds",cds);renderCds(new Date());return}
+  if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
+  if(e.target.closest("#status")){load();return}
+  if(e.target.id==="scrim"||e.target.closest("#closeSheet"))$("#scrim").hidden=true;
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#scrim").hidden=true;if(e.key==="Enter"&&e.target.matches(".ev"))openEvent(+e.target.dataset.ev)});
+$("#addform").addEventListener("submit",e=>{e.preventDefault();const n=$("#cdName").value.trim(),d=$("#cdDate").value;if(!n||!d)return;
+  cds.push({id:Date.now().toString(36),n,d:new Date(d).toISOString()});store.set("cds",cds);e.target.reset();e.target.hidden=true;renderCds(new Date())});
+
+// ---- tick ----
+let lastMin=-1;
+function renderAll(){lastMin=-1;renderTasks();tick()}
+function tick(){const n=new Date();
+  $("#clock").textContent=n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+  const hr=n.getHours();$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`;
+  $("#date").textContent=n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
+  renderHero(n);renderCds(n);renderWx(n);
+  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderStatus()}
+}
+renderAll();setInterval(tick,1000);
+load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+(async()=>{try{await navigator.wakeLock?.request("screen")}catch{}})();
+})();
+</script>
+</body></html>

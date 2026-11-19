@@ -1,0 +1,24 @@
+{
+  "name": "tesla-dashboard",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pskandel1431/tesla-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pskandel1431/tesla-dashboard/issues"
+  },
+  "homepage": "https://github.com/pskandel1431/tesla-dashboard#readme",
+  "dependencies": {
+    "ical.js": "^2.1.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.20.0"
+  },
+  "type": "module",
+  "private": true
+}
