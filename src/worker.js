@@ -80,7 +80,14 @@ function expandIcs(text, from, to, cal) {
 }
 
 async function getEvents(env) {
-  const cals = JSON.parse(env.CALENDARS || "[]");
+  let cals;
+  try {
+    // Accept phone-typed curly quotes too.
+    cals = JSON.parse((env.CALENDARS || "[]").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2018\u2019]/g, "'"));
+    if (!Array.isArray(cals)) cals = [cals];
+  } catch (e) {
+    return { events: [], errors: [`CALENDARS isn't valid JSON (${e.message})`] };
+  }
   const from = new Date(Date.now() - 36 * 36e5), to = new Date(Date.now() + 4 * 864e5);
   const results = await Promise.all(cals.map(async cal => {
     try {
@@ -169,7 +176,12 @@ export default {
     }
 
     if (url.pathname === "/api/data") {
-      const [cal, td] = await Promise.all([getEvents(env), getTasks(env)]);
+      let cal, td;
+      try {
+        [cal, td] = await Promise.all([getEvents(env), getTasks(env)]);
+      } catch (e) {
+        return json({ error: `Server error: ${e.message}` }, 500);
+      }
       return json({
         events: cal.events, tasks: td.tasks, errors: [...cal.errors, ...td.errors],
         place: { name: env.PLACE, lat: +env.LAT, lon: +env.LON }, generated: new Date().toISOString(),

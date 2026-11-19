@@ -233,11 +233,12 @@ async function load(){
   try{
     const r=await fetch("/api/data",{cache:"no-store"});
     if(r.status===401){location.href="/login";return}
-    const j=await r.json();
+    let j;try{j=await r.json()}catch{throw new Error(`Server returned ${r.status}`)}
+    if(!r.ok||j.error)throw new Error(j.error||`Server returned ${r.status}`);
     EVENTS=j.events.map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
     TASKS=j.tasks;errors=j.errors||[];lastLoad=new Date();
     if(!PLACE||PLACE.lat!==j.place.lat){PLACE=j.place;loadWx()}
-  }catch(e){errors=["Offline, showing last data"]}
+  }catch(e){errors=[navigator.onLine===false?"Offline, showing last data":(e.message||"Couldn't load data")]}
   heroSig="";wxSig="";renderAll();
 }
 async function loadWx(){
