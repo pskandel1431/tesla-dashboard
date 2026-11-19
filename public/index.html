@@ -201,6 +201,8 @@ body{
 .scrim{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .sheet{background:rgba(22,26,34,.82);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--line);border-radius:26px}
 .sheet h3{font:400 34px/1.15 var(--display)}
+/* Long lists scroll inside their panel instead of stretching the page */
+#todos,#pri{max-height:520px;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
 .radar-frame{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:rgba(0,0,0,.35)}
 .radar-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 #radarOpen{color:var(--accent);text-decoration:none}
@@ -439,12 +441,12 @@ function taskHTML(t){const done=pending.has(t.id);return`<button class="task p${
 function renderTasks(){
   const by=(a,b)=>((dueDays(a)??999)-(dueDays(b)??999))||a.p-b.p;
   const hi=TASKS.filter(t=>t.p===1).sort(by);
-  // To-dos: overdue, due in the next 7 days, or P2; capped to stay glanceable
-  const rest=TASKS.filter(t=>t.p!==1&&((dueDays(t)!=null&&dueDays(t)<=7)||t.p===2)).sort(by);
-  $("#pri").innerHTML=hi.slice(0,8).map(taskHTML).join("")||`<div class="empty">${lastLoad?"No P1 tasks.":"Loading…"}</div>`;
-  $("#todos").innerHTML=rest.slice(0,12).map(taskHTML).join("")||`<div class="empty">${lastLoad?"Nothing due this week.":"Loading…"}</div>`;
+  // To-dos: every open non-P1 task, soonest due first (undated last)
+  const rest=TASKS.filter(t=>t.p!==1).sort(by);
+  $("#pri").innerHTML=hi.map(taskHTML).join("")||`<div class="empty">${lastLoad?"No P1 tasks.":"Loading…"}</div>`;
+  $("#todos").innerHTML=rest.map(taskHTML).join("")||`<div class="empty">${lastLoad?"No open to-dos.":"Loading…"}</div>`;
   $("#priCount").textContent=`${hi.length} open`;
-  $("#todoCount").textContent=rest.length>12?`12 of ${rest.length}`:`${rest.length} open`;
+  $("#todoCount").textContent=`${rest.length} open`;
   $("#taskCount").textContent=TASKS.length-pending.size;
 }
 async function toggleTask(id){
