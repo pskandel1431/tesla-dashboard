@@ -206,43 +206,48 @@ body{
 .radar-frame{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:rgba(0,0,0,.35)}
 .radar-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 #radarOpen{color:var(--accent);text-decoration:none}
+.panel[hidden]{display:none}
+.wx{cursor:pointer}
+.wx .tap{color:var(--accent)}
+#radarHide{color:var(--accent);font:inherit;background:none;border:0;padding:8px 4px;cursor:pointer}
 @media (max-width:700px){.clock{font-size:48px}.big .v{font-size:62px}.big .sep{font-size:44px}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,.wx,.hero,.sheet{background:#12161d}}
 
 /* ===== Live sky: backdrop follows time of day (sun position) and current weather ===== */
 #sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#0b1226,#05070d);transition:background 3s}
 #sky .l{position:absolute;inset:0;opacity:0;transition:opacity 3s}
-#sky .stars{background:
-  radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 27% 42%,#fff,transparent),
-  radial-gradient(1.5px 1.5px at 41% 12%,#fff,transparent),radial-gradient(1px 1px at 58% 30%,#fff,transparent),
-  radial-gradient(1px 1px at 69% 8%,#fff,transparent),radial-gradient(1.5px 1.5px at 83% 24%,#fff,transparent),
-  radial-gradient(1px 1px at 92% 46%,#fff,transparent),radial-gradient(1px 1px at 6% 55%,#fff,transparent),
-  radial-gradient(1px 1px at 35% 62%,#fff,transparent),radial-gradient(1.5px 1.5px at 76% 58%,#fff,transparent);
-  background-size:600px 400px}
+#sky .stars canvas{position:absolute;inset:0;width:100%;height:100%}
+#sky.stars .stars canvas+canvas{animation:twinkle 4s ease-in-out infinite alternate}
+#sky .stars::after{content:"";position:absolute;inset:0}
+#sky .stars::after{background:radial-gradient(circle at 46% 9%,#f4f1e6 15px,transparent 16px),radial-gradient(circle at 46% 9%,rgba(240,235,210,.16),transparent 90px)}
+@keyframes twinkle{from{opacity:.35}to{opacity:1}}
 #sky .glow{background:radial-gradient(900px 500px at var(--sx,80%) var(--sy,100%),var(--sun,rgba(255,170,90,.35)),transparent 70%)}
 #sky .clouds{background:
   radial-gradient(600px 160px at 20% 20%,rgba(200,210,225,.20),transparent 70%),
   radial-gradient(700px 180px at 70% 12%,rgba(200,210,225,.18),transparent 70%),
   radial-gradient(800px 220px at 45% 40%,rgba(200,210,225,.12),transparent 70%),
   linear-gradient(180deg,rgba(110,120,135,.45),rgba(60,66,78,.35))}
-#sky .rain::before,#sky .snow::before{content:"";position:absolute;left:0;right:0;top:-240px;bottom:0;animation:fall .7s linear infinite}
+#sky .rain::before,#sky .snow::before{content:"";position:absolute;left:0;right:0;top:-240px;bottom:0}
+#sky.rain .rain::before{animation:fall .7s linear infinite}
+#sky.snow .snow::before{animation:fall 6s linear infinite}
 #sky .rain::before{background:repeating-linear-gradient(100deg,transparent 0 22px,rgba(190,210,240,.30) 22px 24px);background-size:240px 240px}
 #sky .snow::before{background:
   radial-gradient(2px 2px at 20px 30px,rgba(255,255,255,.8),transparent),radial-gradient(2.5px 2.5px at 120px 90px,rgba(255,255,255,.7),transparent),
   radial-gradient(2px 2px at 200px 170px,rgba(255,255,255,.8),transparent),radial-gradient(1.5px 1.5px at 70px 200px,rgba(255,255,255,.7),transparent);
-  background-size:240px 240px;animation-duration:6s}
+  background-size:240px 240px}
 #sky .fog{background:linear-gradient(180deg,rgba(180,185,195,.10),rgba(180,185,195,.30))}
-#sky .flash{background:rgba(220,230,255,.5);animation:flash 9s infinite}
-#sky .scrim{background:rgba(4,6,10,var(--scrim,.0));opacity:1}
+#sky .flash{background:rgba(220,230,255,.5)}
+#sky .shade{background:rgba(4,6,10,var(--scrim,.0));opacity:1}
 #sky.stars .stars,#sky.glow .glow,#sky.clouds .clouds,#sky.rain .rain,#sky.snow .snow,#sky.fog .fog{opacity:1}
-#sky.storm .flash{opacity:1}
+#sky.storm .flash{animation:flash 9s infinite}
+#sky.clouds.stars .stars{opacity:.45}
 @keyframes fall{to{transform:translateY(240px)}}
 @keyframes flash{0%,93%,95%,97%,100%{opacity:0}94%,96%{opacity:1}}
 @media (prefers-reduced-motion:reduce){#sky *,#sky *::before{animation:none!important}}
 </style>
 
 </head><body>
-<div id="sky" aria-hidden="true"><div class="l glow"></div><div class="l stars"></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l scrim"></div></div>
+<div id="sky" aria-hidden="true"><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -291,8 +296,8 @@ body{
         <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
         <div class="pri" id="todos"></div>
       </div>
-      <div class="panel radar">
-        <h2 class="label">Radar <a class="count" id="radarOpen" href="#" target="_blank" rel="noopener">Open full screen</a></h2>
+      <div class="panel radar" id="radarPanel" hidden>
+        <h2 class="label">Radar <span class="count"><a id="radarOpen" href="#" target="_blank" rel="noopener">Full screen</a> · <button id="radarHide" type="button">Hide</button></span></h2>
         <div class="radar-frame"><iframe id="radar" title="Weather radar" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
       </div>
     </section>
@@ -379,9 +384,17 @@ function locate(){
   },()=>{},{maximumAge:5*60e3,timeout:15e3});
 }
 // Animated radar (RainViewer) centered on PLACE
+let radarUrl="";
+// Radar stays hidden until the weather band is tapped; iframe only loads while shown
+function toggleRadar(show){
+  const p=$("#radarPanel");show=show??p.hidden;p.hidden=!show;
+  $("#radar").src=show?radarUrl:"about:blank";
+  if(show)p.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
 function setRadar(){
   const u=`https://www.rainviewer.com/map.html?loc=${PLACE.lat.toFixed(2)},${PLACE.lon.toFixed(2)}&z=7&overlay=radar&product=radar&opacity=0.75&play=true`;
-  $("#radar").src=u;$("#radarOpen").href=u;
+  radarUrl=u;$("#radarOpen").href=u;
+  if(!$("#radarPanel").hidden&&$("#radar").src!==u)$("#radar").src=u;
 }
 function wcode(c){
   if(c===0)return{icon:"sun",cond:"Clear"};
@@ -422,7 +435,7 @@ function renderWx(n){
   const left=day?split(set-n):split((n<rise?rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise)-n);
   const dn=(t,i)=>i===0?"Today":localDate(t).toLocaleDateString([], {weekday:"short"});
   $("#wx").innerHTML=`${WX?`<div class="now">${IC[WX.icon]}<div><div class="temp">${WX.temp}°</div></div>
-    <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">${esc(PLACE.name)}</div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
+    <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">${esc(PLACE.name)} · <span class="tap">Tap for radar</span></div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
   <div class="sun"><div class="row"><span>${SUNUP}${fmtT(rise)}</span><span>${fmtT(set)}${SUNDN}</span></div>
     <div class="track"><div class="fill" style="width:${pct}%"></div></div>
     <div class="left">${day?`Sunset in ${left.h}h ${left.m}m`:`Sunrise in ${left.h}h ${left.m}m`} · ${Math.round((set-rise)/36e5*10)/10}h of daylight</div></div>
@@ -432,7 +445,17 @@ function renderWx(n){
 // ---- live sky background ----
 const SKY={night:["#0a1124","#05070d",0,"rgba(90,110,180,.12)"],dawn:["#2a2f5c","#b8667a",.30,"rgba(255,160,110,.45)"],
   day:["#2563b0","#7fb0de",.5,"rgba(255,240,200,.30)"],dusk:["#2a1f4a","#c8604a",.30,"rgba(255,140,80,.50)"]};
-let skySig="";
+let skySig="",starW=0;
+function drawStars(){
+  const W=innerWidth,H=innerHeight,dpr=devicePixelRatio||1;if(W===starW)return;starW=W;
+  document.querySelectorAll("#sky .stars canvas").forEach((c,k)=>{
+    c.width=W*dpr;c.height=H*dpr;const g=c.getContext("2d");g.scale(dpr,dpr);g.fillStyle="#fff";
+    const n=k?Math.round(W*H/25000):Math.round(W*H/4500);
+    for(let i=0;i<n;i++){g.globalAlpha=k?.9+Math.random()*.1:.35+Math.random()*.55;g.beginPath();
+      g.arc(Math.random()*W,Math.random()*H*.85,k?1.1+Math.random()*.7:.4+Math.random()*.8,0,7);g.fill()}
+  });
+}
+addEventListener("resize",()=>{starW=0;if($("#sky").classList.contains("stars"))drawStars()});
 function setSky(n){
   let ph;
   if(PLACE){const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon),m=45*60e3;
@@ -441,8 +464,9 @@ function setSky(n){
   const ic=WX?.icon||"",cond=WX?.cond||"";
   const wet=ic==="rain",snow=ic==="snow",fog=cond==="Fog",cloudy=ic==="cloud"||wet||snow||fog;
   const cls=[cloudy||ic==="pcloud"?"clouds":"",wet?"rain":"",snow?"snow":"",fog?"fog":"",cond==="Thunderstorms"?"storm":"",
-    ph==="night"&&!cloudy?"stars":"",ph!=="night"&&!cloudy?"glow":""].filter(Boolean).join(" ");
+    ph==="night"&&!wet&&!snow&&!fog?"stars":"",ph!=="night"&&!cloudy?"glow":""].filter(Boolean).join(" ");
   const sig=ph+cls;if(sig===skySig)return;skySig=sig;
+  if(cls.includes("stars"))drawStars();
   const [top,bot,scrim,sun]=SKY[ph],el=$("#sky");
   el.className=cls;
   el.style.background=`linear-gradient(180deg,${top} 0%,${bot} 100%)`;
@@ -558,6 +582,8 @@ document.addEventListener("click",e=>{
   const tk=e.target.closest("[data-task]"); if(tk){toggleTask(tk.dataset.task);return}
   const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);store.set("cds",cds);renderCds(new Date());return}
   if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
+  if(e.target.closest("#radarHide")){toggleRadar(false);return}
+  if(e.target.closest("#wx")){toggleRadar();return}
   if(e.target.closest("#status")){load();return}
   if(e.target.id==="scrim"||e.target.closest("#closeSheet"))$("#scrim").hidden=true;
 });
