@@ -206,6 +206,11 @@ body{
 .radar-frame{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:rgba(0,0,0,.35)}
 .radar-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 #radarOpen{color:var(--accent);text-decoration:none}
+.fcst{padding:16px 20px;display:grid;gap:10px}
+.fcst .row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:16px;align-items:baseline}
+.fcst .when{font:500 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.fcst .txt{font-size:17px;line-height:1.45;color:var(--fg)}
+@media (max-width:700px){.fcst .row{grid-template-columns:minmax(0,1fr);gap:2px}}
 .panel[hidden]{display:none}
 .wx{cursor:pointer}
 .wx .tap{color:var(--accent)}
@@ -218,8 +223,7 @@ body{
 #sky .l{position:absolute;inset:0;opacity:0;transition:opacity 3s}
 #sky .stars canvas{position:absolute;inset:0;width:100%;height:100%}
 #sky.stars .stars canvas+canvas{animation:twinkle 4s ease-in-out infinite alternate}
-#sky .stars::after{content:"";position:absolute;inset:0}
-#sky .stars::after{background:radial-gradient(circle at 46% 9%,#f4f1e6 15px,transparent 16px),radial-gradient(circle at 46% 9%,rgba(240,235,210,.16),transparent 90px)}
+#moon{position:absolute;left:calc(46% - 20px);top:calc(9% - 20px);width:40px;height:40px;overflow:visible;filter:drop-shadow(0 0 18px rgba(240,235,210,.35))}
 @keyframes twinkle{from{opacity:.35}to{opacity:1}}
 #sky .glow{background:radial-gradient(900px 500px at var(--sx,80%) var(--sy,100%),var(--sun,rgba(255,170,90,.35)),transparent 70%)}
 #sky .clouds{background:
@@ -247,7 +251,7 @@ body{
 </style>
 
 </head><body>
-<div id="sky" aria-hidden="true"><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
+<div id="sky" aria-hidden="true"><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -263,6 +267,7 @@ body{
     </div>
   </header>
 
+  <section class="panel fcst" id="fcst" aria-label="Forecast" hidden></section>
   <section class="wx" id="wx" aria-label="Weather"></section>
 
   <main class="grid">
@@ -362,6 +367,7 @@ async function load(){
 }
 async function loadWx(){
   if(!PLACE)return;
+  loadFcst();
   try{
     const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
     const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
@@ -442,6 +448,28 @@ function renderWx(n){
   <div class="fc">${WX?WX.days.map((d,i)=>`<div class="fd"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join(""):""}</div>`;
 }
 
+// ---- moon phase (synodic month from a known new moon, 2000-01-06 18:14 UTC) ----
+function moonPhase(n){const syn=29.530588853,t=(n-Date.UTC(2000,0,6,18,14))/864e5;return((t%syn)+syn)%syn/syn}
+let moonSig="";
+function drawMoon(n){
+  const p=moonPhase(n),sig=Math.round(p*200);if(sig===moonSig)return;moonSig=sig;
+  const r=19,rx=Math.abs(Math.cos(2*Math.PI*p))*r,wax=p<.5;
+  const outer=wax?1:0,inner=wax?(p<.25?0:1):(p<.75?0:1);
+  $("#moonLit").setAttribute("d",`M0 ${-r}A${r} ${r} 0 0 ${outer} 0 ${r}A${rx.toFixed(2)} ${r} 0 0 ${inner} 0 ${-r}Z`);
+}
+// ---- plain-language forecast (National Weather Service) ----
+let nwsKey="",nwsUrl="";
+async function loadFcst(){
+  if(!PLACE)return;
+  try{
+    const key=PLACE.lat.toFixed(3)+","+PLACE.lon.toFixed(3);
+    if(key!==nwsKey){const pt=await (await fetch(`https://api.weather.gov/points/${PLACE.lat.toFixed(4)},${PLACE.lon.toFixed(4)}`)).json();nwsUrl=pt.properties.forecast;nwsKey=key}
+    const f=await (await fetch(nwsUrl)).json();
+    const per=f.properties.periods.slice(0,2);
+    const el=$("#fcst");el.hidden=false;
+    el.innerHTML=`<h2 class="label">Forecast</h2>`+per.map(x=>`<div class="row"><div class="when">${esc(x.name)}</div><div class="txt">${esc(x.detailedForecast)}</div></div>`).join("");
+  }catch{}
+}
 // ---- live sky background ----
 const SKY={night:["#0a1124","#05070d",0,"rgba(90,110,180,.12)"],dawn:["#2a2f5c","#b8667a",.30,"rgba(255,160,110,.45)"],
   day:["#2563b0","#7fb0de",.5,"rgba(255,240,200,.30)"],dusk:["#2a1f4a","#c8604a",.30,"rgba(255,140,80,.50)"]};
@@ -465,6 +493,7 @@ function setSky(n){
   const wet=ic==="rain",snow=ic==="snow",fog=cond==="Fog",cloudy=ic==="cloud"||wet||snow||fog;
   const cls=[cloudy||ic==="pcloud"?"clouds":"",wet?"rain":"",snow?"snow":"",fog?"fog":"",cond==="Thunderstorms"?"storm":"",
     ph==="night"&&!wet&&!snow&&!fog?"stars":"",ph!=="night"&&!cloudy?"glow":""].filter(Boolean).join(" ");
+  drawMoon(n);
   const sig=ph+cls;if(sig===skySig)return;skySig=sig;
   if(cls.includes("stars"))drawStars();
   const [top,bot,scrim,sun]=SKY[ph],el=$("#sky");
