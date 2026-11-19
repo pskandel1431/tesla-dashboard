@@ -19,3 +19,12 @@ TZ = "America/New_York"
 #   SESSION_SECRET  long random string used to sign the login cookie
 #   CALENDARS       JSON: [{"name":"Personal","url":"<private iCal URL>","color":"blue"}, ...]
 #   TODOIST_TOKEN   Todoist > Settings > Integrations > Developer > API token
+
+# Synced countdowns live in one SQLite-backed Durable Object (free plan); created on deploy.
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "Store"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Store"]

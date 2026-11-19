@@ -206,6 +206,32 @@ body{
 .radar-frame{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:rgba(0,0,0,.35)}
 .radar-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 #radarOpen{color:var(--accent);text-decoration:none}
+.brief{font-size:17px;color:var(--fg);margin-top:8px;max-width:760px;line-height:1.4}
+.alerts{display:grid;gap:10px}
+.alerts details{border-radius:var(--r);padding:14px 20px;background:color-mix(in srgb,var(--red) 22%,rgba(10,10,14,.6));border:1px solid color-mix(in srgb,var(--red) 55%,transparent);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass)}
+.alerts summary{cursor:pointer;font-size:17px;list-style:none}
+.alerts summary b{color:#ffd6d6;margin-right:8px}
+.alerts .desc{white-space:pre-line;color:var(--dim);margin-top:10px;font-size:15px;max-height:260px;overflow:auto}
+.chip.aqi-ok b{color:var(--green)} .chip.aqi-mid b{color:var(--amber)} .chip.aqi-bad b{color:var(--red)}
+.leave{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;font-size:17px}
+.leave b{font-weight:600}
+.leave.now{background:color-mix(in srgb,var(--red) 18%,transparent);border-color:color-mix(in srgb,var(--red) 45%,transparent)}
+.leave a{color:var(--accent);white-space:nowrap;text-decoration:none;font-weight:500}
+.task .open{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:10px;color:var(--dim);text-decoration:none;font-size:20px}
+.task{cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.task.snoozing{opacity:.5;transition:opacity .6s}
+.hint{font:400 12px var(--body);letter-spacing:.04em;text-transform:none;color:var(--faint);margin-left:8px}
+/* night: dimmer, warmer */
+html.night{--fg:#eee4d6;--dim:rgba(238,228,214,.55);--faint:rgba(238,228,214,.3);--accent:#e3a76f;--blue:#e3a76f}
+html.night .panel,html.night .wx,html.night .hero{background:linear-gradient(180deg,rgba(255,235,210,.05),rgba(255,235,210,.02))}
+html.night #sky .shade{background:rgba(4,3,2,.25)}
+/* drive mode: big and simple */
+html.drive .fcst,html.drive #alerts details .desc,html.drive .wx .fc,html.drive .col.c3,html.drive .cdpanel,html.drive .brief,html.drive .allday{display:none!important}
+html.drive .grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+html.drive .clock{font-size:96px}
+html.drive .ev .nm{font-size:22px}
+html.drive .leave{font-size:22px;padding:18px 20px}
+#drive.on{color:var(--accent);border-color:var(--accent)}
 .fcst{padding:16px 20px;display:grid;gap:10px}
 .fcst .row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:16px;align-items:baseline}
 .fcst .when{font:500 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
@@ -258,22 +284,27 @@ body{
       <div class="greet" id="greet">Hello, Paul</div>
       <div class="clock num" id="clock">--:--</div>
       <div class="date" id="date"></div>
+      <div class="brief" id="brief"></div>
     </div>
     <div class="weather-ish">
       <span class="chip"><b id="evCount">0</b> events today</span>
       <span class="chip"><b id="taskCount">0</b> open to-dos</span>
+      <span class="chip" id="aqi" hidden></span>
       <a class="chip" href="https://claude.ai/artifact/BnXgH6d4iX7XVEZwdoz3Ei" target="_blank" rel="noopener">Chief of Staff</a>
+      <a class="chip" href="https://sentienlabs.ai" target="_blank" rel="noopener">Sentien Labs</a>
+      <button class="chip" id="drive" type="button" title="Big, simple layout. Turns on by itself while moving.">Drive mode</button>
       <button class="chip" id="status" title="Tap to refresh">Loading…</button>
     </div>
   </header>
 
+  <section class="alerts" id="alerts" hidden></section>
   <section class="panel fcst" id="fcst" aria-label="Forecast" hidden></section>
   <section class="wx" id="wx" aria-label="Weather"></section>
 
   <main class="grid">
     <section class="col">
       <div class="panel hero" id="hero"></div>
-      <div class="panel">
+      <div class="panel cdpanel">
         <h2 class="label">Countdowns</h2>
         <div class="cds" id="cds"></div>
         <form class="addform" id="addform" hidden>
@@ -287,6 +318,7 @@ body{
     <section class="col">
       <div class="panel" style="flex:1">
         <h2 class="label">Today &amp; tomorrow</h2>
+        <div class="leave" id="leave" hidden></div>
         <div class="allday" id="allday"></div>
         <div class="tl" id="tl"></div>
       </div>
@@ -294,7 +326,7 @@ body{
 
     <section class="col c3">
       <div class="panel">
-        <h2 class="label prihead">High priority <span class="count" id="priCount"></span></h2>
+        <h2 class="label prihead">High priority<span class="hint">hold to snooze</span> <span class="count" id="priCount"></span></h2>
         <div class="pri" id="pri"></div>
       </div>
       <div class="panel">
@@ -322,6 +354,13 @@ const COLORS={blue:"var(--blue)",green:"var(--green)",orange:"var(--amber)",red:
 // ---- state ----
 let GEO=null,EVENTS=[],TASKS=[],PLACE=null,WX=null,errors=[],lastLoad=null;
 const yr=new Date().getFullYear();
+const saveCds=()=>{store.set("cds",cds);fetch("/api/cds",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(cds)}).catch(()=>{})};
+async function syncCds(){
+  try{const r=await fetch("/api/cds",{cache:"no-store"});if(!r.ok)return;const v=await r.json();
+    if(Array.isArray(v)){if(JSON.stringify(v)!==JSON.stringify(cds)){cds=v;store.set("cds",cds);cdSig=null;heroSig=""}}
+    else saveCds(); // first run: seed the server with this browser's list
+  }catch{}
+}
 let cds=store.get("cds",[
   {id:"a",n:"Thanksgiving",d:new Date(yr,10,26,15,0).toISOString()},
   {id:"b",n:"Christmas",d:new Date(yr,11,25,8,0).toISOString()},
@@ -360,34 +399,65 @@ async function load(){
     }));
     EVENTS=lists.flat().sort((a,b)=>a.start.localeCompare(b.start)).map(e=>({...e,s:e.allDay?localDate(e.start):new Date(e.start),e:e.allDay?localDate(e.end):new Date(e.end),c:COLORS[e.color]||e.color}));
     TASKS=j.tasks;errors=errs;lastLoad=new Date();
+    await syncCds();
     const want=GEO||j.place;
     if(!PLACE||PLACE.lat!==want.lat||PLACE.lon!==want.lon){PLACE=want;loadWx();setRadar()}
   }catch(e){errors=[navigator.onLine===false?"Offline, showing last data":(e.message||"Couldn't load data")]}
-  heroSig="";wxSig="";renderAll();
+  heroSig="";wxSig="";renderAll();updateLeave();
 }
 async function loadWx(){
   if(!PLACE)return;
-  loadFcst();
+  loadFcst();loadAir();loadAlerts();
   try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&hourly=precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
     const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
     const dirs=["N","NE","E","SE","S","SW","W","NW"];
     WX={temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),hum:c.relative_humidity_2m,
       wind:`${dirs[Math.round(c.wind_direction_10m/45)%8]} ${Math.round(c.wind_speed_10m)} mph`,
       ...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
+      hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i]})),
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
   }catch{}
   wxSig="";
 }
 // Use the car's GPS when the browser allows it; fall back to the server's PLACE
 function km(a,b){const r=Math.PI/180,x=(b.lon-a.lon)*r*Math.cos((a.lat+b.lat)*r/2),y=(b.lat-a.lat)*r;return Math.hypot(x,y)*6371}
+let HERE=null,moving=false,stillSince=0,driveManual=null;
 function locate(){
-  if(!navigator.geolocation)return;
-  navigator.geolocation.getCurrentPosition(p=>{
+  if(!navigator.geolocation||locate.on)return;locate.on=true;
+  navigator.geolocation.watchPosition(p=>{
+    HERE={lat:p.coords.latitude,lon:p.coords.longitude};
+    const sp=p.coords.speed;
+    if(sp!=null&&!isNaN(sp)){if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>60e3)moving=false}setDrive()}
     const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
     if(GEO&&km(GEO,g)<5)return;
     GEO=g;if(!PLACE||km(PLACE,g)>=5){PLACE=g;loadWx();setRadar()}
-  },()=>{},{maximumAge:5*60e3,timeout:15e3});
+  },()=>{},{enableHighAccuracy:true,maximumAge:30e3,timeout:30e3});
+}
+// ---- drive mode: on while moving (or when tapped) ----
+function setDrive(){const on=driveManual??moving;document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive").textContent=on?"Exit drive mode":"Drive mode"}
+// ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
+const geoCache=store.get("geoCache",{});
+async function geocode(q){
+  if(q in geoCache)return geoCache[q];
+  let v=null;
+  try{const j=await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`)).json();if(j[0])v=[+j[0].lat,+j[0].lon]}catch{return null}
+  geoCache[q]=v;const keys=Object.keys(geoCache);if(keys.length>80)delete geoCache[keys[0]];store.set("geoCache",geoCache);return v;
+}
+let leaveInfo=null,routeCache={};
+async function updateLeave(){
+  const n=new Date(),el=$("#leave");
+  const ev=timed().filter(e=>e.s>n&&e.s-n<4*36e5&&e.location&&!/zoom|teams|meet\.google|webex|https?:/i.test(e.location)).sort((a,b)=>a.s-b.s)[0];
+  const from=HERE||GEO;
+  if(!ev||!from){leaveInfo=null;el.hidden=true;return}
+  const dest=await geocode(ev.location);if(!dest){leaveInfo=null;el.hidden=true;return}
+  const key=`${ev.location}|${from.lat.toFixed(2)},${from.lon.toFixed(2)}`;
+  let mins=routeCache[key]&&Date.now()-routeCache[key].at<10*60e3?routeCache[key].m:null;
+  if(mins==null){try{const j=await (await fetch(`https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${dest[1]},${dest[0]}?overview=false`)).json();
+    mins=Math.ceil(j.routes[0].duration/60);routeCache={[key]:{m:mins,at:Date.now()}}}catch{el.hidden=true;return}}
+  const by=new Date(ev.s.getTime()-(mins+5)*60e3),late=by<=n;
+  el.hidden=false;el.className="leave"+(late?" now":"");
+  el.innerHTML=`<div>${late?"<b>Leave now</b>":`Leave by <b>${fmtT(by)}</b>`} for ${esc(ev.title)} · ${mins} min drive</div><a href="${gmaps(ev.location)}" target="_blank" rel="noopener">Open in Maps</a>`;
 }
 // Animated radar (RainViewer) centered on PLACE
 let radarUrl="";
@@ -457,6 +527,25 @@ function drawMoon(n){
   const outer=wax?1:0,inner=wax?(p<.25?0:1):(p<.75?0:1);
   $("#moonLit").setAttribute("d",`M0 ${-r}A${r} ${r} 0 0 ${outer} 0 ${r}A${rx.toFixed(2)} ${r} 0 0 ${inner} 0 ${-r}Z`);
 }
+// ---- air quality (US AQI) ----
+async function loadAir(){
+  try{
+    const j=await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=us_aqi`)).json();
+    const v=Math.round(j.current.us_aqi);if(!isFinite(v))return;
+    const [lab,cls]=v<=50?["Good","aqi-ok"]:v<=100?["Moderate","aqi-mid"]:v<=150?["Unhealthy for some","aqi-bad"]:["Unhealthy","aqi-bad"];
+    const el=$("#aqi");el.hidden=false;el.className="chip "+cls;el.innerHTML=`AQI <b>${v}</b> ${lab}`;
+  }catch{}
+}
+// ---- NWS watches and warnings ----
+async function loadAlerts(){
+  try{
+    const j=await (await fetch(`https://api.weather.gov/alerts/active?point=${PLACE.lat.toFixed(4)},${PLACE.lon.toFixed(4)}`)).json();
+    const a=(j.features||[]).map(f=>f.properties).filter(x=>x&&x.status==="Actual");
+    const el=$("#alerts");el.hidden=!a.length;
+    el.innerHTML=a.map(x=>{const end=x.ends||x.expires;const until=end?` until ${new Date(end).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"})}`:"";
+      return`<details><summary><b>${esc(x.event)}</b>${esc(until)}</summary><div class="desc">${esc(x.description||x.headline||"")}</div></details>`}).join("");
+  }catch{}
+}
 // ---- plain-language forecast (National Weather Service) ----
 let nwsKey="",nwsUrl="";
 async function loadFcst(){
@@ -469,6 +558,20 @@ async function loadFcst(){
     const el=$("#fcst");el.hidden=false;
     el.innerHTML=`<h2 class="label">Forecast</h2>`+per.map(x=>`<div class="row"><div class="when">${esc(x.name)}</div><div class="txt">${esc(x.detailedForecast)}</div></div>`).join("");
   }catch{}
+}
+// ---- one-line daily briefing ----
+function renderBrief(n){
+  const end=new Date(n);end.setHours(23,59,59,999);
+  const left=timed().filter(e=>e.s>n&&e.s<=end).sort((a,b)=>a.s-b.s);
+  const parts=[];
+  if(left.length)parts.push(`${left.length} more ${left.length===1?"event":"events"} today, next at ${fmtT(left[0].s)}.`);
+  else parts.push(n.getHours()<18?"Nothing else on the calendar today.":"Calendar is clear for the rest of today.");
+  const p1=TASKS.filter(t=>t.p===1&&!pending.has(t.id)).length;
+  if(p1)parts.push(`${p1} high-priority ${p1===1?"to-do":"to-dos"}.`);
+  const wet=WX?.hourly?.find(h=>h.t>n&&h.t<=new Date(n.getTime()+12*36e5)&&h.pp>=50);
+  if(wet){const sn=(wet.code>=71&&wet.code<=77)||wet.code===85||wet.code===86;
+    parts.push(`${sn?"Snow":"Rain"} likely ${wet.t-n<36e5?"within the hour":"around "+wet.t.toLocaleTimeString([], {hour:"numeric"})}.`)}
+  $("#brief").textContent=parts.join(" ");
 }
 // ---- live sky background ----
 const SKY={night:["#0a1124","#05070d",0,"rgba(90,110,180,.12)"],dawn:["#2a2f5c","#b8667a",.30,"rgba(255,160,110,.45)"],
@@ -494,6 +597,7 @@ function setSky(n){
   const cls=[cloudy||ic==="pcloud"?"clouds":"",wet?"rain":"",snow?"snow":"",fog?"fog":"",cond==="Thunderstorms"?"storm":"",
     ph==="night"&&!wet&&!snow&&!fog?"stars":"",ph!=="night"&&!cloudy?"glow":""].filter(Boolean).join(" ");
   drawMoon(n);
+  document.documentElement.classList.toggle("night",ph==="night");
   const sig=ph+cls;if(sig===skySig)return;skySig=sig;
   if(cls.includes("stars"))drawStars();
   const [top,bot,scrim,sun]=SKY[ph],el=$("#sky");
@@ -551,9 +655,22 @@ function renderTimeline(n){
 
 // ---- tasks ----
 const pending=new Set();
-function taskHTML(t){const done=pending.has(t.id);return`<button class="task p${t.p} ${done?"done":""}" data-task="${t.id}">
+function taskHTML(t){const done=pending.has(t.id);return`<div class="task p${t.p} ${done?"done":""}" role="button" tabindex="0" data-task="${t.id}"${t.p===1&&!t.recurring?' data-snooze="1"':""}>
   <span class="box"></span><span class="tx"><div class="tt">${esc(t.title)}</div><div class="meta">${dueTxt(t)}</div></span>
-  ${t.p<3?`<span class="tag">P${t.p}</span>`:""}</button>`}
+  ${t.p<3?`<span class="tag">P${t.p}</span>`:""}<a class="open" href="https://app.todoist.com/app/task/${encodeURIComponent(t.id)}" target="_blank" rel="noopener" aria-label="Open in Todoist">↗</a></div>`}
+let holdT=null,held=false;
+document.addEventListener("pointerdown",e=>{const el=e.target.closest("[data-snooze]");if(!el||e.target.closest("a"))return;held=false;
+  el.classList.add("snoozing");holdT=setTimeout(()=>{held=true;holdT=null;snooze(el.dataset.task)},650)});
+const cancelHold=()=>{if(holdT){clearTimeout(holdT);holdT=null}document.querySelectorAll(".task.snoozing").forEach(x=>x.classList.remove("snoozing"))};
+["pointerup","pointerleave","pointercancel","scroll"].forEach(t=>document.addEventListener(t,cancelHold,true));
+document.addEventListener("contextmenu",e=>{if(e.target.closest("[data-snooze]"))e.preventDefault()});
+async function snooze(id){
+  const t=TASKS.find(x=>x.id===id);if(!t)return;const old=t.due;
+  const d=new Date();d.setDate(d.getDate()+1);t.due=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;renderTasks();
+  try{const r=await fetch(`/api/tasks/${id}/snooze`,{method:"POST"});if(!r.ok)throw 0;errors=[];lastLoad=new Date()}
+  catch{t.due=old;errors=["Couldn't snooze in Todoist"];renderTasks()}
+  renderStatus();
+}
 function renderTasks(){
   const by=(a,b)=>((dueDays(a)??999)-(dueDays(b)??999))||a.p-b.p;
   const hi=TASKS.filter(t=>t.p===1).sort(by);
@@ -572,10 +689,10 @@ async function toggleTask(id){
 }
 
 // ---- countdowns ----
-let cdSig="";
+let cdSig=null;
 function renderCds(n){
   const list=cds.filter(c=>c.id!==heroId).sort((a,b)=>new Date(a.d)-new Date(b.d));
-  const sig=list.map(c=>c.id).join();
+  const sig="L"+list.map(c=>c.id).join();
   if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
   cdSig=sig;
   $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;return`<div class="cd"><div class="n">${esc(c.n)}</div><div class="t">${ms>0?short(ms):"Now"}</div>
@@ -608,17 +725,18 @@ function openEvent(i){
 document.addEventListener("click",e=>{
   if(e.target.closest("a"))return;
   const ev=e.target.closest("[data-ev]"); if(ev){openEvent(+ev.dataset.ev);return}
-  const tk=e.target.closest("[data-task]"); if(tk){toggleTask(tk.dataset.task);return}
-  const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);store.set("cds",cds);renderCds(new Date());return}
+  const tk=e.target.closest("[data-task]"); if(tk){if(held){held=false;return}toggleTask(tk.dataset.task);return}
+  const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);saveCds();renderCds(new Date());return}
   if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
   if(e.target.closest("#radarHide")){toggleRadar(false);return}
   if(e.target.closest("#wx")){toggleRadar();return}
+  if(e.target.closest("#drive")){driveManual=!document.documentElement.classList.contains("drive");setDrive();return}
   if(e.target.closest("#status")){load();return}
   if(e.target.id==="scrim"||e.target.closest("#closeSheet"))$("#scrim").hidden=true;
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#scrim").hidden=true;if(e.key==="Enter"&&e.target.matches(".ev"))openEvent(+e.target.dataset.ev)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#scrim").hidden=true;if(e.key==="Enter"&&e.target.matches(".ev"))openEvent(+e.target.dataset.ev);if(e.key==="Enter"&&e.target.matches(".task"))toggleTask(e.target.dataset.task)});
 $("#addform").addEventListener("submit",e=>{e.preventDefault();const n=$("#cdName").value.trim(),d=$("#cdDate").value;if(!n||!d)return;
-  cds.push({id:Date.now().toString(36),n,d:new Date(d).toISOString()});store.set("cds",cds);e.target.reset();e.target.hidden=true;renderCds(new Date())});
+  cds.push({id:Date.now().toString(36),n,d:new Date(d).toISOString()});saveCds();e.target.reset();e.target.hidden=true;renderCds(new Date())});
 
 // ---- tick ----
 let lastMin=-1;
@@ -628,10 +746,10 @@ function tick(){const n=new Date();
   const hr=n.getHours();$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`;
   $("#date").textContent=n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
   renderHero(n);renderCds(n);renderWx(n);setSky(n);
-  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderStatus()}
+  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderStatus();renderBrief(n);if(n.getMinutes()%2===0)updateLeave()}
 }
 renderAll();setInterval(tick,1000);
-locate();setInterval(locate,10*60e3);load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
+locate();load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
 (async()=>{try{await navigator.wakeLock?.request("screen")}catch{}})();
 })();
