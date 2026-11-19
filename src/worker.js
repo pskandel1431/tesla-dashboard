@@ -129,11 +129,29 @@ async function setTask(env, id, action) {
 // ---------- router ----------
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
+// Tolerate stray spaces in secret names typed on a phone ("DASH_PASSWORD ").
+function cleanEnv(env) {
+  const out = { ...env };
+  for (const k of Object.keys(env)) {
+    const t = k.trim();
+    if (t !== k && !(t in out)) out[t] = env[k];
+  }
+  for (const k of ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN"]) {
+    if (typeof out[k] === "string") out[k] = out[k].trim();
+  }
+  return out;
+}
+
 export default {
-  async fetch(req, env) {
+  async fetch(req, rawEnv) {
+    const env = cleanEnv(rawEnv);
     const url = new URL(req.url);
     TD = env.TODOIST_API || TD_DEFAULT; // override only for local testing
-    if (!env.SESSION_SECRET || !env.DASH_PASSWORD) return new Response("Set DASH_PASSWORD and SESSION_SECRET secrets.", { status: 500 });
+    if (!env.SESSION_SECRET || !env.DASH_PASSWORD) {
+      // Names only, never values, to help debug setup.
+      const seen = Object.keys(rawEnv).filter(k => k !== "ASSETS").map(k => JSON.stringify(k)).join(", ") || "none";
+      return new Response(`Set DASH_PASSWORD and SESSION_SECRET secrets.\nSettings this Worker can see: ${seen}`, { status: 500, headers: { "cache-control": "no-store" } });
+    }
 
     if (url.pathname === "/login") {
       if (req.method !== "POST") return loginPage();
