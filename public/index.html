@@ -651,13 +651,13 @@ html.drive #hero:not([hidden])+.today,html.drive .hero .btnrow{display:none!impo
 .nextstop.soon .ns-cd{color:#ffb547}
 /* drive: smaller rings, short weather word; banner carries the next stop */
 html.drive .rings{gap:12px}
-html.drive .ring2{width:84px;height:84px}
-html.drive .ring2 .ic{width:22px;height:22px}
+html.drive .ring2{width:70px;height:70px}
+html.drive .ring2 .ic{width:18px;height:18px}
 html.drive .ring2 .rv{gap:3px}
-html.drive .ring2 .rv span{font-size:10px;letter-spacing:.08em}
+html.drive .ring2 .rv span{font-size:9.5px;letter-spacing:.08em}
 .ring2 .dw{display:none}
 html.drive .ring2 .rw{display:none}
-html.drive .ring2 .dw{display:block;font-size:13px;letter-spacing:.06em;color:var(--fg)}
+html.drive .ring2 .dw{display:block;font-size:11px;letter-spacing:.06em;color:var(--fg)}
 html.drive.hasnext .driveband .dtxt b{font-size:30px}
 html.drive.hasnext .driveband .dtxt span{font-size:15px}
 html.drive.hasnext main.simple .col.right{display:none}
@@ -665,6 +665,25 @@ html.drive.hasnext main.simple .col.left{grid-column:1/-1;display:grid;grid-temp
 .hero-what{display:flex;align-items:center;gap:16px}
 .hero-ic{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--accent);background:#11161f;box-shadow:0 0 18px -4px var(--accent)}
 .hero-ic svg{width:28px;height:28px;fill:none;stroke:var(--fg);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* date tucked under the clock, aligned with the first digit */
+.clock{margin-bottom:2px}
+.date{font-size:22px;padding-left:.12em}
+html.drive .date{font-size:24px}
+/* drive banner: tighter car area so the next stop has room */
+.driveband{gap:14px;padding:12px 18px}
+.driveband .road{width:280px}
+.driveband .dtxt{min-width:0}
+html.drive.hasnext .driveband .dtxt b{font-size:26px}
+.nextstop{padding-left:18px}
+/* spinning wheels: blurred spoke streaks over each rim, squashed to the 3/4 view */
+.whl{position:absolute;border-radius:50%;overflow:hidden;pointer-events:none;opacity:0}
+.whl.front{left:161px;top:67px;width:24px;height:26px}
+.whl.rear{left:40px;top:58px;width:18px;height:21px}
+.whl b{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(20,22,28,.9) 0 14deg,rgba(150,155,165,.35) 18deg 22deg,rgba(20,22,28,.9) 26deg 36deg);filter:blur(.6px)}
+.driveband.moving .whl{opacity:.75}
+.driveband.moving .whl b{animation:wspin .28s linear infinite}
+@keyframes wspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.whl b{animation:none!important}}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -684,7 +703,7 @@ html.drive.hasnext main.simple .col.left{grid-column:1/-1;display:grid;grid-temp
   </header>
 
   <div class="driveband" id="driveBand" aria-live="polite">
-    <div class="road"><svg class="lanes" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true"><path class="surf" d="M-10 52.4L330 83L330 140L-10 93.4Z"/><path class="far" d="M-10 52.4L330 83"/><path class="near" d="M-10 93.4L330 135"/></svg><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="95"></div>
+    <div class="road"><svg class="lanes" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true"><path class="surf" d="M-10 52.4L330 83L330 140L-10 93.4Z"/><path class="far" d="M-10 52.4L330 83"/><path class="near" d="M-10 93.4L330 135"/></svg><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="95"><i class="whl rear"><b></b></i><i class="whl front"><b></b></i></div>
     <div class="dtxt"><b id="driveWord">Driving</b><span id="driveSub">Drive mode is on</span></div>
     <div class="nextstop" id="nextStop" hidden></div>
   </div>
@@ -875,7 +894,7 @@ function renderNextStop(n){
 const TRIP_LINES=["We're off and running, {n}","We're on the move, {n}","Rolling, {n}","On the road, {n}"];let tripLine=null;
 function setDrive(){const on=driveManual??moving;
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
-  $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph · simple view on`:"Simple view on"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 5 min";
+  $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 5 min";
   $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive"}
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
