@@ -232,7 +232,6 @@ body{
 .alerts summary{cursor:pointer;font-size:17px;list-style:none}
 .alerts summary b{color:#ffd6d6;margin-right:8px}
 .alerts .desc{white-space:pre-line;color:var(--dim);margin-top:10px;font-size:15px;max-height:260px;overflow:auto}
-.chip.aqi-ok b{color:var(--green)} .chip.aqi-mid b{color:var(--amber)} .chip.aqi-bad b{color:var(--red)}
 .leave{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;font-size:17px}
 .leave b{font-weight:600}
 .leave.now{background:color-mix(in srgb,var(--red) 18%,transparent);border-color:color-mix(in srgb,var(--red) 45%,transparent)}
@@ -246,7 +245,7 @@ html.night{--fg:#eee4d6;--dim:rgba(238,228,214,.55);--faint:rgba(238,228,214,.3)
 html.night .panel,html.night .wx,html.night .hero{background:linear-gradient(180deg,rgba(255,235,210,.05),rgba(255,235,210,.02))}
 html.night #sky .shade{background:rgba(4,3,2,.25)}
 /* drive mode: big and simple */
-html.drive .fcst,html.drive #alerts details .desc,html.drive .wx .fc,html.drive .col.c3,html.drive .cdpanel,html.drive .brief,html.drive .allday{display:none!important}
+html.drive .tcount,html.drive .fcst,html.drive #alerts details .desc,html.drive .wx .fc,html.drive .col.c3,html.drive .cdpanel,html.drive .brief,html.drive .allday{display:none!important}
 html.drive .grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-areas:"a b";grid-template-rows:auto}
 html.drive .c1{grid-area:a} html.drive .c2{grid-area:b}
 html.drive .clock{font-size:96px}
@@ -309,8 +308,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
     </div>
     <div class="weather-ish">
       <span class="chip"><b id="evCount">0</b> events today</span>
-      <span class="chip"><b id="taskCount">0</b> open to-dos</span>
-      <span class="chip" id="aqi" hidden></span>
+      <span class="chip tcount"><b id="taskCount">0</b> open to-dos</span>
       <a class="chip" href="https://claude.ai/artifact/BnXgH6d4iX7XVEZwdoz3Ei" target="_blank" rel="noopener">Chief of Staff</a>
       <a class="chip" href="https://sentienlabs.ai" target="_blank" rel="noopener">Sentien Labs</a>
       <button class="chip" id="drive" type="button" title="Big, simple layout. Turns on by itself while moving.">Drive mode</button>
@@ -429,7 +427,7 @@ async function load(){
 }
 async function loadWx(){
   if(!PLACE)return;
-  loadFcst();loadAir();loadAlerts();
+  loadFcst();loadAlerts();
   try{
     const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&hourly=precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
     const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
@@ -450,7 +448,7 @@ function locate(){
   navigator.geolocation.watchPosition(p=>{
     HERE={lat:p.coords.latitude,lon:p.coords.longitude};
     const sp=p.coords.speed;
-    if(sp!=null&&!isNaN(sp)){if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>60e3)moving=false}setDrive()}
+    if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>60e3)moving=false}if(was!==moving)driveManual=null;setDrive()}
     const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
     if(GEO&&km(GEO,g)<5)return;
     GEO=g;if(!PLACE||km(PLACE,g)>=5){PLACE=g;loadWx();setRadar()}
@@ -579,15 +577,6 @@ function drawMoon(n){
   const r=19,rx=Math.abs(Math.cos(2*Math.PI*p))*r,wax=p<.5;
   const outer=wax?1:0,inner=wax?(p<.25?0:1):(p<.75?0:1);
   $("#moonLit").setAttribute("d",`M0 ${-r}A${r} ${r} 0 0 ${outer} 0 ${r}A${rx.toFixed(2)} ${r} 0 0 ${inner} 0 ${-r}Z`);
-}
-// ---- air quality (US AQI) ----
-async function loadAir(){
-  try{
-    const j=await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=us_aqi`)).json();
-    const v=Math.round(j.current.us_aqi);if(!isFinite(v))return;
-    const [lab,cls]=v<=50?["Good","aqi-ok"]:v<=100?["Moderate","aqi-mid"]:v<=150?["Unhealthy for some","aqi-bad"]:["Unhealthy","aqi-bad"];
-    const el=$("#aqi");el.hidden=false;el.className="chip "+cls;el.innerHTML=`AQI <b>${v}</b> ${lab}`;
-  }catch{}
 }
 // ---- NWS watches and warnings ----
 async function loadAlerts(){
