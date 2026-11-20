@@ -127,7 +127,19 @@ function cleanEnv(env) {
 }
 
 export default {
-  async fetch(req, rawEnv) {
+  // Show the real error instead of Cloudflare's generic 1101 page.
+  async fetch(req, rawEnv, ctx) {
+    try { return await handle(req, rawEnv, ctx); }
+    catch (e) {
+      console.error(e);
+      const msg = `Dashboard error: ${e && e.message || e}\n${new URL(req.url).pathname}`;
+      return new Response(msg, { status: 500, headers: { "content-type": "text/plain", "cache-control": "no-store" } });
+    }
+  },
+};
+
+async function handle(req, rawEnv) {
+  {
     const env = cleanEnv(rawEnv);
     const url = new URL(req.url);
     TD = env.TODOIST_API || TD_DEFAULT; // override only for local testing
@@ -173,6 +185,6 @@ export default {
     }
 
     return env.ASSETS.fetch(req);
-  },
-};
+  }
+}
 
