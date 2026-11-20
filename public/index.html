@@ -605,13 +605,22 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
 .driveband .dtxt{display:flex;flex-direction:column;gap:2px}
 .driveband .dtxt b{font:300 40px/1 var(--display);letter-spacing:-.02em}
 .driveband .dtxt span{font-size:17px;color:var(--dim)}
-@media (prefers-reduced-motion:reduce){.driveband .lanes,.driveband .car{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.driveband .lanes,.driveband .lanes path,.driveband .car{animation:none!important}}
 </style>
 <style>
-.driveband .road{width:300px;height:104px;background:linear-gradient(180deg,transparent 0 70%,rgba(255,255,255,.05) 70%)}
-.driveband .car{left:28px;bottom:4px;width:240px;height:95px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,255,255,.06))}
-.driveband .shadow{position:absolute;left:44px;bottom:4px;width:212px;height:12px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.75),transparent)}
-.driveband .lanes{bottom:8px}
+.driveband .road{width:320px;height:120px;background:none}
+.driveband .car{left:28px;top:8px;bottom:auto;width:240px;height:95px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,255,255,.06))}
+.driveband .shadow{position:absolute;left:40px;top:84px;width:200px;height:16px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.8),transparent);transform:rotate(7deg)}
+.driveband .lanes{position:absolute;inset:0;width:100%;height:100%;background:none;bottom:auto}
+.driveband .lanes path{fill:none;stroke:rgba(255,255,255,.6);stroke-linecap:round}
+.driveband .lanes .surf{fill:rgba(255,255,255,.035);stroke:none}
+.driveband .lanes .far{stroke-width:1.6;stroke-dasharray:10 12;opacity:.55}
+.driveband .lanes .near{stroke-width:3.2;stroke-dasharray:22 18}
+.driveband.moving .lanes .far{animation:dlf .5s linear infinite}
+.driveband.moving .lanes .near{animation:dln .5s linear infinite}
+@keyframes dlf{to{stroke-dashoffset:22}}
+@keyframes dln{to{stroke-dashoffset:40}}
+.driveband.moving .lanes{animation:none}
 .driveband.moving .car{animation:bob .7s ease-in-out infinite alternate}
 .allday{gap:6px}
 .allday .chip{min-height:0;padding:5px 12px;font-size:14px;border-radius:999px;line-height:1.3}
@@ -641,7 +650,7 @@ html.drive #hero:not([hidden])+.today,html.drive .hero .btnrow{display:none!impo
   </header>
 
   <div class="driveband" id="driveBand" aria-live="polite">
-    <div class="road"><div class="lanes"></div><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="95"></div>
+    <div class="road"><svg class="lanes" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true"><path class="surf" d="M-10 52.4L330 83L330 140L-10 93.4Z"/><path class="far" d="M-10 52.4L330 83"/><path class="near" d="M-10 93.4L330 135"/></svg><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="95"></div>
     <div class="dtxt"><b id="driveWord">Driving</b><span id="driveSub">Drive mode is on</span></div>
   </div>
   <section class="alerts" id="alerts" hidden></section>
@@ -808,6 +817,8 @@ function locate(){
 // Stays on through stoplights: off only after 5 min stopped. GPS may stop reporting while parked, so check on a timer too.
 const STOP_MS=5*60e3;
 setInterval(()=>{if(moving&&stillSince&&Date.now()-stillSince>STOP_MS){moving=false;driveManual=null;setDrive()}},15e3);
+// greeting while moving: one line per trip, picked at random
+const TRIP_LINES=["We're off and running, {n}","We're on the move, {n}","Rolling, {n}","On the road, {n}"];let tripLine=null;
 function setDrive(){const on=driveManual??moving;
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
   $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph · simple view on`:"Simple view on"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 5 min";
@@ -1337,7 +1348,9 @@ let lastMin=-1;
 function renderAll(){lastMin=-1;renderTasks();tick()}
 function tick(){const n=new Date();
   $("#clock").textContent=n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
-  const hr=n.getHours();$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`;
+  const hr=n.getHours();
+  if(moving){tripLine??=TRIP_LINES[Math.floor(Math.random()*TRIP_LINES.length)];$("#greet").textContent=tripLine.replace("{n}",NAME)}
+  else{tripLine=null;$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`}
   $("#date").innerHTML=`<b>${n.toLocaleDateString([], {weekday:"long"})}</b> ${n.toLocaleDateString([], {month:"long",day:"numeric"})}`;
   renderHero(n);renderCds(n);renderWx(n);setSky(n);
   if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderDayBar(n);renderStatus();renderBrief(n);if(n.getMinutes()%2===0)updateLeave()}
