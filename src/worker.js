@@ -184,7 +184,9 @@ async function handle(req, rawEnv) {
       return env.STORE.get(env.STORE.idFromName("main")).fetch(req);
     }
 
-    return env.ASSETS.fetch(req);
+    const assets = rawEnv.ASSETS || env.ASSETS;
+    if (!assets) return new Response("Dashboard files are missing from this deploy. In Cloudflare, retry the latest build.", { status: 503, headers: { "cache-control": "no-store" } });
+    return assets.fetch(req);
   }
 }
 
