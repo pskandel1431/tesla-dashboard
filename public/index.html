@@ -591,6 +591,24 @@ body{background:#030405}
 .reasons li.hazard i{color:#ff7a7e;background:rgba(255,90,95,.14)}.reasons li.caution i{color:#ffc56a;background:rgba(255,181,71,.14)}.reasons li.info i{color:var(--dim)}
 .reasons li{align-items:flex-start}
 </style>
+<style>
+/* drive mode banner: a little car rolling down a road */
+.driveband{display:none;align-items:center;gap:22px;padding:14px 22px;border-radius:var(--r);background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 22%,transparent),rgba(255,255,255,.03));border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);box-shadow:var(--lift)}
+html.drive .driveband{display:flex;animation:rise .4s ease both}
+.driveband .road{position:relative;width:220px;height:56px;flex:none;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,transparent 0 60%,rgba(255,255,255,.06) 60%)}
+.driveband .lanes{position:absolute;left:0;right:0;bottom:12px;height:3px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 18px,transparent 18px 36px);background-size:36px 3px}
+.driveband.moving .lanes{animation:lanes .45s linear infinite}
+@keyframes lanes{to{background-position:-36px 0}}
+.driveband .car{position:absolute;left:70px;bottom:14px;width:78px;height:34px;color:var(--accent);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 60%,transparent))}
+.driveband .car .wh{fill:#0b0d12;stroke:currentColor;stroke-width:2.2}
+.driveband .car .win{fill:#0b0d12;opacity:.7}
+.driveband.moving .car{animation:bob .6s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-1.5px)}}
+.driveband .dtxt{display:flex;flex-direction:column;gap:2px}
+.driveband .dtxt b{font:300 40px/1 var(--display);letter-spacing:-.02em}
+.driveband .dtxt span{font-size:17px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){.driveband .lanes,.driveband .car{animation:none!important}}
+</style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <div class="wrap">
@@ -608,12 +626,16 @@ body{background:#030405}
     </div>
   </header>
 
+  <div class="driveband" id="driveBand" aria-live="polite">
+    <div class="road"><div class="lanes"></div><svg class="car" viewBox="0 0 64 28"><path d="M6 20h52l-2-6c-.8-2.2-2.8-3.4-5-3.6L40 9 33 3.5C31.8 2.6 30.4 2 29 2H17c-2.3 0-4.3 1.3-5.4 3.3L8.5 11C6.6 11.7 5 13.6 5 16z" fill="currentColor"/><circle cx="17" cy="21" r="5" class="wh"/><circle cx="47" cy="21" r="5" class="wh"/><path d="M15 9l3.5-5H28v5zM31 9V4h-1l7 5z" class="win"/></svg></div>
+    <div class="dtxt"><b id="driveWord">Driving</b><span id="driveSub">Drive mode is on</span></div>
+  </div>
   <section class="alerts" id="alerts" hidden></section>
   <section class="panel fcst" id="fcst" aria-label="Forecast" hidden></section>
   <main class="simple">
     <section class="col left">
       <div class="panel roadcard" id="roadCard">
-        <h2 class="label">Driving<span class="hint" id="roadHint"></span></h2>
+        <h2 class="label">Road conditions<span class="hint" id="roadHint"></span></h2>
         <div class="roadhead" id="roadHead"></div>
         <ul class="reasons" id="roadWhy"></ul>
         <div class="chart p2h"><h2 class="label" id="p2hHead">Next 2 hours</h2><div class="pbars" id="p2h"></div><div class="ptxt" id="p2hTxt"></div></div>
@@ -756,12 +778,12 @@ async function loadWx(){
 }
 // Use the car's GPS when the browser allows it; fall back to the server's PLACE
 function km(a,b){const r=Math.PI/180,x=(b.lon-a.lon)*r*Math.cos((a.lat+b.lat)*r/2),y=(b.lat-a.lat)*r;return Math.hypot(x,y)*6371}
-let HERE=null,moving=false,stillSince=0,driveManual=null;
+let lastMph=null,HERE=null,moving=false,stillSince=0,driveManual=null;
 function locate(){
   if(!navigator.geolocation||locate.on)return;locate.on=true;
   navigator.geolocation.watchPosition(p=>{
     HERE={lat:p.coords.latitude,lon:p.coords.longitude};
-    const sp=p.coords.speed;
+    const sp=p.coords.speed;if(sp!=null&&!isNaN(sp))lastMph=Math.round(sp*2.237);
     if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>STOP_MS)moving=false}if(was!==moving)driveManual=null;setDrive()}
     const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
     if(GEO&&km(GEO,g)<5)return;
@@ -772,7 +794,10 @@ function locate(){
 // Stays on through stoplights: off only after 5 min stopped. GPS may stop reporting while parked, so check on a timer too.
 const STOP_MS=5*60e3;
 setInterval(()=>{if(moving&&stillSince&&Date.now()-stillSince>STOP_MS){moving=false;driveManual=null;setDrive()}},15e3);
-function setDrive(){const on=driveManual??moving;document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit drive":"Drive"}
+function setDrive(){const on=driveManual??moving;
+  $("#driveWord").textContent=moving?"Driving":"Drive mode";
+  $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph · simple view on`:"Simple view on"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 5 min";
+  $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit drive":"Drive"}
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
 async function geocode(q){
