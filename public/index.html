@@ -218,6 +218,7 @@ body{
 .nowline::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
 .cd .dt{font-size:12px;color:var(--faint);margin-top:-4px;letter-spacing:.02em}
 .cd.soon .t{color:var(--accent)}
+.cd.next{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
 .panel,.wx,.hero,.alerts{animation:rise .5s ease both}
 .grid .col:nth-child(2) .panel{animation-delay:.06s}.grid .col:nth-child(3) .panel{animation-delay:.12s}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -757,11 +758,11 @@ document.addEventListener("contextmenu",e=>{if(e.target.closest('[data-hold="cd"
 // ---- countdowns ----
 let cdSig=null;
 function renderCds(n){
-  const list=cds.filter(c=>c.id!==heroId).sort((a,b)=>new Date(a.d)-new Date(b.d));
-  const sig="L"+list.map(c=>c.id).join();
+  const list=[...cds].sort((a,b)=>new Date(a.d)-new Date(b.d));
+  const sig="L"+heroId+list.map(c=>c.id).join();
   if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
   cdSig=sig;
-  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;const dd=new Date(c.d);return`<div class="cd${ms>0&&ms<864e5?" soon":""}"><div class="n">${esc(c.n)}</div><div class="dt">${dd.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div><div class="t">${ms>0?short(ms):"Now"}</div>
+  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;const dd=new Date(c.d);return`<div class="cd${ms>0&&ms<864e5?" soon":""}${c.id===heroId?" next":""}"><div class="n">${esc(c.n)}</div><div class="dt">${dd.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div><div class="t">${ms>0?short(ms):"Now"}</div>
     <button class="x" data-del="${c.id}" aria-label="Remove ${esc(c.n)}">×</button></div>`}).join("")+
     `<button class="cd add" id="addBtn">+ Add countdown</button>`;
 }
