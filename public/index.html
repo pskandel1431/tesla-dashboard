@@ -27,19 +27,12 @@ button{cursor:pointer;border:0;background:none}
 .label{font:600 13px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 
 /* weather band */
-.wx{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:28px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
+.wx{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
 .wx .now{display:flex;align-items:center;gap:14px}
 .wx .now svg{width:56px;height:56px;flex:none}
 .wx .temp{font:700 54px/1 var(--display);font-variant-numeric:tabular-nums}
 .wx .cond{font-weight:600;font-size:17px}
 .wx .sub2{color:var(--dim);font-size:14px;margin-top:2px}
-.sun{display:flex;flex-direction:column;gap:8px;min-width:220px}
-.sun .row{display:flex;justify-content:space-between;gap:16px;font:600 20px/1 var(--display);font-variant-numeric:tabular-nums}
-.sun .row span{display:flex;align-items:center;gap:6px}
-.sun .row small{font:500 12px var(--body);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
-.sun .track{position:relative;height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden}
-.sun .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#f6c453,var(--accent))}
-.sun .left{font-size:13px;color:var(--dim)}
 .fc{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .fd{background:var(--panel-2);border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .fd .d{font:600 13px var(--body);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
@@ -47,7 +40,7 @@ button{cursor:pointer;border:0;background:none}
 .fd .hl{font:600 18px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .fd .hl span{color:var(--dim)}
 .fd .pp{font-size:12px;color:var(--blue);min-height:15px}
-@media (max-width:1100px){.wx{grid-template-columns:auto minmax(0,1fr)} .wx .fc{grid-column:1/-1}}
+@media (max-width:1100px){.wx .fc{grid-column:1/-1}}
 @media (max-width:700px){.wx{grid-template-columns:minmax(0,1fr)} .fc{grid-template-columns:repeat(5,minmax(56px,1fr));overflow-x:auto}}
 
 /* top bar */
@@ -177,7 +170,6 @@ body{
 .big .v{font:200 92px/.9 var(--display);letter-spacing:-.03em}
 .big .sep{font:200 64px/1 var(--display);color:var(--faint)}
 .wx .temp{font:200 60px/1 var(--display);letter-spacing:-.03em}
-.sun .row,.fd .hl,.ev .tm,.cd .t{font-family:var(--display);font-weight:300}
 .cd .t{font-size:32px;letter-spacing:-.01em}
 .ev .tm{font-size:22px}
 .ev .nm{font-weight:500}
@@ -198,7 +190,6 @@ body{
 .task .box{border-width:2px}
 .p2{--p:var(--amber)} .p2 .tag{background:rgba(255,181,71,.16);color:var(--amber)}
 .tag{border-radius:999px;padding:6px 10px}
-.sun .track{background:rgba(255,255,255,.08)} .sun .fill{background:linear-gradient(90deg,#ffd27a,var(--amber))}
 .scrim{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .sheet{background:rgba(22,26,34,.82);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--line);border-radius:26px}
 .sheet h3{font:400 34px/1.15 var(--display)}
@@ -216,24 +207,30 @@ body{
 .stat::after{content:" ↻"}
 .stat.warn{color:var(--red)}
 .hud{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.ring{position:relative;width:92px;height:92px}
-.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
-.ring .trk{stroke:rgba(255,255,255,.08)}
-.ring .val{stroke:var(--accent);stroke-dasharray:176;stroke-dashoffset:176;transition:stroke-dashoffset .8s ease}
-.ring.p1 .val{stroke:var(--red)}
-.ring.clear .val{stroke:var(--green)}
-.ring .rv{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1}
-.ring .rv b{font:300 28px var(--display)}
-.ring .rv span{font-size:9px;letter-spacing:.06em;max-width:58px;text-transform:uppercase;color:var(--dim);margin-top:4px}
+/* sun arc: daylight path, sun position, rise/set times */
+.sunarc{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:260px}
+.sunarc svg{width:260px;height:118px;overflow:visible}
+.sunarc .trk{fill:none;stroke:rgba(255,255,255,.1);stroke-width:5;stroke-linecap:round;stroke-dasharray:2 7}
+.sunarc .val{fill:none;stroke:url(#sunGrad);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+.sunarc .hz{stroke:rgba(255,255,255,.18);stroke-width:1.5}
+.sunarc .dot{fill:#ffd27a;filter:drop-shadow(0 0 10px rgba(255,200,90,.9))}
+.sunarc.night .dot{fill:#f4f1e6;filter:drop-shadow(0 0 8px rgba(240,235,210,.6))}
+.sunarc .times{display:flex;justify-content:space-between;width:100%;margin-top:-4px}
+.sunarc .times div{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
+.sunarc .times div:last-child{align-items:flex-end}
+.sunarc .times b{font:300 30px var(--display);font-variant-numeric:tabular-nums}
+.sunarc .times span,.sunarc .mid span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.sunarc .mid{position:relative;margin-top:-74px;height:70px;text-align:center;line-height:1.1;pointer-events:none}
+.sunarc .mid b{display:block;font:300 34px var(--display);font-variant-numeric:tabular-nums}
+html.drive .sunarc{display:none}
+@media (max-width:700px){.sunarc{min-width:210px}.sunarc svg{width:210px;height:96px}.sunarc .times b{font-size:24px}.sunarc .mid{margin-top:-62px;height:58px}.sunarc .mid b{font-size:26px}}
 .dock{display:flex;gap:10px;padding:8px;border-radius:24px;background:rgba(255,255,255,.05);border:1px solid var(--line);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass)}
 .ico{width:76px;height:72px;border-radius:18px;display:grid;place-items:center;align-content:center;gap:6px;color:var(--fg);text-decoration:none;background:none;border:0;cursor:pointer}
 .ico:active{background:rgba(255,255,255,.08)}
 .ico svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .ico .lb{font-size:11px;color:var(--dim);white-space:nowrap}
 #drive.on{color:var(--accent)} #drive.on .lb{color:var(--accent)}
-html.drive .ring.p1{display:none}
-@media (max-width:700px){.ring{width:76px;height:76px}.ico{width:64px}}
+@media (max-width:700px){.ico{width:64px}}
 /* polish */
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;z-index:40;padding:14px 22px;border-radius:999px;background:rgba(20,24,32,.85);border:1px solid var(--line);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);font-size:17px;transition:opacity .25s,transform .25s;pointer-events:none}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -294,7 +291,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
 #sky .l{position:absolute;inset:0;opacity:0;transition:opacity 3s}
 #sky .stars canvas{position:absolute;inset:0;width:100%;height:100%}
 #sky.stars .stars canvas+canvas{animation:twinkle 4s ease-in-out infinite alternate}
-#moon{position:absolute;left:calc(46% - 20px);top:calc(9% - 20px);width:40px;height:40px;overflow:visible;filter:drop-shadow(0 0 18px rgba(240,235,210,.35))}
+#moon{position:absolute;left:calc(90% - 20px);top:8px;width:40px;height:40px;overflow:visible;filter:drop-shadow(0 0 18px rgba(240,235,210,.35))}
 @keyframes twinkle{from{opacity:.35}to{opacity:1}}
 #sky .glow{background:radial-gradient(900px 500px at var(--sx,80%) var(--sy,100%),var(--sun,rgba(255,170,90,.35)),transparent 70%)}
 #sky .clouds{background:
@@ -332,8 +329,9 @@ html.drive .leave{font-size:22px;padding:18px 20px}
       <div class="brief" id="brief"></div>
     </div>
     <div class="hud">
-      <div class="ring" id="ringEv" title="Timed events left today"><svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="28"/><circle class="val" cx="32" cy="32" r="28"/></svg><div class="rv"><b>0</b><span>left today</span></div></div>
-      <div class="ring p1" id="ringP1" title="High-priority to-dos"><svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="28"/><circle class="val" cx="32" cy="32" r="28"/></svg><div class="rv"><b>0</b><span>P1</span></div></div>
+      <div class="sunarc" id="sunArc" title="Daylight today"><svg viewBox="0 0 260 118"><defs><linearGradient id="sunGrad" x1="0" x2="1"><stop offset="0" stop-color="#f6c453"/><stop offset="1" stop-color="#f08a3a"/></linearGradient></defs><line class="hz" x1="0" y1="114" x2="260" y2="114"/><path class="trk" d="M14 114A116 106 0 0 1 246 114"/><path class="val" d="M14 114A116 106 0 0 1 246 114"/><circle class="dot" r="8" cx="14" cy="114"/></svg>
+        <div class="mid"><b>--</b><span>daylight left</span></div>
+        <div class="times"><div><b id="sunRise">--</b><span>Sunrise</span></div><div><b id="sunSet">--</b><span>Sunset</span></div></div></div>
       <div class="dock">
         <a class="ico" href="https://claude.ai/artifact/BnXgH6d4iX7XVEZwdoz3Ei" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/></svg><span class="lb">Chief of Staff</span></a>
         <a class="ico" href="https://sentienlabs.ai" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg><span class="lb">Sentien Labs</span></a>
@@ -573,8 +571,6 @@ const IC={
  cloud:'<svg viewBox="0 0 48 48"><path d="M14 36h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 36z" fill="#a9b5c8"/></svg>',
  rain:'<svg viewBox="0 0 48 48"><path d="M14 30h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 30z" fill="#a9b5c8"/><g stroke="#5aa9ff" stroke-width="3" stroke-linecap="round"><path d="M17 35l-2 6M25 35l-2 6M33 35l-2 6"/></g></svg>',
  snow:'<svg viewBox="0 0 48 48"><path d="M14 30h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 30z" fill="#a9b5c8"/><g fill="#e9edf3"><circle cx="16" cy="38" r="2.5"/><circle cx="24" cy="41" r="2.5"/><circle cx="32" cy="38" r="2.5"/></g></svg>'};
-const SUNUP='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6c453" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 3v5M9 6l3-3 3 3"/></svg>';
-const SUNDN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f2a33a" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 3v5M9 5l3 3 3-3"/></svg>';
 // NOAA solar calc
 function sunTimes(date,lat,lon){
   const rad=Math.PI/180,start=Date.UTC(date.getFullYear(),0,0),doy=Math.floor((Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())-start)/864e5);
@@ -589,18 +585,28 @@ let wxSig="";
 function renderWx(n){
   if(!PLACE)return;
   const sig=[n.getMinutes(),n.getDate(),!!WX].join(); if(sig===wxSig)return; wxSig=sig;
-  const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon);
-  const day=n>=rise&&n<set,pct=Math.min(100,Math.max(0,(n-rise)/(set-rise)*100));
-  const left=day?split(set-n):split((n<rise?rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise)-n);
+  renderSunArc(n);
   const dn=(t,i)=>i===0?"Today":localDate(t).toLocaleDateString([], {weekday:"short"});
   $("#wx").innerHTML=`${WX?`<div class="now">${IC[WX.icon]}<div><div class="temp">${WX.temp}°</div></div>
     <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">${esc(PLACE.name)} · <span class="tap">Tap for radar</span></div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
-  <div class="sun"><div class="row"><span>${SUNUP}${fmtT(rise)}</span><span>${fmtT(set)}${SUNDN}</span></div>
-    <div class="track"><div class="fill" style="width:${pct}%"></div></div>
-    <div class="left">${day?`Sunset in ${left.h}h ${left.m}m`:`Sunrise in ${left.h}h ${left.m}m`} · ${Math.round((set-rise)/36e5*10)/10}h of daylight</div></div>
   <div class="fc">${WX?WX.days.map((d,i)=>`<div class="fd"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join(""):""}</div>`;
 }
 
+// ---- header sun arc: sun rides the arc from sunrise to sunset; at night it shows time until sunrise ----
+function renderSunArc(n){
+  const el=$("#sunArc");if(!el||!PLACE)return;
+  const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon),day=n>=rise&&n<set;
+  const nextRise=n<rise?rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise;
+  const f=day?(n-rise)/(set-rise):0,path=el.querySelector(".val"),L=path.getTotalLength();
+  path.style.strokeDasharray=L;path.style.strokeDashoffset=String(L*(1-f));
+  const pt=path.getPointAtLength(L*(day?f:0)),dot=el.querySelector(".dot");
+  dot.setAttribute("cx",pt.x);dot.setAttribute("cy",day?pt.y:114);
+  el.classList.toggle("night",!day);
+  const t=split(day?set-n:nextRise-n),hm=t.h?`${t.h}h ${t.m}m`:`${t.m}m`;
+  el.querySelector(".mid").innerHTML=`<b>${hm}</b><span>${day?"daylight left":"until sunrise"}</span>`;
+  $("#sunRise").textContent=fmtT(day||n<rise?rise:nextRise);$("#sunSet").textContent=fmtT(set);
+  el.title=`${Math.round((set-rise)/36e5*10)/10}h of daylight today`;
+}
 // ---- moon phase (synodic month from a known new moon, 2000-01-06 18:14 UTC) ----
 function moonPhase(n){const syn=29.530588853,t=(n-Date.UTC(2000,0,6,18,14))/864e5;return((t%syn)+syn)%syn/syn}
 let moonSig="";
@@ -762,7 +768,7 @@ function renderTasks(){
   $("#priCount").textContent=`${hi.length} open`;
   $("#todoCount").textContent=`${rest.length} open`;
   const p1=hi.filter(t=>!pending.has(t.id)).length;
-  setRing("#ringP1",p1,1);$("#ringP1").classList.toggle("clear",!p1);
+  setRing("#ringP1",p1,1);
 }
 async function toggleTask(id){
   const done=pending.has(id);done?pending.delete(id):pending.add(id);renderTasks();
@@ -799,7 +805,7 @@ function renderCds(n){
 }
 
 // ---- header rings ----
-function setRing(sel,val,frac){const el=$(sel);el.querySelector("b").textContent=val;
+function setRing(sel,val,frac){const el=$(sel);if(!el)return;el.querySelector("b").textContent=val;
   el.querySelector(".val").style.strokeDashoffset=String(176*(1-Math.max(0,Math.min(1,frac))))}
 // ---- status ----
 function renderStatus(){
