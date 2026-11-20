@@ -138,8 +138,8 @@ button{cursor:pointer;border:0;background:none}
 .kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px 16px;font-size:17px}
 .kv dt{color:var(--dim)} .kv dd{margin:0;overflow-wrap:anywhere}
 
-@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .col.c3{grid-column:1/-1}}
-@media (max-width:700px){.grid{grid-template-columns:minmax(0,1fr)} .clock{font-size:44px} .big .v{font-size:60px} .big .sep{font-size:46px;padding-bottom:18px} .hero .title{font-size:30px} .addform{grid-template-columns:1fr} .ev{grid-template-columns:70px 6px minmax(0,1fr) auto}}
+@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"a b" "c b";grid-template-rows:auto 1fr} .c1{grid-area:a} .c2{grid-area:b} .c3{grid-area:c}}
+@media (max-width:700px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:none;grid-template-rows:none} .c1,.c2,.c3{grid-area:auto} .clock{font-size:44px} .big .v{font-size:60px} .big .sep{font-size:46px;padding-bottom:18px} .hero .title{font-size:30px} .addform{grid-template-columns:1fr} .ev{grid-template-columns:70px 6px minmax(0,1fr) auto}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <style>
@@ -204,7 +204,9 @@ body{
 /* Long lists scroll inside their panel instead of stretching the page */
 #todos,#pri{max-height:520px;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
 .radar-frame{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:rgba(0,0,0,.35)}
-.radar-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.radar-frame{z-index:0}
+.radar-frame .leaflet-container,.radar-frame.leaflet-container{background:#0b0e13;font:12px var(--body)}
+.leaflet-control-attribution{background:rgba(0,0,0,.5)!important;color:#aaa!important}.leaflet-control-attribution a{color:#ccc!important}
 #radarOpen{color:var(--accent);text-decoration:none}
 .brief{font-size:17px;color:var(--fg);margin-top:8px;max-width:760px;line-height:1.4}
 .alerts{display:grid;gap:10px}
@@ -227,7 +229,8 @@ html.night .panel,html.night .wx,html.night .hero{background:linear-gradient(180
 html.night #sky .shade{background:rgba(4,3,2,.25)}
 /* drive mode: big and simple */
 html.drive .fcst,html.drive #alerts details .desc,html.drive .wx .fc,html.drive .col.c3,html.drive .cdpanel,html.drive .brief,html.drive .allday{display:none!important}
-html.drive .grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+html.drive .grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-areas:"a b";grid-template-rows:auto}
+html.drive .c1{grid-area:a} html.drive .c2{grid-area:b}
 html.drive .clock{font-size:96px}
 html.drive .ev .nm{font-size:22px}
 html.drive .leave{font-size:22px;padding:18px 20px}
@@ -302,7 +305,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
   <section class="wx" id="wx" aria-label="Weather"></section>
 
   <main class="grid">
-    <section class="col">
+    <section class="col c1">
       <div class="panel hero" id="hero"></div>
       <div class="panel cdpanel">
         <h2 class="label">Countdowns</h2>
@@ -315,7 +318,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
       </div>
     </section>
 
-    <section class="col">
+    <section class="col c2">
       <div class="panel" style="flex:1">
         <h2 class="label">Today &amp; tomorrow</h2>
         <div class="leave" id="leave" hidden></div>
@@ -335,7 +338,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
       </div>
       <div class="panel radar" id="radarPanel" hidden>
         <h2 class="label">Radar <span class="count"><a id="radarOpen" href="#" target="_blank" rel="noopener">Full screen</a> · <button id="radarHide" type="button">Hide</button></span></h2>
-        <div class="radar-frame"><iframe id="radar" title="Weather radar" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+        <div class="radar-frame" id="radarMap" role="img" aria-label="Weather radar map"></div>
       </div>
     </section>
   </main>
@@ -459,18 +462,49 @@ async function updateLeave(){
   el.hidden=false;el.className="leave"+(late?" now":"");
   el.innerHTML=`<div>${late?"<b>Leave now</b>":`Leave by <b>${fmtT(by)}</b>`} for ${esc(ev.title)} · ${mins} min drive</div><a href="${gmaps(ev.location)}" target="_blank" rel="noopener">Open in Maps</a>`;
 }
-// Animated radar (RainViewer) centered on PLACE
-let radarUrl="";
-// Radar stays hidden until the weather band is tapped; iframe only loads while shown
+// Radar: Leaflet map centered on PLACE at regional zoom, animated RainViewer frames. Loaded on first open.
+const RADAR_ZOOM=8;
+let radarMap=null,radarDot=null,radarLayers=[],radarIdx=0,radarTimer=null,radarAt=0;
+function loadLeaflet(){
+  if(window.L)return Promise.resolve();
+  return new Promise((ok,no)=>{
+    const l=document.createElement("link");l.rel="stylesheet";l.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";document.head.appendChild(l);
+    const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);
+  });
+}
+async function radarFrames(){
+  if(Date.now()-radarAt<10*60e3&&radarLayers.length)return;
+  const j=await (await fetch("https://api.rainviewer.com/public/weather-maps.json")).json();
+  radarLayers.forEach(l=>radarMap.removeLayer(l));
+  radarLayers=(j.radar?.past||[]).slice(-8).map(f=>L.tileLayer(`${j.host}${f.path}/256/{z}/{x}/{y}/4/1_1.png`,{opacity:0,maxNativeZoom:7,maxZoom:12,zIndex:5}).addTo(radarMap));
+  radarAt=Date.now();radarIdx=radarLayers.length-1;
+}
+function radarStep(){
+  if(!radarLayers.length)return;
+  radarLayers.forEach(l=>l.setOpacity(0));
+  radarIdx=(radarIdx+1)%radarLayers.length;radarLayers[radarIdx].setOpacity(.7);
+  clearTimeout(radarTimer);radarTimer=setTimeout(radarStep,radarIdx===radarLayers.length-1?2000:600);
+}
+async function showRadar(){
+  try{
+    await loadLeaflet();
+    const c=[PLACE.lat,PLACE.lon];
+    if(!radarMap){
+      radarMap=L.map("radarMap",{zoomControl:true,attributionControl:true}).setView(c,RADAR_ZOOM);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:12,attribution:"© OpenStreetMap © CARTO · RainViewer"}).addTo(radarMap);
+      radarDot=L.circleMarker(c,{radius:7,color:"#fff",weight:2,fillColor:"#4f8cff",fillOpacity:1}).addTo(radarMap);
+    }else{radarMap.invalidateSize();radarMap.setView(c,RADAR_ZOOM);radarDot.setLatLng(c)}
+    await radarFrames();radarStep();
+  }catch{$("#radarMap").textContent="Radar unavailable"}
+}
+// Radar stays hidden until the weather band is tapped
 function toggleRadar(show){
   const p=$("#radarPanel");show=show??p.hidden;p.hidden=!show;
-  $("#radar").src=show?radarUrl:"about:blank";
-  if(show)p.scrollIntoView({behavior:"smooth",block:"nearest"});
+  if(show){showRadar();p.scrollIntoView({behavior:"smooth",block:"nearest"})}else clearTimeout(radarTimer);
 }
 function setRadar(){
-  const u=`https://www.rainviewer.com/map.html?loc=${PLACE.lat.toFixed(2)},${PLACE.lon.toFixed(2)}&z=7&overlay=radar&product=radar&opacity=0.75&play=true`;
-  radarUrl=u;$("#radarOpen").href=u;
-  if(!$("#radarPanel").hidden&&$("#radar").src!==u)$("#radar").src=u;
+  $("#radarOpen").href=`https://www.rainviewer.com/map.html?loc=${PLACE.lat.toFixed(3)},${PLACE.lon.toFixed(3)},${RADAR_ZOOM}&layer=radar&o=83&c=1&sm=1&sn=1`;
+  if(radarMap){const c=[PLACE.lat,PLACE.lon];radarDot.setLatLng(c);if(!$("#radarPanel").hidden)radarMap.setView(c,RADAR_ZOOM)}
 }
 function wcode(c){
   if(c===0)return{icon:"sun",cond:"Clear"};
@@ -633,7 +667,7 @@ function renderTimeline(n){
   const inWin=e=>e.e>t0&&e.s<t2;
   const all=EVENTS.filter(e=>e.allDay&&inWin(e)&&e.e>t0&&e.s<new Date(t0.getTime()+864e5));
   $("#allday").innerHTML=all.map(e=>`<button class="chip" data-ev="${EVENTS.indexOf(e)}" style="border-color:${e.c}">${esc(e.title)}</button>`).join("");
-  const list=timed().filter(inWin).sort((a,b)=>a.s-b.s);
+  const list=timed().filter(e=>inWin(e)&&e.e>n).sort((a,b)=>a.s-b.s);
   const today=n.toDateString();let html="",nowPlaced=false,lastDay=today;
   list.forEach(ev=>{
     const day=ev.s.toDateString();
