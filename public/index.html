@@ -608,8 +608,8 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
 @media (prefers-reduced-motion:reduce){.driveband .lanes,.driveband .car{animation:none!important}}
 </style>
 <style>
-.driveband .road{width:300px;height:96px;background:linear-gradient(180deg,transparent 0 70%,rgba(255,255,255,.05) 70%)}
-.driveband .car{left:28px;bottom:6px;width:240px;height:90px;filter:drop-shadow(0 0 14px rgba(255,255,255,.06))}
+.driveband .road{width:300px;height:104px;background:linear-gradient(180deg,transparent 0 70%,rgba(255,255,255,.05) 70%)}
+.driveband .car{left:28px;bottom:4px;width:240px;height:95px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,255,255,.06))}
 .driveband .shadow{position:absolute;left:44px;bottom:4px;width:212px;height:12px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.75),transparent)}
 .driveband .lanes{bottom:8px}
 .driveband.moving .car{animation:bob .7s ease-in-out infinite alternate}
@@ -632,7 +632,7 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
   </header>
 
   <div class="driveband" id="driveBand" aria-live="polite">
-    <div class="road"><div class="lanes"></div><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="90"></div>
+    <div class="road"><div class="lanes"></div><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="95"></div>
     <div class="dtxt"><b id="driveWord">Driving</b><span id="driveSub">Drive mode is on</span></div>
   </div>
   <section class="alerts" id="alerts" hidden></section>
