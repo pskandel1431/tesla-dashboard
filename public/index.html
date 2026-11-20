@@ -448,13 +448,16 @@ function locate(){
   navigator.geolocation.watchPosition(p=>{
     HERE={lat:p.coords.latitude,lon:p.coords.longitude};
     const sp=p.coords.speed;
-    if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>60e3)moving=false}if(was!==moving)driveManual=null;setDrive()}
+    if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>STOP_MS)moving=false}if(was!==moving)driveManual=null;setDrive()}
     const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
     if(GEO&&km(GEO,g)<5)return;
     GEO=g;if(!PLACE||km(PLACE,g)>=5){PLACE=g;loadWx();setRadar()}
   },()=>{},{enableHighAccuracy:true,maximumAge:30e3,timeout:30e3});
 }
 // ---- drive mode: on while moving (or when tapped) ----
+// Stays on through stoplights: off only after 5 min stopped. GPS may stop reporting while parked, so check on a timer too.
+const STOP_MS=5*60e3;
+setInterval(()=>{if(moving&&stillSince&&Date.now()-stillSince>STOP_MS){moving=false;driveManual=null;setDrive()}},15e3);
 function setDrive(){const on=driveManual??moving;document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive").textContent=on?"Exit drive mode":"Drive mode"}
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
