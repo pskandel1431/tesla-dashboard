@@ -600,14 +600,28 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
 .driveband.moving .lanes{animation:lanes .45s linear infinite}
 @keyframes lanes{to{background-position:-36px 0}}
 .driveband .car{position:absolute;left:70px;bottom:14px;width:78px;height:34px;color:var(--accent);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 60%,transparent))}
-.driveband .car .wh{fill:#0b0d12;stroke:currentColor;stroke-width:2.2}
-.driveband .car .win{fill:#0b0d12;opacity:.7}
 .driveband.moving .car{animation:bob .6s ease-in-out infinite alternate}
 @keyframes bob{to{transform:translateY(-1.5px)}}
 .driveband .dtxt{display:flex;flex-direction:column;gap:2px}
 .driveband .dtxt b{font:300 40px/1 var(--display);letter-spacing:-.02em}
 .driveband .dtxt span{font-size:17px;color:var(--dim)}
 @media (prefers-reduced-motion:reduce){.driveband .lanes,.driveband .car{animation:none!important}}
+</style>
+<style>
+.driveband .road{width:300px;height:104px;background:linear-gradient(180deg,transparent 0 70%,rgba(255,255,255,.05) 70%)}
+.driveband .car{left:28px;bottom:4px;width:240px;height:95px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,255,255,.06))}
+.driveband .shadow{position:absolute;left:44px;bottom:4px;width:212px;height:12px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.75),transparent)}
+.driveband .lanes{bottom:8px}
+.driveband.moving .car{animation:bob .7s ease-in-out infinite alternate}
+.allday{gap:6px}
+.allday .chip{min-height:0;padding:5px 12px;font-size:14px;border-radius:999px;line-height:1.3}
+.today .daybar{margin:0 0 6px}
+.chart.p2h[hidden]{display:none!important}
+main.simple .hero{margin-bottom:0}
+/* drive: calendar collapses to the next event; countdown stays */
+html.drive .today .label .hint,html.drive .today .nowline,html.drive .today .daysep,html.drive .today .tl>.ev~.ev,html.drive .today .leave{display:none!important}
+html.drive .today{flex:none!important}
+html.drive #hero:not([hidden])+.today,html.drive .hero .btnrow{display:none!important}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -627,7 +641,7 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
   </header>
 
   <div class="driveband" id="driveBand" aria-live="polite">
-    <div class="road"><div class="lanes"></div><svg class="car" viewBox="0 0 64 28"><path d="M6 20h52l-2-6c-.8-2.2-2.8-3.4-5-3.6L40 9 33 3.5C31.8 2.6 30.4 2 29 2H17c-2.3 0-4.3 1.3-5.4 3.3L8.5 11C6.6 11.7 5 13.6 5 16z" fill="currentColor"/><circle cx="17" cy="21" r="5" class="wh"/><circle cx="47" cy="21" r="5" class="wh"/><path d="M15 9l3.5-5H28v5zM31 9V4h-1l7 5z" class="win"/></svg></div>
+    <div class="road"><div class="lanes"></div><div class="shadow"></div><img class="car" src="/m3.webp" alt="Model 3 Performance" width="240" height="95"></div>
     <div class="dtxt"><b id="driveWord">Driving</b><span id="driveSub">Drive mode is on</span></div>
   </div>
   <section class="alerts" id="alerts" hidden></section>
@@ -643,19 +657,19 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
       <section class="wx" id="wx" aria-label="Weather"></section>
     </section>
     <section class="col right">
+      <div class="panel hero" id="hero" hidden></div>
       <div class="panel today" style="flex:1">
         <h2 class="label">Up next<span class="hint">hold an event to count down</span></h2>
+        <div class="daybar" id="daybar"></div>
         <div class="leave" id="leave" hidden></div>
         <div class="allday" id="allday"></div>
         <div class="tl" id="tl"></div>
-        <div class="daybar" id="daybar"></div>
       </div>
     </section>
   </main>
   <!-- hidden for now (kept so they can come back): countdowns, tasks, 24h chart, wind -->
   <div class="parked" hidden>
     <section class="col c1">
-      <div class="panel hero" id="hero"></div>
       <div class="panel cdpanel">
         <h2 class="label">Countdowns</h2>
         <div class="cds" id="cds"></div>
@@ -1015,7 +1029,7 @@ function renderWxCharts(n){
       if(wetI<0)txt=`Dry for the next 2 hours<small>${fmtT(q[0].t)} – ${fmtT(new Date(q[q.length-1].t.getTime()+15*60e3))}</small>`;
       else{const endI=q.findIndex((r,i)=>i>wetI&&r.mm<.005),tot=q.reduce((a,r)=>a+r.mm,0);
         txt=`${wetI===0?`${kind} now`:`${kind} starts ${fmtT(q[wetI].t)}`}${endI>0?`, ends ${fmtT(q[endI].t)}`:", through the next 2 hours"}<small>about ${tot<.01?"a trace":tot.toFixed(2)+" in"}</small>`}
-      $("#p2hTxt").innerHTML=txt;pb.parentElement.hidden=false;
+      $("#p2hTxt").innerHTML=txt;pb.parentElement.hidden=wetI<0;
     }else pb.parentElement.hidden=true;
   }
   const dir=WX.windDir??0,names=["N","NE","E","SE","S","SW","W","NW"];
@@ -1143,7 +1157,7 @@ function upcomingCds(n){return cds.filter(c=>new Date(c.d)>n).sort((a,b)=>new Da
 function renderHero(n){
   const h=$("#hero"),up=upcomingCds(n);
   const c=up.find(x=>x.id===heroPick)||up[0];
-  heroId=c?c.id:null;
+  heroId=c?c.id:null;h.hidden=!c;
   if(!c){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next countdown</div><p class="title">Nothing to count down to</p><div class="hero-empty">Hold any calendar event, or add a date.</div><div class="btnrow"><button class="btn primary" id="addBtn2" type="button">+ Add countdown</button></div>`}return}
   const d=new Date(c.d),x=split(d-n);
   const first=c===up[0],more=up.length>1;
