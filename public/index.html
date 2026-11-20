@@ -899,9 +899,9 @@ function locate(){
   },()=>{},{enableHighAccuracy:true,maximumAge:30e3,timeout:30e3});
 }
 // ---- drive mode: on while moving (or when tapped) ----
-// Stays on through stoplights: off only after 5 min stopped. GPS may stop reporting while parked, so check on a timer too.
-const STOP_MS=5*60e3;
-setInterval(()=>{if(moving&&stillSince&&Date.now()-stillSince>STOP_MS){moving=false;driveManual=null;setDrive()}},15e3);
+// Stays on through stoplights: off after 1 min stopped. GPS may stop reporting while parked, so check on a timer too.
+const STOP_MS=60e3;
+setInterval(()=>{if(moving&&stillSince&&Date.now()-stillSince>STOP_MS){moving=false;driveManual=null;setDrive()}},5e3);
 // ---- drive: next stop countdown with a little icon riding a track (fills over the last 2 hours) ----
 let nsSig="";
 function renderNextStop(n){
@@ -931,7 +931,7 @@ function fitDrive(){const w=$(".wrap"),on=document.documentElement.classList.con
 addEventListener("resize",()=>fitDrive());
 function setDrive(){const on=driveManual??moving;
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
-  $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 5 min";
+  $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 1 min";
   $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive";requestAnimationFrame(fitDrive)}
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
