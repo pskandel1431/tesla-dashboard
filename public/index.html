@@ -400,10 +400,12 @@ html.night .panel,html.night .wx,html.night .hero,html.night .wxcharts .chart,ht
 .big{flex-wrap:nowrap}.big .sep{font-size:clamp(36px,3.6vw,60px)}
 /* header type */
 .greet{font:400 19px/1.2 var(--body);color:var(--dim)}
-.clock{font:200 84px/.95 var(--display);letter-spacing:-.035em;margin:2px 0 6px;
+.clock{font:200 104px/.92 var(--display);letter-spacing:-.035em;margin:2px 0 6px;
   background:linear-gradient(180deg,#fff 30%,rgba(255,255,255,.62));-webkit-background-clip:text;background-clip:text;color:transparent}
 html.night .clock{background-image:linear-gradient(180deg,#fff2e2 30%,rgba(238,214,186,.6))}
-.date{font:400 18px var(--body);color:var(--fg);opacity:.82}
+.date{font:300 28px/1.1 var(--display);color:var(--dim);letter-spacing:-.005em}
+.date b{font-weight:400;color:var(--fg)}
+.dateline{align-items:center}
 .brief{font:400 18px/1.45 var(--body);margin-top:10px;color:var(--fg);opacity:.92}
 .sunarc .times b,.sunarc .mid b{font-family:var(--display);font-weight:300;letter-spacing:-.01em}
 .sunarc .mid{margin-top:-80px;height:76px}
@@ -472,8 +474,8 @@ html.night .clock{background-image:linear-gradient(180deg,#fff2e2 30%,rgba(238,2
 /* entrance: staggered */
 .wxcharts .chart{animation:rise .55s ease both}.wxcharts .chart:nth-child(2){animation-delay:.05s}.wxcharts .chart:nth-child(3){animation-delay:.1s}
 @media (prefers-reduced-motion:reduce){#sky .aurora i,.nowdot,.wxcharts .chart{animation:none}}
-@media (max-width:700px){.clock{font-size:56px}.wx .temp{font-size:58px}.big .v{font-size:66px}}
-html.drive .clock{font-size:110px}
+@media (max-width:700px){.clock{font-size:64px}.date{font-size:22px}.wx .temp{font-size:58px}.big .v{font-size:66px}}
+html.drive .clock{font-size:120px}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -1104,7 +1106,7 @@ function renderAll(){lastMin=-1;renderTasks();tick()}
 function tick(){const n=new Date();
   $("#clock").textContent=n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
   const hr=n.getHours();$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`;
-  $("#date").textContent=n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
+  $("#date").innerHTML=`<b>${n.toLocaleDateString([], {weekday:"long"})}</b> ${n.toLocaleDateString([], {month:"long",day:"numeric"})}`;
   renderHero(n);renderCds(n);renderWx(n);setSky(n);
   if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderDayBar(n);renderStatus();renderBrief(n);if(n.getMinutes()%2===0)updateLeave()}
 }
