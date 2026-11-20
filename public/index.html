@@ -208,6 +208,20 @@ body{
 .radar-frame .leaflet-container,.radar-frame.leaflet-container{background:#0b0e13;font:12px var(--body)}
 .leaflet-control-attribution{background:rgba(0,0,0,.5)!important;color:#aaa!important}.leaflet-control-attribution a{color:#ccc!important}
 #radarOpen{color:var(--accent);text-decoration:none}
+/* polish */
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;z-index:40;padding:14px 22px;border-radius:999px;background:rgba(20,24,32,.85);border:1px solid var(--line);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);font-size:17px;transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.ev,.task,.allday .chip{transition:transform .18s,background .18s;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.holding{transform:scale(.97);background:color-mix(in srgb,var(--accent) 16%,transparent)!important}
+.ev.now{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 22%,transparent) var(--pct,0%),rgba(255,255,255,.04) var(--pct,0%))}
+.ev .cdtag{font-size:13px;color:var(--accent);margin-left:8px;font-weight:500;white-space:nowrap}
+.nowline::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.cd .dt{font-size:12px;color:var(--faint);margin-top:-4px;letter-spacing:.02em}
+.cd.soon .t{color:var(--accent)}
+.panel,.wx,.hero,.alerts{animation:rise .5s ease both}
+.grid .col:nth-child(2) .panel{animation-delay:.06s}.grid .col:nth-child(3) .panel{animation-delay:.12s}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.panel,.wx,.hero,.alerts{animation:none}}
 .brief{font-size:17px;color:var(--fg);margin-top:8px;max-width:760px;line-height:1.4}
 .alerts{display:grid;gap:10px}
 .alerts details{border-radius:var(--r);padding:14px 20px;background:color-mix(in srgb,var(--red) 22%,rgba(10,10,14,.6));border:1px solid color-mix(in srgb,var(--red) 55%,transparent);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass)}
@@ -320,7 +334,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
 
     <section class="col c2">
       <div class="panel" style="flex:1">
-        <h2 class="label">Today &amp; tomorrow</h2>
+        <h2 class="label">Today &amp; tomorrow<span class="hint">hold an event to count down</span></h2>
         <div class="leave" id="leave" hidden></div>
         <div class="allday" id="allday"></div>
         <div class="tl" id="tl"></div>
@@ -344,6 +358,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
   </main>
 </div>
 
+<div class="toast" id="toast" role="status"></div>
 <div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
 <script type="module">
@@ -589,7 +604,7 @@ async function loadFcst(){
     if(key!==nwsKey){const pt=await (await fetch(`https://api.weather.gov/points/${PLACE.lat.toFixed(4)},${PLACE.lon.toFixed(4)}`)).json();nwsUrl=pt.properties.forecast;nwsKey=key}
     const f=await (await fetch(nwsUrl)).json();
     const per=f.properties.periods.slice(0,2);
-    const el=$("#fcst");el.hidden=false;
+    const el=$("#fcst");el.hidden=!per.length;if(!per.length)return;
     el.innerHTML=`<h2 class="label">Forecast</h2>`+per.map(x=>`<div class="row"><div class="when">${esc(x.name)}</div><div class="txt">${esc(x.detailedForecast)}</div></div>`).join("");
   }catch{}
 }
@@ -666,7 +681,7 @@ function renderTimeline(n){
   const t0=dayStart(n),t2=new Date(t0.getTime()+2*864e5);
   const inWin=e=>e.e>t0&&e.s<t2;
   const all=EVENTS.filter(e=>e.allDay&&inWin(e)&&e.e>t0&&e.s<new Date(t0.getTime()+864e5));
-  $("#allday").innerHTML=all.map(e=>`<button class="chip" data-ev="${EVENTS.indexOf(e)}" style="border-color:${e.c}">${esc(e.title)}</button>`).join("");
+  $("#allday").innerHTML=all.map(e=>`<button class="chip" data-ev="${EVENTS.indexOf(e)}" data-hold="cd" style="border-color:${e.c}">${esc(e.title)}</button>`).join("");
   const list=timed().filter(e=>inWin(e)&&e.e>n).sort((a,b)=>a.s-b.s);
   const today=n.toDateString();let html="",nowPlaced=false,lastDay=today;
   list.forEach(ev=>{
@@ -675,10 +690,11 @@ function renderTimeline(n){
       html+=`<div class="label daysep">${ev.s.toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"})}</div>`;lastDay=day}
     if(!nowPlaced&&ev.s>n&&day===today){html+=`<div class="nowline">NOW ${fmtT(n)}</div>`;nowPlaced=true}
     const cls=ev.e<n?"past":ev.s<=n?"now":"";const t=fmtT(ev.s);
-    html+=`<div class="ev ${cls}" style="--c:${ev.c}" role="button" tabindex="0" data-ev="${EVENTS.indexOf(ev)}">
+    const pct=cls==="now"?Math.round((n-ev.s)/(ev.e-ev.s)*100):0,hasCd=cds.some(c=>c.ev===evKey(ev));
+    html+=`<div class="ev ${cls}" style="--c:${ev.c};--pct:${pct}%" role="button" tabindex="0" data-ev="${EVENTS.indexOf(ev)}" data-hold="cd">
       <div class="tm">${t.replace(/\s?[AP]M/i,"")}<small>${t.match(/[AP]M/i)?.[0]||""} · ${Math.round((ev.e-ev.s)/60000)}m</small></div>
       <div class="bar"></div>
-      <div><div class="nm">${esc(ev.title)}</div>${ev.location?`<div class="sub">${esc(ev.location)}</div>`:`<div class="sub">${esc(ev.cal)}</div>`}</div>
+      <div><div class="nm">${esc(ev.title)}${hasCd?'<span class="cdtag">⏱ counting down</span>':""}</div>${ev.location?`<div class="sub">${esc(ev.location)}</div>`:`<div class="sub">${esc(ev.cal)}</div>`}</div>
       ${ev.location?`<a class="go" href="${gmaps(ev.location)}" target="_blank" rel="noopener" aria-label="Open ${esc(ev.location)} in Maps">${PIN}</a>`:"<span></span>"}
     </div>`;
   });
@@ -722,6 +738,22 @@ async function toggleTask(id){
   catch{done?pending.add(id):pending.delete(id);errors=["Couldn't update Todoist"];renderTasks();renderStatus()}
 }
 
+// ---- add a calendar event as a countdown (hold an event, or button in its details) ----
+const evKey=e=>`${e.title}|${e.s.toISOString()}`;
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200)}
+function addCdFromEvent(i){
+  const ev=EVENTS[i];if(!ev)return;const k=evKey(ev);
+  if(cds.some(c=>c.ev===k)){toast(`Already counting down to ${ev.title}`);return}
+  if(ev.s<=new Date()){toast("That event already started");return}
+  cds.push({id:Date.now().toString(36),n:ev.title,d:ev.s.toISOString(),ev:k});saveCds();cdSig=null;heroSig="";lastMin=-1;
+  navigator.vibrate?.(30);toast(`Counting down to ${ev.title}`);renderAll();
+}
+let evHoldT=null;
+document.addEventListener("pointerdown",e=>{const el=e.target.closest('[data-hold="cd"]');if(!el||e.target.closest("a"))return;held=false;
+  el.classList.add("holding");evHoldT=setTimeout(()=>{held=true;evHoldT=null;el.classList.remove("holding");addCdFromEvent(+el.dataset.ev)},650)});
+const cancelEvHold=()=>{if(evHoldT){clearTimeout(evHoldT);evHoldT=null}document.querySelectorAll(".holding").forEach(x=>x.classList.remove("holding"))};
+["pointerup","pointerleave","pointercancel","scroll"].forEach(t=>document.addEventListener(t,cancelEvHold,true));
+document.addEventListener("contextmenu",e=>{if(e.target.closest('[data-hold="cd"]'))e.preventDefault()});
 // ---- countdowns ----
 let cdSig=null;
 function renderCds(n){
@@ -729,7 +761,7 @@ function renderCds(n){
   const sig="L"+list.map(c=>c.id).join();
   if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
   cdSig=sig;
-  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;return`<div class="cd"><div class="n">${esc(c.n)}</div><div class="t">${ms>0?short(ms):"Now"}</div>
+  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;const dd=new Date(c.d);return`<div class="cd${ms>0&&ms<864e5?" soon":""}"><div class="n">${esc(c.n)}</div><div class="dt">${dd.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div><div class="t">${ms>0?short(ms):"Now"}</div>
     <button class="x" data-del="${c.id}" aria-label="Remove ${esc(c.n)}">×</button></div>`}).join("")+
     `<button class="cd add" id="addBtn">+ Add countdown</button>`;
 }
@@ -751,6 +783,7 @@ function openEvent(i){
   ${ev.location?`<dt>Where</dt><dd>${esc(ev.location)}</dd>`:""}
   ${ev.notes?`<dt>Notes</dt><dd style="white-space:pre-line">${esc(ev.notes)}</dd>`:""}</dl>
   <div class="btnrow">${ev.location?`<a class="btn primary" href="${gmaps(ev.location)}" target="_blank" rel="noopener">${PIN}Open in Maps</a>`:""}
+  <button class="btn" data-addcd="${i}">⏱ Count down to this</button>
   <button class="btn" id="closeSheet">Close</button></div>`;
   $("#scrim").hidden=false;
 }
@@ -758,9 +791,10 @@ function openEvent(i){
 // ---- events ----
 document.addEventListener("click",e=>{
   if(e.target.closest("a"))return;
-  const ev=e.target.closest("[data-ev]"); if(ev){openEvent(+ev.dataset.ev);return}
+  const ac=e.target.closest("[data-addcd]"); if(ac){addCdFromEvent(+ac.dataset.addcd);$("#scrim").hidden=true;return}
+  const ev=e.target.closest("[data-ev]"); if(ev){if(held){held=false;return}openEvent(+ev.dataset.ev);return}
   const tk=e.target.closest("[data-task]"); if(tk){if(held){held=false;return}toggleTask(tk.dataset.task);return}
-  const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);saveCds();renderCds(new Date());return}
+  const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);saveCds();lastMin=-1;renderCds(new Date());return}
   if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
   if(e.target.closest("#radarHide")){toggleRadar(false);return}
   if(e.target.closest("#wx")){toggleRadar();return}
