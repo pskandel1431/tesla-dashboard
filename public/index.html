@@ -661,7 +661,10 @@ html.drive .ring2 .dw{display:block;font-size:11px;letter-spacing:.06em;color:va
 html.drive.hasnext .driveband .dtxt b{font-size:30px}
 html.drive.hasnext .driveband .dtxt span{font-size:15px}
 html.drive.hasnext main.simple .col.right{display:none}
-html.drive.hasnext main.simple .col.left{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+html.drive.hasnext main.simple .col.left{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,3fr);align-items:stretch}
+html.drive.hasnext main.simple .wx{grid-template-columns:auto minmax(0,1fr);gap:8px 16px;align-content:start;padding:16px 18px}
+html.drive.hasnext main.simple .wx .fc{display:grid!important;grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}
+html.drive.hasnext main.simple .wx .fc>:nth-child(n+4){display:none}
 .hero-what{display:flex;align-items:center;gap:16px}
 .hero-ic{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--accent);background:#11161f;box-shadow:0 0 18px -4px var(--accent)}
 .hero-ic svg{width:28px;height:28px;fill:none;stroke:var(--fg);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
