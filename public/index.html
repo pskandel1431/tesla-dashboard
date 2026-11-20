@@ -27,19 +27,12 @@ button{cursor:pointer;border:0;background:none}
 .label{font:600 13px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 
 /* weather band */
-.wx{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:28px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
+.wx{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
 .wx .now{display:flex;align-items:center;gap:14px}
 .wx .now svg{width:56px;height:56px;flex:none}
 .wx .temp{font:700 54px/1 var(--display);font-variant-numeric:tabular-nums}
 .wx .cond{font-weight:600;font-size:17px}
 .wx .sub2{color:var(--dim);font-size:14px;margin-top:2px}
-.sun{display:flex;flex-direction:column;gap:8px;min-width:220px}
-.sun .row{display:flex;justify-content:space-between;gap:16px;font:600 20px/1 var(--display);font-variant-numeric:tabular-nums}
-.sun .row span{display:flex;align-items:center;gap:6px}
-.sun .row small{font:500 12px var(--body);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
-.sun .track{position:relative;height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden}
-.sun .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#f6c453,var(--accent))}
-.sun .left{font-size:13px;color:var(--dim)}
 .fc{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .fd{background:var(--panel-2);border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .fd .d{font:600 13px var(--body);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
@@ -47,7 +40,7 @@ button{cursor:pointer;border:0;background:none}
 .fd .hl{font:600 18px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .fd .hl span{color:var(--dim)}
 .fd .pp{font-size:12px;color:var(--blue);min-height:15px}
-@media (max-width:1100px){.wx{grid-template-columns:auto minmax(0,1fr)} .wx .fc{grid-column:1/-1}}
+@media (max-width:1100px){.wx .fc{grid-column:1/-1}}
 @media (max-width:700px){.wx{grid-template-columns:minmax(0,1fr)} .fc{grid-template-columns:repeat(5,minmax(56px,1fr));overflow-x:auto}}
 
 /* top bar */
@@ -177,7 +170,6 @@ body{
 .big .v{font:200 92px/.9 var(--display);letter-spacing:-.03em}
 .big .sep{font:200 64px/1 var(--display);color:var(--faint)}
 .wx .temp{font:200 60px/1 var(--display);letter-spacing:-.03em}
-.sun .row,.fd .hl,.ev .tm,.cd .t{font-family:var(--display);font-weight:300}
 .cd .t{font-size:32px;letter-spacing:-.01em}
 .ev .tm{font-size:22px}
 .ev .nm{font-weight:500}
@@ -198,7 +190,6 @@ body{
 .task .box{border-width:2px}
 .p2{--p:var(--amber)} .p2 .tag{background:rgba(255,181,71,.16);color:var(--amber)}
 .tag{border-radius:999px;padding:6px 10px}
-.sun .track{background:rgba(255,255,255,.08)} .sun .fill{background:linear-gradient(90deg,#ffd27a,var(--amber))}
 .scrim{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .sheet{background:rgba(22,26,34,.82);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--line);border-radius:26px}
 .sheet h3{font:400 34px/1.15 var(--display)}
@@ -216,24 +207,70 @@ body{
 .stat::after{content:" ↻"}
 .stat.warn{color:var(--red)}
 .hud{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.ring{position:relative;width:92px;height:92px}
-.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
-.ring .trk{stroke:rgba(255,255,255,.08)}
-.ring .val{stroke:var(--accent);stroke-dasharray:176;stroke-dashoffset:176;transition:stroke-dashoffset .8s ease}
-.ring.p1 .val{stroke:var(--red)}
-.ring.clear .val{stroke:var(--green)}
-.ring .rv{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1}
-.ring .rv b{font:300 28px var(--display)}
-.ring .rv span{font-size:9px;letter-spacing:.06em;max-width:58px;text-transform:uppercase;color:var(--dim);margin-top:4px}
+/* weather charts row */
+.wxcharts{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) 190px;gap:16px}
+.wxcharts .chart{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.wxcharts .label{display:flex;justify-content:space-between;gap:8px}
+#t24{width:100%;height:150px;overflow:visible}
+#t24 .ln{fill:none;stroke:url(#tGrad);stroke-width:3;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#t24 .ar{fill:url(#tFill);stroke:none}
+#t24 .pb{fill:var(--blue);opacity:.45}
+#t24 .nt{fill:rgba(0,0,0,.18)}
+.t24 .hrs{position:relative;height:16px;font-size:12px;color:var(--dim)}
+.t24 .hrs span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.t24 .tl{position:absolute;font:300 16px var(--display);transform:translate(-50%,-100%);white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.t24 .plot{position:relative}
+.pbars{display:grid;grid-template-columns:repeat(var(--nb,8),1fr);gap:var(--gap,4px);align-items:end;height:84px}
+.pbars i{display:block;border-radius:4px 4px 2px 2px;background:var(--blue);min-height:4px;opacity:.85}
+.pbars i.dry{background:rgba(255,255,255,.1);opacity:1}
+.pbars i.sn{background:#dfe8f5}
+.pbars.storm i{border-radius:2px}
+.pax{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:-4px}
+.ptxt{font-size:15px;line-height:1.3}
+.ptxt small{display:block;color:var(--dim);font-size:12px;margin-top:2px}
+#compass{width:150px;height:150px;align-self:center}
+#compass .ring{fill:none;stroke:rgba(255,255,255,.14);stroke-width:2}
+#compass .tk{stroke:rgba(255,255,255,.25);stroke-width:1.5}
+#compass text{fill:var(--dim);font:600 9px var(--body);text-anchor:middle;dominant-baseline:central}
+#compass .arw{fill:var(--accent)}
+#compass .sp{fill:var(--fg);font:300 26px var(--display)}
+#compass .gs{fill:var(--dim);font:500 8.5px var(--body)}
+@media (max-width:1100px){.wxcharts{grid-template-columns:minmax(0,1fr) 190px}.wxcharts .t24{grid-column:1/-1}}
+@media (max-width:700px){.wxcharts{grid-template-columns:minmax(0,1fr)}}
+/* today's calendar at a glance */
+.daybar{display:flex;flex-direction:column;gap:6px}
+.daybar .trk{position:relative;height:26px;border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden}
+.daybar .blk{position:absolute;top:3px;bottom:3px;border-radius:5px;background:var(--c,var(--blue));opacity:.85}
+.daybar .blk.past{opacity:.25}
+.daybar .now{position:absolute;top:0;bottom:0;width:2px;background:var(--fg);box-shadow:0 0 8px var(--fg)}
+.daybar .ax{position:relative;height:14px;font-size:11px;color:var(--faint)}
+.daybar .ax span{position:absolute;transform:translateX(-50%)}
+.daybar .sum{font-size:14px;color:var(--dim)} .daybar .sum b{color:var(--fg);font-weight:600}
+html.drive .wxcharts,html.drive .daybar{display:none!important}
+/* sun arc: daylight path, sun position, rise/set times */
+.sunarc{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:260px}
+.sunarc svg{width:260px;height:118px;overflow:visible}
+.sunarc .trk{fill:none;stroke:rgba(255,255,255,.1);stroke-width:5;stroke-linecap:round;stroke-dasharray:2 7}
+.sunarc .val{fill:none;stroke:url(#sunGrad);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+.sunarc .hz{stroke:rgba(255,255,255,.18);stroke-width:1.5}
+.sunarc .dot{fill:#ffd27a;filter:drop-shadow(0 0 10px rgba(255,200,90,.9))}
+.sunarc.night .dot{fill:#f4f1e6;filter:drop-shadow(0 0 8px rgba(240,235,210,.6))}
+.sunarc .times{display:flex;justify-content:space-between;width:100%;margin-top:-4px}
+.sunarc .times div{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
+.sunarc .times div:last-child{align-items:flex-end}
+.sunarc .times b{font:300 30px var(--display);font-variant-numeric:tabular-nums}
+.sunarc .times span,.sunarc .mid span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.sunarc .mid{position:relative;margin-top:-74px;height:70px;text-align:center;line-height:1.1;pointer-events:none}
+.sunarc .mid b{display:block;font:300 34px var(--display);font-variant-numeric:tabular-nums}
+html.drive .sunarc{display:none}
+@media (max-width:700px){.sunarc{min-width:210px}.sunarc svg{width:210px;height:96px}.sunarc .times b{font-size:24px}.sunarc .mid{margin-top:-62px;height:58px}.sunarc .mid b{font-size:26px}}
 .dock{display:flex;gap:10px;padding:8px;border-radius:24px;background:rgba(255,255,255,.05);border:1px solid var(--line);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass)}
 .ico{width:76px;height:72px;border-radius:18px;display:grid;place-items:center;align-content:center;gap:6px;color:var(--fg);text-decoration:none;background:none;border:0;cursor:pointer}
 .ico:active{background:rgba(255,255,255,.08)}
 .ico svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .ico .lb{font-size:11px;color:var(--dim);white-space:nowrap}
 #drive.on{color:var(--accent)} #drive.on .lb{color:var(--accent)}
-html.drive .ring.p1{display:none}
-@media (max-width:700px){.ring{width:76px;height:76px}.ico{width:64px}}
+@media (max-width:700px){.ico{width:64px}}
 /* polish */
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;z-index:40;padding:14px 22px;border-radius:999px;background:rgba(20,24,32,.85);border:1px solid var(--line);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);font-size:17px;transition:opacity .25s,transform .25s;pointer-events:none}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -294,7 +331,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
 #sky .l{position:absolute;inset:0;opacity:0;transition:opacity 3s}
 #sky .stars canvas{position:absolute;inset:0;width:100%;height:100%}
 #sky.stars .stars canvas+canvas{animation:twinkle 4s ease-in-out infinite alternate}
-#moon{position:absolute;left:calc(46% - 20px);top:calc(9% - 20px);width:40px;height:40px;overflow:visible;filter:drop-shadow(0 0 18px rgba(240,235,210,.35))}
+#moon{position:absolute;left:calc(90% - 20px);top:8px;width:40px;height:40px;overflow:visible;filter:drop-shadow(0 0 18px rgba(240,235,210,.35))}
 @keyframes twinkle{from{opacity:.35}to{opacity:1}}
 #sky .glow{background:radial-gradient(900px 500px at var(--sx,80%) var(--sy,100%),var(--sun,rgba(255,170,90,.35)),transparent 70%)}
 #sky .clouds{background:
@@ -332,8 +369,9 @@ html.drive .leave{font-size:22px;padding:18px 20px}
       <div class="brief" id="brief"></div>
     </div>
     <div class="hud">
-      <div class="ring" id="ringEv" title="Timed events left today"><svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="28"/><circle class="val" cx="32" cy="32" r="28"/></svg><div class="rv"><b>0</b><span>left today</span></div></div>
-      <div class="ring p1" id="ringP1" title="High-priority to-dos"><svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="28"/><circle class="val" cx="32" cy="32" r="28"/></svg><div class="rv"><b>0</b><span>P1</span></div></div>
+      <div class="sunarc" id="sunArc" title="Daylight today"><svg viewBox="0 0 260 118"><defs><linearGradient id="sunGrad" x1="0" x2="1"><stop offset="0" stop-color="#f6c453"/><stop offset="1" stop-color="#f08a3a"/></linearGradient></defs><line class="hz" x1="0" y1="114" x2="260" y2="114"/><path class="trk" d="M14 114A116 106 0 0 1 246 114"/><path class="val" d="M14 114A116 106 0 0 1 246 114"/><circle class="dot" r="8" cx="14" cy="114"/></svg>
+        <div class="mid"><b>--</b><span>daylight left</span></div>
+        <div class="times"><div><b id="sunRise">--</b><span>Sunrise</span></div><div><b id="sunSet">--</b><span>Sunset</span></div></div></div>
       <div class="dock">
         <a class="ico" href="https://claude.ai/artifact/BnXgH6d4iX7XVEZwdoz3Ei" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/></svg><span class="lb">Chief of Staff</span></a>
         <a class="ico" href="https://sentienlabs.ai" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg><span class="lb">Sentien Labs</span></a>
@@ -345,6 +383,11 @@ html.drive .leave{font-size:22px;padding:18px 20px}
   <section class="alerts" id="alerts" hidden></section>
   <section class="panel fcst" id="fcst" aria-label="Forecast" hidden></section>
   <section class="wx" id="wx" aria-label="Weather"></section>
+  <section class="wxcharts" id="wxcharts" aria-label="Weather charts" hidden>
+    <div class="chart t24"><h2 class="label">Next 24 hours<span class="hint">temp · chance of precip</span></h2><div class="plot"><svg id="t24" viewBox="0 0 600 150" preserveAspectRatio="none"></svg></div><div class="hrs" id="t24h"></div></div>
+    <div class="chart p2h"><h2 class="label" id="p2hHead">Next 2 hours</h2><div class="pbars" id="p2h"></div><div class="ptxt" id="p2hTxt"></div></div>
+    <div class="chart wind"><h2 class="label">Wind</h2><svg id="compass" viewBox="-60 -60 120 120"></svg></div>
+  </section>
 
   <main class="grid">
     <section class="col c1">
@@ -363,6 +406,7 @@ html.drive .leave{font-size:22px;padding:18px 20px}
     <section class="col c2">
       <div class="panel" style="flex:1">
         <h2 class="label">Today &amp; tomorrow<span class="hint">hold an event to count down</span></h2>
+        <div class="daybar" id="daybar"></div>
         <div class="leave" id="leave" hidden></div>
         <div class="allday" id="allday"></div>
         <div class="tl" id="tl"></div>
@@ -455,13 +499,15 @@ async function loadWx(){
   if(!PLACE)return;
   loadFcst();loadAlerts();
   try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&hourly=precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability,weather_code,temperature_2m,precipitation,snowfall&minutely_15=precipitation,snowfall&forecast_minutely_15=8&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=5`;
     const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
     const dirs=["N","NE","E","SE","S","SW","W","NW"];
     WX={temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),hum:c.relative_humidity_2m,
       wind:`${dirs[Math.round(c.wind_direction_10m/45)%8]} ${Math.round(c.wind_speed_10m)} mph`,
       ...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
-      hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i]})),
+      windDir:c.wind_direction_10m,windMph:Math.round(c.wind_speed_10m),gust:Math.round(c.wind_gusts_10m??c.wind_speed_10m),
+      hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m?.[i],mm:j.hourly.precipitation?.[i]||0,snow:j.hourly.snowfall?.[i]||0})),
+      q15:(j.minutely_15?.time||[]).map((t,i)=>({t:new Date(t),mm:j.minutely_15.precipitation?.[i]||0,snow:j.minutely_15.snowfall?.[i]||0})),
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
   }catch{}
   wxSig="";
@@ -568,13 +614,13 @@ function wcode(c){
 
 // ---- weather + sun ----
 const IC={
+ moon:'<svg viewBox="0 0 48 48"><path d="M31 8a17 17 0 1 0 10 25A14 14 0 0 1 31 8z" fill="#efe9d6"/></svg>',
+ pmoon:'<svg viewBox="0 0 48 48"><path d="M22 6a12 12 0 1 0 9 19A10 10 0 0 1 22 6z" fill="#efe9d6"/><path d="M16 40h20a8 8 0 0 0 0-16 11 11 0 0 0-20.6 4A6 6 0 0 0 16 40z" fill="#9aa6ba"/></svg>',
  sun:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="#f6c453"/><g stroke="#f6c453" stroke-width="3" stroke-linecap="round"><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.6 10.6l4.2 4.2M33.2 33.2l4.2 4.2M10.6 37.4l4.2-4.2M33.2 14.8l4.2-4.2"/></g></svg>',
  pcloud:'<svg viewBox="0 0 48 48"><circle cx="18" cy="18" r="8" fill="#f6c453"/><path d="M16 38h20a8 8 0 0 0 0-16 11 11 0 0 0-20.6 4A6 6 0 0 0 16 38z" fill="#c9d3e3"/></svg>',
  cloud:'<svg viewBox="0 0 48 48"><path d="M14 36h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 36z" fill="#a9b5c8"/></svg>',
  rain:'<svg viewBox="0 0 48 48"><path d="M14 30h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 30z" fill="#a9b5c8"/><g stroke="#5aa9ff" stroke-width="3" stroke-linecap="round"><path d="M17 35l-2 6M25 35l-2 6M33 35l-2 6"/></g></svg>',
  snow:'<svg viewBox="0 0 48 48"><path d="M14 30h22a9 9 0 0 0 0-18 12 12 0 0 0-22.5 4.5A7 7 0 0 0 14 30z" fill="#a9b5c8"/><g fill="#e9edf3"><circle cx="16" cy="38" r="2.5"/><circle cx="24" cy="41" r="2.5"/><circle cx="32" cy="38" r="2.5"/></g></svg>'};
-const SUNUP='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6c453" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 3v5M9 6l3-3 3 3"/></svg>';
-const SUNDN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f2a33a" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 3v5M9 5l3 3 3-3"/></svg>';
 // NOAA solar calc
 function sunTimes(date,lat,lon){
   const rad=Math.PI/180,start=Date.UTC(date.getFullYear(),0,0),doy=Math.floor((Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())-start)/864e5);
@@ -589,18 +635,106 @@ let wxSig="";
 function renderWx(n){
   if(!PLACE)return;
   const sig=[n.getMinutes(),n.getDate(),!!WX].join(); if(sig===wxSig)return; wxSig=sig;
-  const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon);
-  const day=n>=rise&&n<set,pct=Math.min(100,Math.max(0,(n-rise)/(set-rise)*100));
-  const left=day?split(set-n):split((n<rise?rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise)-n);
+  renderSunArc(n);renderWxCharts(n);
   const dn=(t,i)=>i===0?"Today":localDate(t).toLocaleDateString([], {weekday:"short"});
-  $("#wx").innerHTML=`${WX?`<div class="now">${IC[WX.icon]}<div><div class="temp">${WX.temp}°</div></div>
+  const st=sunTimes(n,PLACE.lat,PLACE.lon),dark=n<st.rise||n>=st.set;
+  const nowIcon=WX&&dark?({sun:"moon",pcloud:"pmoon"}[WX.icon]||WX.icon):WX?.icon;
+  $("#wx").innerHTML=`${WX?`<div class="now">${IC[nowIcon]}<div><div class="temp">${WX.temp}°</div></div>
     <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">${esc(PLACE.name)} · <span class="tap">Tap for radar</span></div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
-  <div class="sun"><div class="row"><span>${SUNUP}${fmtT(rise)}</span><span>${fmtT(set)}${SUNDN}</span></div>
-    <div class="track"><div class="fill" style="width:${pct}%"></div></div>
-    <div class="left">${day?`Sunset in ${left.h}h ${left.m}m`:`Sunrise in ${left.h}h ${left.m}m`} · ${Math.round((set-rise)/36e5*10)/10}h of daylight</div></div>
   <div class="fc">${WX?WX.days.map((d,i)=>`<div class="fd"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join(""):""}</div>`;
 }
 
+// ---- weather charts: 24h temp + precip chance, 2h precip strip, wind compass ----
+function renderWxCharts(n){
+  const box=$("#wxcharts");if(!WX||!WX.hourly?.length){box.hidden=true;return}box.hidden=false;
+  const hs=WX.hourly.filter(h=>h.t>new Date(n.getTime()-36e5)&&h.temp!=null).slice(0,25);
+  if(hs.length>2){
+    const W=600,H=150,top=22,bot=118,ts=hs.map(h=>h.temp),lo=Math.min(...ts),hi=Math.max(...ts),span=Math.max(4,hi-lo);
+    const x=i=>i/(hs.length-1)*W,y=v=>bot-(v-lo)/span*(bot-top);
+    const pts=hs.map((h,i)=>[x(i),y(h.temp)]);
+    let d=`M${pts[0][0]} ${pts[0][1]}`;for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;d+=`C${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`}
+    const bw=W/(hs.length-1)*.55;
+    let nt="";if(PLACE){for(let i=0;i<hs.length-1;i++){const t=hs[i].t,st=sunTimes(t,PLACE.lat,PLACE.lon);if(t<st.rise||t>=st.set)nt+=`<rect class="nt" x="${x(i)}" y="0" width="${W/(hs.length-1)+.5}" height="${H}"/>`}}
+    $("#t24").innerHTML=`<defs><linearGradient id="tGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f6a23a"/><stop offset="1" stop-color="#7ab8ff"/></linearGradient><linearGradient id="tFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f6a23a" stop-opacity=".22"/><stop offset="1" stop-color="#7ab8ff" stop-opacity="0"/></linearGradient></defs>${nt}
+      ${hs.map((h,i)=>h.pp>=5?`<rect class="pb" x="${x(i)-bw/2}" y="${H-h.pp/100*44}" width="${bw}" height="${h.pp/100*44}" rx="2"/>`:"").join("")}
+      <path class="ar" d="${d}L${W} ${H}L0 ${H}Z"/><path class="ln" d="${d}"/>`;
+    const hiI=ts.indexOf(hi),loI=ts.indexOf(lo),plot=$("#t24").parentElement;
+    plot.querySelectorAll(".tl").forEach(e=>e.remove());
+    [[hiI,hi],[loI,lo]].forEach(([i,v],k)=>{if(k&&i===hiI)return;const e=document.createElement("div");e.className="tl";e.textContent=Math.round(v)+"°";
+      e.style.left=Math.min(94,Math.max(4,i/(hs.length-1)*100))+"%";e.style.top=`${y(v)-(k?-22:4)}px`;plot.appendChild(e)});
+    $("#t24h").innerHTML=hs.map((h,i)=>i%6===0&&i<hs.length-2?`<span style="left:${i/(hs.length-1)*100}%">${i===0?"Now":h.t.toLocaleTimeString([], {hour:"numeric"})}</span>`:"").join("");
+  }
+  // Precip: 2-hour strip normally; when a storm is likely within 48h, switch to an hourly 48h timeline with totals
+  const H48=WX.hourly.filter(h=>h.t>new Date(n.getTime()-36e5)).slice(0,48);
+  const storm=H48.some(h=>h.pp>=40&&(h.mm>=.01||h.snow>0));
+  const pb=$("#p2h"),head=$("#p2hHead");
+  if(storm){
+    const mx=Math.max(.05,...H48.map(h=>h.mm)),wet=h=>h.pp>=40&&(h.mm>=.01||h.snow>0);
+    pb.className="pbars storm";pb.style.setProperty("--nb",H48.length);pb.style.setProperty("--gap","1px");
+    pb.innerHTML=H48.map(h=>`<i class="${!wet(h)?"dry":h.snow>0?"sn":""}" style="height:${!wet(h)?4:Math.max(8,h.mm/mx*84)}px" title="${h.t.toLocaleString([], {weekday:"short",hour:"numeric"})} · ${h.pp}%"></i>`).join("")+"";
+    const i0=H48.findIndex(wet);let i1=i0;while(i1+1<H48.length&&H48.slice(i1+1,i1+4).some(wet))i1++;
+    const seg=H48.slice(i0,i1+1),snowIn=seg.reduce((a,h)=>a+h.snow,0),rainIn=seg.reduce((a,h)=>a+h.mm,0);
+    const kind=snowIn>=.1?(seg.some(h=>h.snow===0&&h.mm>=.01)?"Mixed snow and rain":"Snow"):"Rain";
+    const dt=t=>t.toDateString()===n.toDateString()?fmtT(t):t.toLocaleString([], {weekday:"short",hour:"numeric"});
+    const amt=snowIn>=.1?`about ${snowIn<1?snowIn.toFixed(1):Math.round(snowIn*2)/2} in of snow`:`about ${rainIn.toFixed(2)} in of rain`;
+    head.textContent="Storm · next 48 hours";
+    $("#p2hTxt").innerHTML=`${kind} ${i0===0?"now":"starts "+dt(H48[i0].t)}, ends around ${dt(new Date(H48[i1].t.getTime()+36e5))}<small>${amt} · peak ${Math.max(...seg.map(h=>h.pp))}% chance</small>`;
+    pb.nextElementSibling?.classList.contains("pax")||pb.insertAdjacentHTML("afterend",'<div class="pax"></div>');
+    pb.nextElementSibling.innerHTML=[0,12,24,36].filter(i=>i<H48.length).map(i=>`<span>${i===0?"Now":H48[i].t.toLocaleString([], {weekday:"short",hour:"numeric"})}</span>`).join("");
+    pb.parentElement.hidden=false;
+  }else{
+    pb.className="pbars";pb.style.removeProperty("--nb");pb.style.removeProperty("--gap");head.textContent="Next 2 hours";
+    if(pb.nextElementSibling?.classList.contains("pax"))pb.nextElementSibling.remove();
+    const q=(WX.q15||[]).filter(r=>r.t>new Date(n.getTime()-15*60e3)).slice(0,8);
+    if(q.length){
+      const mx=Math.max(.02,...q.map(r=>r.mm));
+      pb.innerHTML=q.map(r=>`<i class="${r.mm<.005?"dry":r.snow>0?"sn":""}" style="height:${r.mm<.005?4:Math.max(10,r.mm/mx*84)}px" title="${fmtT(r.t)}"></i>`).join("");
+      const wetI=q.findIndex(r=>r.mm>=.005),kind=q.some(r=>r.snow>0)?"Snow":"Rain";
+      let txt;
+      if(wetI<0)txt=`Dry for the next 2 hours<small>${fmtT(q[0].t)} – ${fmtT(new Date(q[q.length-1].t.getTime()+15*60e3))}</small>`;
+      else{const endI=q.findIndex((r,i)=>i>wetI&&r.mm<.005),tot=q.reduce((a,r)=>a+r.mm,0);
+        txt=`${wetI===0?`${kind} now`:`${kind} starts ${fmtT(q[wetI].t)}`}${endI>0?`, ends ${fmtT(q[endI].t)}`:", through the next 2 hours"}<small>about ${tot<.01?"a trace":tot.toFixed(2)+" in"}</small>`}
+      $("#p2hTxt").innerHTML=txt;pb.parentElement.hidden=false;
+    }else pb.parentElement.hidden=true;
+  }
+  const dir=WX.windDir??0,names=["N","NE","E","SE","S","SW","W","NW"];
+  let tk="";for(let a=0;a<360;a+=30)tk+=`<line class="tk" x1="0" y1="-50" x2="0" y2="${a%90?-46:-43}" transform="rotate(${a})"/>`;
+  $("#compass").innerHTML=`<circle class="ring" r="50"/>${tk}<text x="0" y="-36">N</text><text x="36" y="0">E</text><text x="0" y="36">S</text><text x="-36" y="0">W</text>
+    <g transform="rotate(${dir+180})"><path class="arw" d="M0 -56L7 -42L0 -46L-7 -42Z"/></g>
+    <text class="sp" x="0" y="-9">${WX.windMph??"–"}</text><text class="gs" x="0" y="9">mph from ${names[Math.round(dir/45)%8]}</text><text class="gs" x="0" y="20">gusts ${WX.gust??"–"}</text>`;
+}
+// ---- today's calendar at a glance: busy blocks, now marker, next free gap ----
+function renderDayBar(n){
+  const el=$("#daybar"),t0=dayStart(n),t1=new Date(t0.getTime()+864e5);
+  const evs=timed().filter(e=>e.e>t0&&e.s<t1).sort((a,b)=>a.s-b.s);
+  if(!evs.length){el.innerHTML="";return}
+  let a=6,b=22;evs.forEach(e=>{a=Math.min(a,Math.max(0,(e.s<t0?0:e.s.getHours()))),b=Math.max(b,Math.min(24,e.e>=t1?24:e.e.getHours()+(e.e.getMinutes()?1:0)))});
+  const A=new Date(t0.getTime()+a*36e5),B=new Date(t0.getTime()+b*36e5),pc=t=>Math.max(0,Math.min(100,(t-A)/(B-A)*100));
+  const blocks=evs.map(e=>`<div class="blk${e.e<=n?" past":""}" style="--c:${e.c};left:${pc(e.s)}%;width:${Math.max(.6,pc(e.e)-pc(e.s))}%" title="${esc(e.title)}"></div>`).join("");
+  const ticks=[];for(let h=Math.ceil(a/3)*3;h<=b;h+=3)if(h>a&&h<b)ticks.push(`<span style="left:${(h-a)/(b-a)*100}%">${h%12||12}${h<12?"a":"p"}</span>`);
+  // next free gap of 30+ min between now and end of window
+  const busy=evs.filter(e=>e.e>n).map(e=>[Math.max(e.s,n),+e.e]).sort((x,y)=>x[0]-y[0]);
+  let cur=+n,free=null;for(const [s,e] of busy){if(s-cur>=30*60e3){free=[cur,s];break}cur=Math.max(cur,e)}
+  if(!free&&B-cur>=30*60e3&&cur<B)free=[cur,+B];
+  const inEv=busy.some(([s,e])=>s<=+n&&e>+n);
+  const sum=!free?"Booked for the rest of the day":free[0]<=+n+60e3&&!inEv?`<b>Free now</b> until ${free[1]>=+B?"end of day":fmtT(new Date(free[1]))}`:`Next free <b>${fmtT(new Date(free[0]))}</b>${free[1]>=+B?" onward":` – ${fmtT(new Date(free[1]))}`}`;
+  el.innerHTML=`<div class="trk">${blocks}${n>=A&&n<B?`<div class="now" style="left:${pc(n)}%"></div>`:""}</div><div class="ax">${ticks.join("")}</div><div class="sum">${sum}</div>`;
+}
+// ---- header sun arc: sun rides the arc from sunrise to sunset; at night it shows time until sunrise ----
+function renderSunArc(n){
+  const el=$("#sunArc");if(!el||!PLACE)return;
+  const {rise,set}=sunTimes(n,PLACE.lat,PLACE.lon),day=n>=rise&&n<set;
+  const nextRise=n<rise?rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise;
+  const f=day?(n-rise)/(set-rise):0,path=el.querySelector(".val"),L=path.getTotalLength();
+  path.style.strokeDasharray=L;path.style.strokeDashoffset=String(L*(1-f));
+  const pt=path.getPointAtLength(L*(day?f:0)),dot=el.querySelector(".dot");
+  dot.setAttribute("cx",pt.x);dot.setAttribute("cy",day?pt.y:114);
+  el.classList.toggle("night",!day);
+  const t=split(day?set-n:nextRise-n),hm=t.h?`${t.h}h ${t.m}m`:`${t.m}m`;
+  el.querySelector(".mid").innerHTML=`<b>${hm}</b><span>${day?"daylight left":"until sunrise"}</span>`;
+  $("#sunRise").textContent=fmtT(day||n<rise?rise:nextRise);$("#sunSet").textContent=fmtT(set);
+  el.title=`${Math.round((set-rise)/36e5*10)/10}h of daylight today`;
+}
 // ---- moon phase (synodic month from a known new moon, 2000-01-06 18:14 UTC) ----
 function moonPhase(n){const syn=29.530588853,t=(n-Date.UTC(2000,0,6,18,14))/864e5;return((t%syn)+syn)%syn/syn}
 let moonSig="";
@@ -762,7 +896,7 @@ function renderTasks(){
   $("#priCount").textContent=`${hi.length} open`;
   $("#todoCount").textContent=`${rest.length} open`;
   const p1=hi.filter(t=>!pending.has(t.id)).length;
-  setRing("#ringP1",p1,1);$("#ringP1").classList.toggle("clear",!p1);
+  setRing("#ringP1",p1,1);
 }
 async function toggleTask(id){
   const done=pending.has(id);done?pending.delete(id):pending.add(id);renderTasks();
@@ -799,7 +933,7 @@ function renderCds(n){
 }
 
 // ---- header rings ----
-function setRing(sel,val,frac){const el=$(sel);el.querySelector("b").textContent=val;
+function setRing(sel,val,frac){const el=$(sel);if(!el)return;el.querySelector("b").textContent=val;
   el.querySelector(".val").style.strokeDashoffset=String(176*(1-Math.max(0,Math.min(1,frac))))}
 // ---- status ----
 function renderStatus(){
@@ -851,7 +985,7 @@ function tick(){const n=new Date();
   const hr=n.getHours();$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`;
   $("#date").textContent=n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
   renderHero(n);renderCds(n);renderWx(n);setSky(n);
-  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderStatus();renderBrief(n);if(n.getMinutes()%2===0)updateLeave()}
+  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderDayBar(n);renderStatus();renderBrief(n);if(n.getMinutes()%2===0)updateLeave()}
 }
 renderAll();setInterval(tick,1000);
 locate();load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
