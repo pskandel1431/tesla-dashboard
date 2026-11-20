@@ -924,11 +924,19 @@ function renderNextStop(n){
 // greeting while moving: one line per trip, picked at random
 const TRIP_LINES=["We're off and running, {n}","We're on the move, {n}","Rolling, {n}","On the road, {n}"];let tripLine=null;
 // drive: shrink the page if it would overflow the screen (extra room is filled by CSS)
-function fitDrive(){const w=$(".wrap"),on=document.documentElement.classList.contains("drive");
-  const vh=(window.visualViewport?.height||innerHeight);document.documentElement.style.setProperty("--vh",vh/100+"px");document.documentElement.style.setProperty("--rz",String(Math.min(1.3,Math.max(1,vh/720))));
-  w.style.zoom="";if(!on)return;
-  const need=w.scrollHeight+4,have=vh;if(need>have)w.style.zoom=String(Math.max(.6,have/need))}
+function fitDrive(){const w=$(".wrap"),de=document.documentElement,on=de.classList.contains("drive");
+  const vh=(window.visualViewport?.height||innerHeight);de.style.setProperty("--vh",vh/100+"px");de.style.setProperty("--rz",String(Math.min(1.3,Math.max(1,vh/720))));
+  w.style.zoom="";w.style.height="";if(!on)return;
+  // measure natural content height, then fill the window: shrink (zoom) only if it doesn't fit,
+  // and size the frame in zoomed units so it still reaches the bottom of the screen
+  w.style.height="auto";const need=w.scrollHeight+2;
+  const z=need>vh?Math.max(.6,vh/need):1;
+  if(z<1)w.style.zoom=String(z);
+  w.style.height=(vh/z)+"px";
+  const over=w.getBoundingClientRect().bottom-vh;if(over>0)w.style.height=(vh-over)/z+"px";
+}
 addEventListener("resize",()=>fitDrive());
+setInterval(()=>{if(document.documentElement.classList.contains("drive"))fitDrive()},3000);addEventListener("load",()=>fitDrive());document.fonts?.ready.then(()=>fitDrive());
 // ?size shows the real window/layout numbers on screen (for tuning the car display)
 if(/[?&]size\b/.test(location.search)){const d=document.createElement("div");d.id="sizeDbg";d.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99;font:600 14px/1.3 monospace;background:#000c;color:#7df;padding:6px 10px;border-radius:8px;pointer-events:none";document.body.appendChild(d);
   setInterval(()=>{const w=$(".wrap"),r=w.getBoundingClientRect();d.textContent=`win ${innerWidth}×${innerHeight} · vv ${Math.round(visualViewport?.height||0)} · screen ${screen.width}×${screen.height} · dpr ${devicePixelRatio} · wrap ${Math.round(r.height)} · zoom ${w.style.zoom||1} · ${document.documentElement.className}`},1000)}
