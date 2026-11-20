@@ -508,7 +508,7 @@ async function updateLeave(){
   el.hidden=false;el.className="leave"+(late?" now":"");
   el.innerHTML=`<div>${late?"<b>Leave now</b>":`Leave by <b>${fmtT(by)}</b>`} for ${esc(ev.title)} · ${mins} min drive</div><a href="${gmaps(ev.location)}" target="_blank" rel="noopener">Open in Maps</a>`;
 }
-// Radar: Leaflet map centered on PLACE at regional zoom, animated RainViewer frames. Loaded on first open.
+// Radar: Leaflet map centered on PLACE at regional zoom, animated NWS radar frames. Loaded on first open.
 const RADAR_ZOOM=8;
 let radarMap=null,radarDot=null,radarLayers=[],radarIdx=0,radarTimer=null,radarAt=0;
 function loadLeaflet(){
@@ -518,11 +518,12 @@ function loadLeaflet(){
     const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);
   });
 }
+// NWS NEXRAD composite via Iowa Environmental Mesonet: no key, 5-min steps, last 50 min
 async function radarFrames(){
-  if(Date.now()-radarAt<10*60e3&&radarLayers.length)return;
-  const j=await (await fetch("https://api.rainviewer.com/public/weather-maps.json")).json();
+  if(Date.now()-radarAt<5*60e3&&radarLayers.length)return;
   radarLayers.forEach(l=>radarMap.removeLayer(l));
-  radarLayers=(j.radar?.past||[]).slice(-8).map(f=>L.tileLayer(`${j.host}${f.path}/256/{z}/{x}/{y}/4/1_1.png`,{opacity:0,maxNativeZoom:7,maxZoom:12,zIndex:5}).addTo(radarMap));
+  const t=Math.floor(Date.now()/3e5);
+  radarLayers=[50,40,30,20,10,0].map(m=>L.tileLayer(`https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913${m?`-m${String(m).padStart(2,"0")}m`:""}/{z}/{x}/{y}.png?t=${t}`,{opacity:0,maxZoom:12,zIndex:5}).addTo(radarMap));
   radarAt=Date.now();radarIdx=radarLayers.length-1;
 }
 function radarStep(){
@@ -537,10 +538,12 @@ async function showRadar(){
     const c=[PLACE.lat,PLACE.lon];
     if(!radarMap){
       radarMap=L.map("radarMap",{zoomControl:true,attributionControl:true}).setView(c,RADAR_ZOOM);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:12,attribution:"© OpenStreetMap © CARTO · RainViewer"}).addTo(radarMap);
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",{maxZoom:12,attribution:"Esri · NWS via Iowa Mesonet"}).addTo(radarMap);
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",{maxZoom:12,zIndex:6}).addTo(radarMap);
+      new ResizeObserver(()=>radarMap.invalidateSize()).observe($("#radarMap"));
       radarDot=L.circleMarker(c,{radius:7,color:"#fff",weight:2,fillColor:"#4f8cff",fillOpacity:1}).addTo(radarMap);
     }else{radarMap.invalidateSize();radarMap.setView(c,RADAR_ZOOM);radarDot.setLatLng(c)}
-    await radarFrames();radarStep();
+    setTimeout(()=>radarMap.invalidateSize(),50);await radarFrames();radarStep();
   }catch{$("#radarMap").textContent="Radar unavailable"}
 }
 // Radar stays hidden until the weather band is tapped
@@ -549,7 +552,7 @@ function toggleRadar(show){
   if(show){showRadar();p.scrollIntoView({behavior:"smooth",block:"nearest"})}else clearTimeout(radarTimer);
 }
 function setRadar(){
-  $("#radarOpen").href=`https://www.rainviewer.com/map.html?loc=${PLACE.lat.toFixed(3)},${PLACE.lon.toFixed(3)},${RADAR_ZOOM}&layer=radar&o=83&c=1&sm=1&sn=1`;
+  $("#radarOpen").href=`https://radar.weather.gov/?settings=v1_${btoa(JSON.stringify({agenda:{id:"local",center:[PLACE.lon,PLACE.lat],location:[PLACE.lon,PLACE.lat],zoom:RADAR_ZOOM,layer:"bref_qcd"},animating:true,base:"standard",county:false,cwa:false,rfc:false,state:false,menu:true,shortFusedOnly:false,opacity:{alerts:0.8,local:0.6,localStations:0.8,national:0.6}}))}`;
   if(radarMap){const c=[PLACE.lat,PLACE.lon];radarDot.setLatLng(c);if(!$("#radarPanel").hidden)radarMap.setView(c,RADAR_ZOOM)}
 }
 function wcode(c){
