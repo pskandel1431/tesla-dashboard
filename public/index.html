@@ -204,7 +204,9 @@ body{
 .top{align-items:flex-start}
 .dateline{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .stat{font:400 14px var(--body);color:var(--faint);background:none;border:0;padding:6px 0;cursor:pointer}
-.stat::after{content:" ↻"}
+.stat::after{content:"";display:inline-block;width:.95em;height:.95em;margin-left:6px;vertical-align:-.12em;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.34-5.66'/%3E%3Cpath d='M20 4v5h-5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.34-5.66'/%3E%3Cpath d='M20 4v5h-5'/%3E%3C/svg%3E") center/contain no-repeat}
 .stat.warn{color:var(--red)}
 .hud{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 /* weather charts row */
@@ -370,7 +372,11 @@ html.night{--rain:#8fb7e6}
 body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"cv11","ss01"}
 .wrap{max-width:1680px;margin-inline:auto;gap:20px;padding-top:26px}
 /* backdrop depth: slow aurora + film grain + vignette */
-#sky .aurora{opacity:1;filter:blur(70px) saturate(140%);mix-blend-mode:screen}
+#sky .aurora{opacity:.45;filter:blur(70px) saturate(130%);mix-blend-mode:screen;transition:opacity 3s}
+#sky.clouds .aurora,#sky.rain .aurora,#sky.snow .aurora,#sky.fog .aurora{opacity:0}
+#sky.clouds .clouds{animation:cloudDrift 90s linear infinite alternate;background-size:140% 100%,160% 100%,180% 100%,100% 100%}
+@keyframes cloudDrift{to{background-position:30% 0,-25% 0,15% 0,0 0}}
+#sky.clouds .glow{opacity:.35}
 #sky .aurora i{position:absolute;border-radius:50%;opacity:.55;animation:drift 38s ease-in-out infinite alternate}
 #sky .aurora i:nth-child(1){width:60vw;height:50vh;left:-12vw;top:-14vh;background:radial-gradient(closest-side,rgba(79,140,255,.42),transparent)}
 #sky .aurora i:nth-child(2){width:50vw;height:46vh;right:-10vw;top:18vh;background:radial-gradient(closest-side,rgba(146,98,255,.30),transparent);animation-duration:46s;animation-delay:-12s}
@@ -477,6 +483,15 @@ html.night .clock{background-image:linear-gradient(180deg,#fff2e2 30%,rgba(238,2
 @media (max-width:700px){.clock{font-size:64px}.date{font-size:22px}.wx .temp{font-size:58px}.big .v{font-size:66px}}
 html.drive .clock{font-size:120px}
 </style>
+<style>
+/* radar opens as a full-screen sheet so it's always visible on the car screen */
+.radar-scrim{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#radarPanel{position:fixed;z-index:61;inset:max(24px,4vh) max(16px,4vw);display:flex;flex-direction:column;background:rgba(14,18,26,.92);animation:rise .3s ease both}
+#radarPanel .radar-frame{flex:1;aspect-ratio:auto;min-height:0}
+#radarPanel .label{font-size:14px}
+#radarHide,#radarOpen{font-size:17px;padding:10px 14px}
+.wx .tap{display:inline-block;padding:2px 0}
+</style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <div class="wrap">
@@ -541,6 +556,7 @@ html.drive .clock{font-size:120px}
         <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
         <div class="pri" id="todos"></div>
       </div>
+      <div class="radar-scrim" id="radarScrim" hidden></div>
       <div class="panel radar" id="radarPanel" hidden>
         <h2 class="label">Radar <span class="count"><a id="radarOpen" href="#" target="_blank" rel="noopener">Full screen</a> · <button id="radarHide" type="button">Hide</button></span></h2>
         <div class="radar-frame" id="radarMap" role="img" aria-label="Weather radar map"></div>
@@ -713,8 +729,8 @@ async function showRadar(){
 }
 // Radar stays hidden until the weather band is tapped
 function toggleRadar(show){
-  const p=$("#radarPanel");show=show??p.hidden;p.hidden=!show;
-  if(show){showRadar();p.scrollIntoView({behavior:"smooth",block:"nearest"})}else clearTimeout(radarTimer);
+  const p=$("#radarPanel");show=show??p.hidden;p.hidden=!show;$("#radarScrim").hidden=!show;
+  if(show)showRadar();else clearTimeout(radarTimer);
 }
 function setRadar(){
   $("#radarOpen").href=`https://radar.weather.gov/?settings=v1_${btoa(JSON.stringify({agenda:{id:"local",center:[PLACE.lon,PLACE.lat],location:[PLACE.lon,PLACE.lat],zoom:RADAR_ZOOM,layer:"bref_qcd"},animating:true,base:"standard",county:false,cwa:false,rfc:false,state:false,menu:true,shortFusedOnly:false,opacity:{alerts:0.8,local:0.6,localStations:0.8,national:0.6}}))}`;
@@ -891,17 +907,11 @@ async function loadFcst(){
 }
 // ---- one-line daily briefing ----
 function renderBrief(n){
-  const end=new Date(n);end.setHours(23,59,59,999);
-  const left=timed().filter(e=>e.s>n&&e.s<=end).sort((a,b)=>a.s-b.s);
   const parts=[];
-  if(left.length)parts.push(`${left.length} more ${left.length===1?"event":"events"} today, next at ${fmtT(left[0].s)}.`);
-  else parts.push(n.getHours()<18?"Nothing else on the calendar today.":"Calendar is clear for the rest of today.");
-  const p1=TASKS.filter(t=>t.p===1&&!pending.has(t.id)).length;
-  if(p1)parts.push(`${p1} high-priority ${p1===1?"to-do":"to-dos"}.`);
   const wet=WX?.hourly?.find(h=>h.t>n&&h.t<=new Date(n.getTime()+12*36e5)&&h.pp>=50);
   if(wet){const sn=(wet.code>=71&&wet.code<=77)||wet.code===85||wet.code===86;
     parts.push(`${sn?"Snow":"Rain"} likely ${wet.t-n<36e5?"within the hour":"around "+wet.t.toLocaleTimeString([], {hour:"numeric"})}.`)}
-  $("#brief").textContent=parts.join(" ");
+  $("#brief").textContent=parts.join(" ");$("#brief").hidden=!parts.length;
 }
 // ---- live sky background ----
 const SKY={night:["#0a1124","#05070d",0,"rgba(90,110,180,.12)"],dawn:["#2a2f5c","#b8667a",.30,"rgba(255,160,110,.45)"],
@@ -1090,7 +1100,7 @@ document.addEventListener("click",e=>{
   const del=e.target.closest("[data-del]"); if(del){cds=cds.filter(c=>c.id!==del.dataset.del);saveCds();lastMin=-1;renderCds(new Date());return}
   if(e.target.closest("#addBtn2")){$("#addform").hidden=false;$("#addform").scrollIntoView({behavior:"smooth",block:"center"});$("#cdName").focus();return}
   if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
-  if(e.target.closest("#radarHide")){toggleRadar(false);return}
+  if(e.target.closest("#radarHide")||e.target.closest("#radarScrim")){toggleRadar(false);return}
   if(e.target.closest("#wx")){toggleRadar();return}
   if(e.target.closest("#drive")){driveManual=!document.documentElement.classList.contains("drive");setDrive();return}
   if(e.target.closest("#status")){load();return}
