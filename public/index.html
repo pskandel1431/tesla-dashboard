@@ -481,7 +481,7 @@ html.night .clock{background-image:linear-gradient(180deg,#fff2e2 30%,rgba(238,2
 .wxcharts .chart{animation:rise .55s ease both}.wxcharts .chart:nth-child(2){animation-delay:.05s}.wxcharts .chart:nth-child(3){animation-delay:.1s}
 @media (prefers-reduced-motion:reduce){#sky .aurora i,.nowdot,.wxcharts .chart{animation:none}}
 @media (max-width:700px){.clock{font-size:64px}.date{font-size:22px}.wx .temp{font-size:58px}.big .v{font-size:66px}}
-html.drive .clock{font-size:120px}
+html.drive .clock{font-size:84px}
 </style>
 <style>
 /* radar opens as a full-screen sheet so it's always visible on the car screen */
@@ -684,6 +684,14 @@ html.drive.hasnext .driveband .dtxt b{font-size:26px}
 .driveband.moving .whl b{animation:wspin .28s linear infinite}
 @keyframes wspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.whl b{animation:none!important}}
+/* drive: everything on one screen */
+html.drive,html.drive body{height:100%;overflow:hidden}
+html.drive .tasks{display:none!important}
+html.drive .wrap{padding-top:14px;padding-bottom:0;min-height:0}
+html.drive header.top{margin-bottom:10px}
+html.drive .greet{font-size:16px}
+html.drive .reasons li:nth-child(n+4){display:none}
+html.drive main.simple{gap:16px}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -718,6 +726,14 @@ html.drive.hasnext .driveband .dtxt b{font-size:26px}
         <div class="chart p2h"><h2 class="label" id="p2hHead">Next 2 hours</h2><div class="pbars" id="p2h"></div><div class="ptxt" id="p2hTxt"></div></div>
       </div>
       <section class="wx" id="wx" aria-label="Weather"></section>
+      <div class="panel tasks">
+        <h2 class="label prihead">High priority<span class="hint">hold to snooze</span> <span class="count" id="priCount"></span></h2>
+        <div class="pri" id="pri"></div>
+      </div>
+      <div class="panel tasks">
+        <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
+        <div class="pri" id="todos"></div>
+      </div>
     </section>
     <section class="col right">
       <div class="panel hero" id="hero" hidden></div>
@@ -744,16 +760,6 @@ html.drive.hasnext .driveband .dtxt b{font-size:26px}
       </div>
     </section>
 
-    <section class="col c3">
-      <div class="panel">
-        <h2 class="label prihead">High priority<span class="hint">hold to snooze</span> <span class="count" id="priCount"></span></h2>
-        <div class="pri" id="pri"></div>
-      </div>
-      <div class="panel">
-        <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
-        <div class="pri" id="todos"></div>
-      </div>
-    </section>
   </div>
   <div class="radar-scrim" id="radarScrim" hidden></div>
   <div class="panel radar wxpage" id="radarPanel" hidden>
@@ -892,10 +898,14 @@ function renderNextStop(n){
 }
 // greeting while moving: one line per trip, picked at random
 const TRIP_LINES=["We're off and running, {n}","We're on the move, {n}","Rolling, {n}","On the road, {n}"];let tripLine=null;
+function fitDrive(){const w=$(".wrap"),on=document.documentElement.classList.contains("drive");
+  w.style.zoom="";if(!on)return;
+  const need=w.getBoundingClientRect().height+8,have=innerHeight;if(need>have)w.style.zoom=String(Math.max(.6,have/need))}
+addEventListener("resize",()=>fitDrive());
 function setDrive(){const on=driveManual??moving;
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
   $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 5 min";
-  $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive"}
+  $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive";requestAnimationFrame(fitDrive)}
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
 async function geocode(q){
@@ -1284,7 +1294,7 @@ function renderTimeline(n){
   const inWin=e=>e.e>t0&&e.s<t2;
   const all=EVENTS.filter(e=>e.allDay&&inWin(e)&&e.e>t0&&e.s<new Date(t0.getTime()+864e5));
   $("#allday").innerHTML=all.map(e=>`<button class="chip" data-ev="${EVENTS.indexOf(e)}" data-hold="cd" style="border-color:${e.c}">${esc(e.title)}</button>`).join("");
-  const list=timed().filter(e=>inWin(e)&&e.e>n).sort((a,b)=>a.s-b.s).slice(0,6);
+  const list=timed().filter(e=>inWin(e)&&e.e>n).sort((a,b)=>a.s-b.s).slice(0,14);
   const today=n.toDateString();let html="",nowPlaced=false,lastDay=today;
   list.forEach(ev=>{
     const day=ev.s.toDateString();
@@ -1428,7 +1438,7 @@ function tick(){const n=new Date();
   else{tripLine=null;$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`}
   $("#date").innerHTML=`<b>${n.toLocaleDateString([], {weekday:"long"})}</b> ${n.toLocaleDateString([], {month:"long",day:"numeric"})}`;
   renderHero(n);renderCds(n);renderWx(n);setSky(n);renderNextStop(n);
-  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderDayBar(n);renderStatus();renderBrief(n);if(n.getMinutes()%2===0)updateLeave()}
+  if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderDayBar(n);renderStatus();renderBrief(n);fitDrive();if(n.getMinutes()%2===0)updateLeave()}
 }
 renderAll();setInterval(tick,1000);
 locate();load();setInterval(load,5*60e3);setInterval(loadWx,30*60e3);
