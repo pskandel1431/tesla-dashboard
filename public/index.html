@@ -929,6 +929,9 @@ function fitDrive(){const w=$(".wrap"),on=document.documentElement.classList.con
   w.style.zoom="";if(!on)return;
   const need=w.scrollHeight+4,have=vh;if(need>have)w.style.zoom=String(Math.max(.6,have/need))}
 addEventListener("resize",()=>fitDrive());
+// ?size shows the real window/layout numbers on screen (for tuning the car display)
+if(/[?&]size\b/.test(location.search)){const d=document.createElement("div");d.id="sizeDbg";d.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99;font:600 14px/1.3 monospace;background:#000c;color:#7df;padding:6px 10px;border-radius:8px;pointer-events:none";document.body.appendChild(d);
+  setInterval(()=>{const w=$(".wrap"),r=w.getBoundingClientRect();d.textContent=`win ${innerWidth}×${innerHeight} · vv ${Math.round(visualViewport?.height||0)} · screen ${screen.width}×${screen.height} · dpr ${devicePixelRatio} · wrap ${Math.round(r.height)} · zoom ${w.style.zoom||1} · ${document.documentElement.className}`},1000)}
 function setDrive(){const on=driveManual??moving;
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
   $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 1 min";
