@@ -218,6 +218,8 @@ body{
 .nowline::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
 .cd .dt{font-size:12px;color:var(--faint);margin-top:-4px;letter-spacing:.02em}
 .cd.soon .t{color:var(--accent)}
+.cd[data-pick]{cursor:pointer}
+.hero .btnrow .btn{min-height:48px}
 .cd.next{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
 .panel,.wx,.hero,.alerts{animation:rise .5s ease both}
 .grid .col:nth-child(2) .panel{animation-delay:.06s}.grid .col:nth-child(3) .panel{animation-delay:.12s}
@@ -660,21 +662,24 @@ function setSky(n){
 }
 // ---- hero: soonest upcoming custom countdown ----
 const timed=()=>EVENTS.filter(e=>!e.allDay);
-let heroSig="",heroId=null;
+let heroSig="",heroId=null,heroPick=null;
+function upcomingCds(n){return cds.filter(c=>new Date(c.d)>n).sort((a,b)=>new Date(a.d)-new Date(b.d))}
 function renderHero(n){
-  const h=$("#hero");
-  const c=cds.filter(c=>new Date(c.d)>n).sort((a,b)=>new Date(a.d)-new Date(b.d))[0];
+  const h=$("#hero"),up=upcomingCds(n);
+  const c=up.find(x=>x.id===heroPick)||up[0];
   heroId=c?c.id:null;
   if(!c){if(heroSig!=="none"){heroSig="none";h.innerHTML=`<div class="label">Next countdown</div><p class="title">No upcoming countdowns</p>`}return}
   const d=new Date(c.d),x=split(d-n);
-  const sig=[c.id,c.n,c.d,!!x.d].join();
+  const first=c===up[0],more=up.length>1;
+  const sig=[c.id,c.n,c.d,!!x.d,first,more].join();
   // With days left, show D:HH:MM so it fits on one line; otherwise HH:MM:SS.
   const segs=x.d?[[x.d,"days"],[pad(x.h),"hrs"],[pad(x.m),"min"]]:[[pad(x.h),"hrs"],[pad(x.m),"min"],[pad(x.s),"sec"]];
   if(sig===heroSig){h.querySelectorAll(".v").forEach((el,i)=>el.textContent=segs[i][0]);return}
   heroSig=sig;
-  h.innerHTML=`<div class="label">Next countdown</div>
+  h.innerHTML=`<div class="label">${first?"Next countdown":"Countdown"}</div>
   <div class="big">${segs.map(([v,u])=>`<div class="seg"><span class="v">${v}</span><span class="u">${u}</span></div>`).join('<span class="sep">:</span>')}</div>
-  <div><p class="title">${esc(c.n)}</p><div class="when">${d.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${fmtT(d)}</div></div>`;
+  <div><p class="title">${esc(c.n)}</p><div class="when">${d.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${fmtT(d)}</div></div>
+  <div class="btnrow">${more?`<button class="btn" data-hnext>Next ›</button>`:""}<button class="btn" data-del="${c.id}">Remove</button></div>`;
 }
 
 // ---- timeline (today + tomorrow) ----
@@ -762,7 +767,7 @@ function renderCds(n){
   const sig="L"+heroId+list.map(c=>c.id).join();
   if(sig===cdSig){$("#cds").querySelectorAll(".cd .t").forEach((el,i)=>{const ms=new Date(list[i].d)-n;el.innerHTML=ms>0?short(ms):"Now"});return}
   cdSig=sig;
-  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;const dd=new Date(c.d);return`<div class="cd${ms>0&&ms<864e5?" soon":""}${c.id===heroId?" next":""}"><div class="n">${esc(c.n)}</div><div class="dt">${dd.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div><div class="t">${ms>0?short(ms):"Now"}</div>
+  $("#cds").innerHTML=list.map(c=>{const ms=new Date(c.d)-n;const dd=new Date(c.d);return`<div class="cd${ms>0&&ms<864e5?" soon":""}${c.id===heroId?" next":""}" data-pick="${c.id}" role="button" tabindex="0"><div class="n">${esc(c.n)}</div><div class="dt">${dd.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div><div class="t">${ms>0?short(ms):"Now"}</div>
     <button class="x" data-del="${c.id}" aria-label="Remove ${esc(c.n)}">×</button></div>`}).join("")+
     `<button class="cd add" id="addBtn">+ Add countdown</button>`;
 }
@@ -792,6 +797,8 @@ function openEvent(i){
 // ---- events ----
 document.addEventListener("click",e=>{
   if(e.target.closest("a"))return;
+  if(e.target.closest("[data-hnext]")){const up=upcomingCds(new Date()),i=up.findIndex(x=>x.id===heroId);heroPick=up[(i+1)%up.length]?.id||null;heroSig="";cdSig=null;tick();return}
+  const pk=e.target.closest("[data-pick]"); if(pk&&!e.target.closest("[data-del]")){heroPick=pk.dataset.pick;heroSig="";cdSig=null;tick();$("#hero").scrollIntoView({behavior:"smooth",block:"nearest"});return}
   const ac=e.target.closest("[data-addcd]"); if(ac){addCdFromEvent(+ac.dataset.addcd);$("#scrim").hidden=true;return}
   const ev=e.target.closest("[data-ev]"); if(ev){if(held){held=false;return}openEvent(+ev.dataset.ev);return}
   const tk=e.target.closest("[data-task]"); if(tk){if(held){held=false;return}toggleTask(tk.dataset.task);return}
