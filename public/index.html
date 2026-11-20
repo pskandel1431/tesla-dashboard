@@ -492,6 +492,105 @@ html.drive .clock{font-size:120px}
 #radarHide,#radarOpen{font-size:17px;padding:10px 14px}
 .wx .tap{display:inline-block;padding:2px 0}
 </style>
+<style>
+/* ===== Simplified board: weather at a glance, does it affect driving, what's next ===== */
+.brief,.fcst,.parked{display:none!important}
+.rings{display:flex;gap:18px;align-items:center}
+.ring2{position:relative;width:118px;height:118px;border-radius:50%;padding:0;border:0;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.08),rgba(255,255,255,.02) 70%);box-shadow:var(--lift);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);color:var(--fg);cursor:pointer;transition:transform .15s}
+.ring2:active{transform:scale(.95)}
+.ring2>svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring2 circle{fill:none;stroke-width:6;stroke-linecap:round}
+.ring2 .trk{stroke:rgba(255,255,255,.09)}
+.ring2 .val{stroke-dasharray:276.5;stroke-dashoffset:276.5;transition:stroke-dashoffset .8s ease,stroke .4s}
+.ring2 .rv{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:4px;line-height:1}
+.ring2 .rv b{font:300 34px var(--display);letter-spacing:-.02em}
+.ring2 .rv span{font:600 10.5px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.ring2 .ic{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ring2.temp{cursor:default}
+.ring2.road .val,.ring2.drv .val{stroke-dashoffset:0}
+.ring2.road .val{stroke:var(--ok,#43d19e);filter:drop-shadow(0 0 6px var(--ok,#43d19e))}
+.ring2.road.caution{--ok:#ffb547}.ring2.road.hazard{--ok:#ff5a5f}
+.ring2.road .rv span{color:var(--ok,#43d19e)}
+.ring2.drv .val{stroke:var(--accent);opacity:.55}
+.ring2.drv.on{background:radial-gradient(circle,color-mix(in srgb,var(--accent) 40%,transparent),color-mix(in srgb,var(--accent) 12%,transparent))}
+.ring2.drv.on .val{opacity:1;filter:drop-shadow(0 0 8px var(--accent))}
+.ring2.drv .lb{font:600 10.5px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.ring2.drv.on .lb,.ring2.drv.on{color:#fff}
+main.simple{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+main.simple .col{display:flex;flex-direction:column;gap:20px;min-width:0}
+main.simple .wx{grid-template-columns:auto minmax(0,1fr)}
+main.simple .wx .fc{grid-column:1/-1}
+.roadcard{gap:14px;--ok:#43d19e;background:radial-gradient(110% 120% at 0% 0%,color-mix(in srgb,var(--ok) 20%,transparent),transparent 60%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025))}
+.roadcard.caution{--ok:#ffb547}.roadcard.hazard{--ok:#ff5a5f}
+.roadhead{display:flex;align-items:center;gap:14px}
+.roadhead b{font:300 40px/1.05 var(--display);letter-spacing:-.02em}
+.roadhead .dot{width:16px;height:16px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 22%,transparent),0 0 18px var(--ok);flex:none}
+.reasons{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.reasons li{display:flex;gap:10px;align-items:baseline;font-size:18px;line-height:1.35}
+.reasons li::before{content:"";width:8px;height:8px;border-radius:50%;flex:none;transform:translateY(-2px);background:var(--dim)}
+.reasons li.hazard::before{background:#ff5a5f}.reasons li.caution::before{background:#ffb547}
+.roadcard .p2h{border-top:1px solid rgba(255,255,255,.08);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.today .tl{display:grid;gap:10px}
+.today .daybar{margin-top:4px}
+@media (max-width:900px){main.simple{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.rings{gap:10px}.ring2{width:88px;height:88px}.ring2 .rv b{font-size:26px}.ring2 .ic{width:24px;height:24px}}
+html.drive .ring2.temp{display:none}
+html.drive main.simple .wx .fc,html.drive .roadcard .p2h{display:none!important}
+html.drive .roadhead b{font-size:52px}
+html.drive .reasons li{font-size:24px}
+</style>
+<style>
+/* weather page: big radar + 24h chart + wind + NWS text */
+#radarPanel.wxpage{inset:max(16px,3vh) max(16px,3vw);overflow:hidden}
+.wxgrid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px}
+.wxgrid .radar-frame{height:100%;min-height:320px}
+.wxside{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px;overscroll-behavior:contain;padding-right:4px}
+.wxside .wxcharts{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.wxside .wind{flex-direction:row;align-items:center;justify-content:space-between}
+.wxside #compass{width:130px;height:130px}
+.wxside .chart{box-shadow:none}
+.fcst2{display:grid;gap:12px}
+.fcst2 .row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:baseline}
+.fcst2 .when{font:600 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.fcst2 .txt{font-size:16px;line-height:1.45}
+#radarPanel .count{display:flex;align-items:center;gap:6px}
+@media (max-width:900px){.wxgrid{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(260px,45%) minmax(0,1fr)}}
+#ringTemp{cursor:pointer}
+</style>
+<style>
+/* dark-first: black UI like the car, weather as tint + motion */
+#sky .aurora{display:none}
+#sky .clouds{opacity:.0}
+#sky.clouds .clouds{opacity:.55}
+#sky .glow{mix-blend-mode:screen}
+#sky.rain .rain::before{opacity:.55}
+#sky.snow .snow::before{opacity:.8}
+body{background:#030405}
+.panel,.wx,.hero,.wxcharts .chart,.dock{background:radial-gradient(120% 80% at 0% 0%,rgba(255,255,255,.05),transparent 55%),linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018))}
+.roadhead{flex-wrap:wrap}
+.roadhead .tday{margin-left:auto;font:300 22px var(--display);color:var(--dim)}
+/* weather tint strip on the weather band so conditions read at a glance */
+.wx{position:relative;overflow:hidden}
+.wx::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--wxc,linear-gradient(90deg,#6fb4ff,#ffb547))}
+</style>
+<style>
+.ev{grid-template-columns:78px 52px minmax(0,1fr) auto}
+.evb{position:relative;width:52px;height:52px;display:grid;place-items:center;color:var(--c,var(--blue))}
+.evb .r{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.evb .r circle{fill:none;stroke-width:3;stroke-linecap:round}
+.evb .r .t{stroke:color-mix(in srgb,var(--c,#4f8cff) 22%,transparent)}
+.evb .r .v{stroke:var(--c,#4f8cff);stroke-dasharray:144.5;transition:stroke-dashoffset .8s}
+.evb.live .r .v{filter:drop-shadow(0 0 6px var(--c,#4f8cff))}
+.evb>svg:not(.r){width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ev .sub .in{font-weight:600;color:var(--fg)}
+.ev .sub .in.now{color:var(--c,var(--accent))}
+/* icons on driving reasons */
+.reasons li::before{display:none}
+.reasons li i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);transform:translateY(4px)}
+.reasons li i svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.reasons li.hazard i{color:#ff7a7e;background:rgba(255,90,95,.14)}.reasons li.caution i{color:#ffc56a;background:rgba(255,181,71,.14)}.reasons li.info i{color:var(--dim)}
+.reasons li{align-items:flex-start}
+</style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <div class="wrap">
@@ -502,28 +601,37 @@ html.drive .clock{font-size:120px}
       <div class="dateline"><span class="date" id="date"></span><button class="stat" id="status" title="Tap to refresh">Loading…</button></div>
       <div class="brief" id="brief"></div>
     </div>
-    <div class="hud">
-      <div class="sunarc" id="sunArc" title="Daylight today"><svg viewBox="0 0 260 118"><defs><linearGradient id="sunGrad" x1="0" x2="1"><stop offset="0" stop-color="#f6c453"/><stop offset="1" stop-color="#f08a3a"/></linearGradient></defs><line class="hz" x1="0" y1="114" x2="260" y2="114"/><path class="trk" d="M14 114A116 106 0 0 1 246 114"/><path class="val" d="M14 114A116 106 0 0 1 246 114"/><circle class="dot" r="8" cx="14" cy="114"/></svg>
-        <div class="mid"><b>--</b><span>daylight left</span></div>
-        <div class="times"><div><b id="sunRise">--</b><span>Sunrise</span></div><div><b id="sunSet">--</b><span>Sunset</span></div></div></div>
-      <div class="dock">
-        <a class="ico" href="https://claude.ai/artifact/BnXgH6d4iX7XVEZwdoz3Ei" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/></svg><span class="lb">Chief of Staff</span></a>
-        <a class="ico" href="https://sentienlabs.ai" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg><span class="lb">Sentien Labs</span></a>
-        <button class="ico" id="drive" type="button" title="Big, simple layout. Turns on by itself while moving."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M3.5 10.5h6.5M14 10.5h6.5M12 14v7"/></svg><span class="lb">Drive</span></button>
-      </div>
+    <div class="rings">
+      <div class="ring2 temp" id="ringTemp" title="Now, and where it sits between today's low and high"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="val" cx="50" cy="50" r="44" stroke="url(#tempGrad)"/><defs><linearGradient id="tempGrad" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6fb4ff"/><stop offset="1" stop-color="#ffb547"/></linearGradient></defs></svg><div class="rv"><b>--°</b><span>H -- L --</span></div></div>
+      <button class="ring2 road" id="ringRoad" type="button" title="Road conditions from weather"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="val" cx="50" cy="50" r="44"/></svg><div class="rv"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3 5 21M16 3l3 18M12 4v3M12 10.5v3M12 17v3"/></svg><span>Roads</span></div></button>
+      <button class="ring2 drv" id="drive" type="button" title="Big, simple layout. Turns on by itself while moving."><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="val" cx="50" cy="50" r="44"/></svg><div class="rv"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M3.5 10.5h6.5M14 10.5h6.5M12 14v7"/></svg><span class="lb">Drive</span></div></button>
     </div>
   </header>
 
   <section class="alerts" id="alerts" hidden></section>
   <section class="panel fcst" id="fcst" aria-label="Forecast" hidden></section>
-  <section class="wx" id="wx" aria-label="Weather"></section>
-  <section class="wxcharts" id="wxcharts" aria-label="Weather charts" hidden>
-    <div class="chart t24"><h2 class="label">Next 24 hours<span class="hint">temp · chance of precip</span></h2><div class="plot"><svg id="t24" viewBox="0 0 600 150" preserveAspectRatio="none"></svg></div><div class="hrs" id="t24h"></div></div>
-    <div class="chart p2h"><h2 class="label" id="p2hHead">Next 2 hours</h2><div class="pbars" id="p2h"></div><div class="ptxt" id="p2hTxt"></div></div>
-    <div class="chart wind"><h2 class="label">Wind</h2><svg id="compass" viewBox="-60 -60 120 120"></svg></div>
-  </section>
-
-  <main class="grid">
+  <main class="simple">
+    <section class="col left">
+      <div class="panel roadcard" id="roadCard">
+        <h2 class="label">Driving<span class="hint" id="roadHint"></span></h2>
+        <div class="roadhead" id="roadHead"></div>
+        <ul class="reasons" id="roadWhy"></ul>
+        <div class="chart p2h"><h2 class="label" id="p2hHead">Next 2 hours</h2><div class="pbars" id="p2h"></div><div class="ptxt" id="p2hTxt"></div></div>
+      </div>
+      <section class="wx" id="wx" aria-label="Weather"></section>
+    </section>
+    <section class="col right">
+      <div class="panel today" style="flex:1">
+        <h2 class="label">Up next<span class="hint">hold an event to count down</span></h2>
+        <div class="leave" id="leave" hidden></div>
+        <div class="allday" id="allday"></div>
+        <div class="tl" id="tl"></div>
+        <div class="daybar" id="daybar"></div>
+      </div>
+    </section>
+  </main>
+  <!-- hidden for now (kept so they can come back): countdowns, tasks, 24h chart, wind -->
+  <div class="parked" hidden>
     <section class="col c1">
       <div class="panel hero" id="hero"></div>
       <div class="panel cdpanel">
@@ -537,16 +645,6 @@ html.drive .clock{font-size:120px}
       </div>
     </section>
 
-    <section class="col c2">
-      <div class="panel" style="flex:1">
-        <h2 class="label">Today &amp; tomorrow<span class="hint">hold an event to count down</span></h2>
-        <div class="daybar" id="daybar"></div>
-        <div class="leave" id="leave" hidden></div>
-        <div class="allday" id="allday"></div>
-        <div class="tl" id="tl"></div>
-      </div>
-    </section>
-
     <section class="col c3">
       <div class="panel">
         <h2 class="label prihead">High priority<span class="hint">hold to snooze</span> <span class="count" id="priCount"></span></h2>
@@ -556,13 +654,22 @@ html.drive .clock{font-size:120px}
         <h2 class="label">To-dos <span class="count" id="todoCount"></span></h2>
         <div class="pri" id="todos"></div>
       </div>
-      <div class="radar-scrim" id="radarScrim" hidden></div>
-      <div class="panel radar" id="radarPanel" hidden>
-        <h2 class="label">Radar <span class="count"><a id="radarOpen" href="#" target="_blank" rel="noopener">Full screen</a> · <button id="radarHide" type="button">Hide</button></span></h2>
-        <div class="radar-frame" id="radarMap" role="img" aria-label="Weather radar map"></div>
-      </div>
     </section>
-  </main>
+  </div>
+  <div class="radar-scrim" id="radarScrim" hidden></div>
+  <div class="panel radar wxpage" id="radarPanel" hidden>
+    <h2 class="label">Weather <span class="count"><a id="radarOpen" href="#" target="_blank" rel="noopener">NWS radar</a> · <button id="radarHide" type="button">Close</button></span></h2>
+    <div class="wxgrid">
+      <div class="radar-frame" id="radarMap" role="img" aria-label="Weather radar map"></div>
+      <div class="wxside">
+        <section class="wxcharts" id="wxcharts">
+    <div class="chart t24"><h2 class="label">Next 24 hours<span class="hint">temp · chance of precip</span></h2><div class="plot"><svg id="t24" viewBox="0 0 600 150" preserveAspectRatio="none"></svg></div><div class="hrs" id="t24h"></div></div>
+    <div class="chart wind"><h2 class="label">Wind</h2><svg id="compass" viewBox="-60 -60 120 120"></svg></div>
+        </section>
+        <section class="fcst2" id="fcst2"></section>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -639,7 +746,7 @@ async function loadWx(){
     const dirs=["N","NE","E","SE","S","SW","W","NW"];
     WX={temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),hum:c.relative_humidity_2m,
       wind:`${dirs[Math.round(c.wind_direction_10m/45)%8]} ${Math.round(c.wind_speed_10m)} mph`,
-      ...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
+      code:c.weather_code,...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
       windDir:c.wind_direction_10m,windMph:Math.round(c.wind_speed_10m),gust:Math.round(c.wind_gusts_10m??c.wind_speed_10m),
       hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m?.[i],mm:j.hourly.precipitation?.[i]||0,snow:j.hourly.snowfall?.[i]||0})),
       q15:(j.minutely_15?.time||[]).map((t,i)=>({t:new Date(t),mm:j.minutely_15.precipitation?.[i]||0,snow:j.minutely_15.snowfall?.[i]||0})),
@@ -770,16 +877,67 @@ let wxSig="";
 function renderWx(n){
   if(!PLACE)return;
   const sig=[n.getMinutes(),n.getDate(),!!WX].join(); if(sig===wxSig)return; wxSig=sig;
-  renderSunArc(n);renderWxCharts(n);
+  renderSunArc(n);renderWxCharts(n);renderRoad(n);renderTempRing();
   const dn=(t,i)=>i===0?"Today":localDate(t).toLocaleDateString([], {weekday:"short"});
   const st=sunTimes(n,PLACE.lat,PLACE.lon),dark=n<st.rise||n>=st.set;
   const nowIcon=WX&&dark?({sun:"moon",pcloud:"pmoon"}[WX.icon]||WX.icon):WX?.icon;
   $("#wx").innerHTML=`${WX?`<div class="now">${IC[nowIcon]}<div><div class="temp">${WX.temp}°</div></div>
-    <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">${esc(PLACE.name)} · <span class="tap">Tap for radar</span></div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
+    <div><div class="cond">${WX.cond}</div><div class="sub2">Feels ${WX.feels}° · H ${WX.hi}° L ${WX.lo}°</div><div class="sub2">${WX.wind} · ${WX.hum}% humidity</div><div class="sub2">Sunrise ${fmtT(st.rise)} · Sunset ${fmtT(st.set)}</div><div class="sub2"><span class="tap">Tap for radar &amp; details</span></div></div></div>`:`<div class="now"><div class="sub2">Weather unavailable</div></div>`}
   <div class="fc">${WX?(()=>{const lo=Math.min(...WX.days.map(d=>d.lo)),hi=Math.max(...WX.days.map(d=>d.hi)),sp=Math.max(1,hi-lo);
     return WX.days.map((d,i)=>`<div class="fd${i===0?" today":""}"><div class="d">${dn(d.date,i)}</div>${IC[d.icon]}<div class="hl">${d.hi}° <span>${d.lo}°</span></div><div class="rng"><i style="left:${(d.lo-lo)/sp*100}%;right:${(hi-d.hi)/sp*100}%"></i></div><div class="pp">${d.pp>=20?d.pp+"% precip":""}</div></div>`).join("")})():""}</div>`;
 }
 
+// ---- driving outlook: does the weather affect the roads in the next 24 hours? ----
+const LV={ok:0,info:0,caution:1,hazard:2};
+const RIC={snow:'<path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11M9 4l3 2 3-2M9 20l3-2 3 2"/>',ice:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
+ rain:'<path d="M7 15a4 4 0 0 1 .5-8A6 6 0 0 1 19 9a3.5 3.5 0 0 1-1 6z"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/>',wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',
+ fog:'<path d="M3 9h18M5 13h14M3 17h18"/>',heat:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 8v8M17 4l2-1M18 8h2"/>',moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+ bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',warn:'<path d="M12 3 2 20h20zM12 10v4M12 17h.01"/>',ok:'<path d="M5 12l4 4L19 6"/>'};
+function roadOutlook(n){
+  const R=[],add=(lvl,text,ic)=>R.push({lvl,text,ic:ic||(/snow/i.test(text)?"snow":/freez|ice|icy|cold/i.test(text)?"ice":/rain|wet/i.test(text)?"rain":/wind|gust/i.test(text)?"wind":/fog/i.test(text)?"fog":/heat|hot/i.test(text)?"heat":/dark/i.test(text)?"moon":/thunder/i.test(text)?"bolt":"warn")});
+  const H=(WX?.hourly||[]).filter(h=>h.t>new Date(n.getTime()-36e5)&&h.t<=new Date(n.getTime()+24*36e5));
+  const hr=t=>t.toDateString()===n.toDateString()?t.toLocaleTimeString([], {hour:"numeric"}):t.toLocaleString([], {weekday:"short",hour:"numeric"});
+  const span=(arr)=>{const a=arr[0].t,b=new Date(arr[arr.length-1].t.getTime()+36e5);return a<=n?`now until ${hr(b)}`:`${hr(a)} to ${hr(b)}`};
+  const likely=h=>h.pp>=40;
+  const snow=H.filter(h=>likely(h)&&h.snow>0);
+  if(snow.length){const tot=snow.reduce((a,h)=>a+h.snow,0);add(tot>=1?"hazard":"caution",`Snow ${span(snow)}${tot>=.1?`, about ${tot<1?tot.toFixed(1):Math.round(tot*2)/2} in`:""}`)}
+  const ice=H.filter(h=>likely(h)&&h.snow===0&&h.mm>=.01&&h.temp!=null&&h.temp<=32);
+  if(ice.length)add("hazard",`Freezing rain possible ${span(ice)}`);
+  const rain=H.filter(h=>likely(h)&&h.snow===0&&h.mm>=.01&&!(h.temp<=32));
+  if(rain.length){const heavy=rain.some(h=>h.mm>=.15);add(heavy?"caution":"info",`${heavy?"Heavy rain":"Wet roads"} ${span(rain)}`)}
+  const temps=H.map(h=>h.temp).filter(t=>t!=null),tmin=temps.length?Math.min(...temps):WX.lo,tmax=temps.length?Math.max(...temps):WX.hi;
+  const wetSoon=WX.code>=51||H.some(h=>h.mm>0||h.snow>0);
+  const fz=H.filter(h=>h.temp!=null&&h.temp<=32);
+  if(fz.length&&wetSoon&&!ice.length)add("caution",`Below freezing ${span(fz)}; icy patches likely`);
+  else if(fz.length)add("info",`Below freezing ${span(fz)}; watch bridges and shaded spots`);
+  else if(tmin<=36&&wetSoon)add("caution","Near freezing; bridges and overpasses may ice");
+  if(tmin<=10)add("caution",`Very cold, ${Math.round(tmin)}°: expect less range, precondition before leaving`);
+  else if(tmin<=25)add("info",`Cold, low ${Math.round(tmin)}°: range will dip, precondition helps`);
+  if(tmax>=100)add("hazard",`Extreme heat, ${Math.round(tmax)}°: keep Cabin Overheat Protection on`);
+  else if(tmax>=90)add("caution",`Hot, ${Math.round(tmax)}°: cabin heats fast when parked`);
+  if(WX?.gust>=40)add("hazard",`Wind gusts ${WX.gust} mph`);else if(WX?.gust>=30)add("caution",`Gusty, up to ${WX.gust} mph`);
+  if(WX&&(WX.code===45||WX.code===48))add("caution","Fog, low visibility");
+  if(WX&&WX.code>=95)add("hazard","Thunderstorms");
+  (ALERTS||[]).forEach(a=>{const ev=a.event||"";if(/winter|ice|snow|blizzard|flood|wind|fog|freez|storm|tornado/i.test(ev))add(/warning/i.test(ev)?"hazard":"caution",ev)});
+  if(PLACE){const st=sunTimes(n,PLACE.lat,PLACE.lon);if(n<st.set&&st.set-n<3*36e5)add("info",`Dark by ${fmtT(st.set)}`);else if(n>=st.set||n<st.rise)add("info","Dark out, sunrise "+fmtT(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise))}
+  const lvl=R.reduce((m,r)=>Math.max(m,LV[r.lvl]),0);
+  R.sort((a,b)=>LV[b.lvl]-LV[a.lvl]);
+  return{lvl,reasons:R,word:["Good","Caution","Hazard"][lvl],title:["Good driving","Use caution","Hazardous roads"][lvl]};
+}
+function renderRoad(n){
+  if(!WX)return;const o=roadOutlook(n),cls=["ok","caution","hazard"][o.lvl];
+  $("#roadCard").className="panel roadcard "+cls;
+  $("#roadHead").innerHTML=`<i class="dot"></i><b>${o.title}</b><span class="tday">Today ${WX.lo}° to ${WX.hi}°</span>`;
+  $("#roadHint").textContent="next 24 hours";
+  $("#roadWhy").innerHTML=o.reasons.length?o.reasons.map(r=>`<li class="${r.lvl}"><i><svg viewBox="0 0 24 24">${RIC[r.ic]}</svg></i><span>${esc(r.text)}</span></li>`).join(""):`<li class="info"><i><svg viewBox="0 0 24 24">${RIC.ok}</svg></i><span>No rain, snow or ice expected</span></li>`;
+  const ring=$("#ringRoad");ring.className="ring2 road "+cls;ring.querySelector("span").textContent=o.word;
+}
+function renderTempRing(){
+  const el=$("#ringTemp");if(!WX)return;
+  const lo=Math.min(WX.lo,WX.temp),hi=Math.max(WX.hi,WX.temp),f=hi>lo?(WX.temp-lo)/(hi-lo):1;
+  el.querySelector(".val").style.strokeDashoffset=String(276.5*(1-Math.max(.04,f)));
+  el.querySelector("b").textContent=WX.temp+"°";el.querySelector("span").textContent=`H ${WX.hi}° L ${WX.lo}°`;
+}
 // ---- weather charts: 24h temp + precip chance, 2h precip strip, wind compass ----
 function renderWxCharts(n){
   const box=$("#wxcharts");if(!WX||!WX.hourly?.length){box.hidden=true;return}box.hidden=false;
@@ -883,11 +1041,12 @@ function drawMoon(n){
   $("#moonLit").setAttribute("d",`M0 ${-r}A${r} ${r} 0 0 ${outer} 0 ${r}A${rx.toFixed(2)} ${r} 0 0 ${inner} 0 ${-r}Z`);
 }
 // ---- NWS watches and warnings ----
+let ALERTS=[];
 async function loadAlerts(){
   try{
     const j=await (await fetch(`https://api.weather.gov/alerts/active?point=${PLACE.lat.toFixed(4)},${PLACE.lon.toFixed(4)}`)).json();
     const a=(j.features||[]).map(f=>f.properties).filter(x=>x&&x.status==="Actual");
-    const el=$("#alerts");el.hidden=!a.length;
+    ALERTS=a;wxSig="";const el=$("#alerts");el.hidden=!a.length;
     el.innerHTML=a.map(x=>{const end=x.ends||x.expires;const until=end?` until ${new Date(end).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"})}`:"";
       return`<details><summary><b>${esc(x.event)}</b>${esc(until)}</summary><div class="desc">${esc(x.description||x.headline||"")}</div></details>`}).join("");
   }catch{}
@@ -901,6 +1060,7 @@ async function loadFcst(){
     if(key!==nwsKey){const pt=await (await fetch(`https://api.weather.gov/points/${PLACE.lat.toFixed(4)},${PLACE.lon.toFixed(4)}`)).json();nwsUrl=pt.properties.forecast;nwsKey=key}
     const f=await (await fetch(nwsUrl)).json();
     const per=f.properties.periods.slice(0,2);
+    $("#fcst2").innerHTML=`<h2 class="label">Forecast · National Weather Service</h2>`+f.properties.periods.slice(0,6).map(x=>`<div class="row"><div class="when">${esc(x.name)}</div><div class="txt">${esc(x.detailedForecast)}</div></div>`).join("");
     const el=$("#fcst");el.hidden=!per.length;if(!per.length)return;
     el.innerHTML=`<h2 class="label">Forecast</h2>`+per.map(x=>`<div class="row"><div class="when">${esc(x.name)}</div><div class="txt">${esc(x.detailedForecast)}</div></div>`).join("");
   }catch{}
@@ -914,8 +1074,9 @@ function renderBrief(n){
   $("#brief").textContent=parts.join(" ");$("#brief").hidden=!parts.length;
 }
 // ---- live sky background ----
-const SKY={night:["#0a1124","#05070d",0,"rgba(90,110,180,.12)"],dawn:["#2a2f5c","#b8667a",.30,"rgba(255,160,110,.45)"],
-  day:["#2563b0","#7fb0de",.5,"rgba(255,240,200,.30)"],dusk:["#2a1f4a","#c8604a",.30,"rgba(255,140,80,.50)"]};
+// Dark-first palette to match the car's dark UI: near-black base, weather and time of day shown as a faint tint, glow and particles
+const SKY={night:["#05070b","#020305",0,"rgba(90,110,180,.10)"],dawn:["#0b0d17","#1c1216",.2,"rgba(255,150,100,.22)"],
+  day:["#0a1220","#070a10",.15,"rgba(150,190,255,.16)"],dusk:["#0c0a14","#1a0f0c",.2,"rgba(255,130,70,.24)"]};
 let skySig="",starW=0;
 function drawStars(){
   const W=innerWidth,H=innerHeight,dpr=devicePixelRatio||1;if(W===starW)return;starW=W;
@@ -942,6 +1103,8 @@ function setSky(n){
   if(cls.includes("stars"))drawStars();
   const [top,bot,scrim,sun]=SKY[ph],el=$("#sky");
   el.className=cls;
+  const wxc=cls.includes("storm")?"#b28cff":cls.includes("snow")?"#e6eefc":cls.includes("rain")?"#6fb4ff":cls.includes("fog")?"#9aa3b2":cls.includes("clouds")?"#7d8796":ph==="night"?"#7f8fd6":"#ffc25a";
+  document.documentElement.style.setProperty("--wxc",`linear-gradient(90deg,transparent,${wxc} 30%,${wxc} 70%,transparent)`);
   el.style.background=`linear-gradient(180deg,${top} 0%,${bot} 100%)`;
   el.style.setProperty("--scrim",cloudy&&ph==="day"?scrim+.08:scrim);
   el.style.setProperty("--sun",sun);
@@ -970,13 +1133,33 @@ function renderHero(n){
   <div class="btnrow">${more?`<button class="btn" data-hnext>Next ›</button>`:""}<button class="btn" data-del="${c.id}">Remove</button></div>`;
 }
 
+// ---- event icons: pick a little picture from the title/location ----
+const EVI=[
+ [/train|amtrak|metro-?north|ctrail|hartford line|new haven|union station|\bnhv\b/i,'<rect x="6" y="3" width="12" height="14" rx="3"/><path d="M6 11h12M9 21l1.5-4M15 21l-1.5-4"/><circle cx="9.5" cy="14" r=".9" fill="currentColor"/><circle cx="14.5" cy="14" r=".9" fill="currentColor"/><path d="M10 6h4"/>'],
+ [/flight|fly|airport|\bbdl\b|\bjfk\b|\blga\b|\bbos\b|plane/i,'<path d="M10.5 21 12 17l6 2v-2l-6-4V7.5a1.5 1.5 0 0 0-3 0V13l-6 4v2l6-2 1.5 4"/>'],
+ [/doctor|dr\.|derm|dentist|dental|clinic|hospital|appointment|physical|therapy|pt\b/i,'<path d="M12 6v12M6 12h12"/><rect x="3.5" y="3.5" width="17" height="17" rx="5"/>'],
+ [/school|class|kenyon|teacher|pickup|pick-up|drop-?off|bus/i,'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/>'],
+ [/gym|workout|run|yoga|swim|tennis|golf|soccer|practice|game/i,'<path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/>'],
+ [/coffee|breakfast|lunch|dinner|brunch|restaurant|drinks/i,'<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M12 3v3"/>'],
+ [/call|zoom|meet|teams|webex|sync|standup|1:1|interview/i,'<rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3"/>'],
+ [/invoice|bank|tax|pay|bill/i,'<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h3"/>'],
+ [/birthday|party|celebrat/i,'<path d="M4 21h16v-7H4zM4 17h16M12 14V9"/><path d="M12 9c-1.5-1.2-1.5-3 0-5 1.5 2 1.5 3.8 0 5z"/>'],
+ [/car|tesla|service|oil|tire|dmv|registration/i,'<path d="M5 16h14l-1.5-5.5A2 2 0 0 0 15.6 9H8.4a2 2 0 0 0-1.9 1.5zM5 16v3M19 16v3"/><circle cx="8" cy="14" r=".9" fill="currentColor"/><circle cx="16" cy="14" r=".9" fill="currentColor"/>'],
+];
+const EVI_DEF='<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>';
+function evIcon(ev){const t=`${ev.title} ${ev.location||""}`;const m=EVI.find(([r])=>r.test(t));return`<svg viewBox="0 0 24 24">${m?m[1]:EVI_DEF}</svg>`}
+// ring fills over the 2 hours before start; full and glowing while happening
+function evBadge(ev,n){const lead=ev.s-n,f=ev.s<=n?1:lead>72e5?0:1-lead/72e5;
+  return`<div class="evb${ev.s<=n?" live":""}"><svg class="r" viewBox="0 0 52 52"><circle cx="26" cy="26" r="23" class="t"/><circle cx="26" cy="26" r="23" class="v" style="stroke-dashoffset:${(144.5*(1-f)).toFixed(1)}"/></svg>${evIcon(ev)}</div>`}
+function evWhen(ev,n){const ms=ev.s-n;if(ms<=0)return ev.e>n?`<b class="in now">Now</b> · `:"";if(ms>12*36e5||ev.s.toDateString()!==n.toDateString())return"";
+  const m=Math.round(ms/6e4);return`<b class="in">in ${m<60?m+" min":Math.floor(m/60)+"h"+(m%60?" "+m%60+"m":"")}</b> · `}
 // ---- timeline (today + tomorrow) ----
 function renderTimeline(n){
   const t0=dayStart(n),t2=new Date(t0.getTime()+2*864e5);
   const inWin=e=>e.e>t0&&e.s<t2;
   const all=EVENTS.filter(e=>e.allDay&&inWin(e)&&e.e>t0&&e.s<new Date(t0.getTime()+864e5));
   $("#allday").innerHTML=all.map(e=>`<button class="chip" data-ev="${EVENTS.indexOf(e)}" data-hold="cd" style="border-color:${e.c}">${esc(e.title)}</button>`).join("");
-  const list=timed().filter(e=>inWin(e)&&e.e>n).sort((a,b)=>a.s-b.s);
+  const list=timed().filter(e=>inWin(e)&&e.e>n).sort((a,b)=>a.s-b.s).slice(0,6);
   const today=n.toDateString();let html="",nowPlaced=false,lastDay=today;
   list.forEach(ev=>{
     const day=ev.s.toDateString();
@@ -987,8 +1170,8 @@ function renderTimeline(n){
     const pct=cls==="now"?Math.round((n-ev.s)/(ev.e-ev.s)*100):0,hasCd=cds.some(c=>c.ev===evKey(ev));
     html+=`<div class="ev ${cls}" style="--c:${ev.c};--pct:${pct}%" role="button" tabindex="0" data-ev="${EVENTS.indexOf(ev)}" data-hold="cd">
       <div class="tm">${t.replace(/\s?[AP]M/i,"")}<small>${t.match(/[AP]M/i)?.[0]||""} · ${Math.round((ev.e-ev.s)/60000)}m</small></div>
-      <div class="bar"></div>
-      <div><div class="nm">${esc(ev.title)}${hasCd?'<span class="cdtag">⏱ counting down</span>':""}</div>${ev.location?`<div class="sub">${esc(ev.location)}</div>`:`<div class="sub">${esc(ev.cal)}</div>`}</div>
+      ${evBadge(ev,n)}
+      <div><div class="nm">${esc(ev.title)}${hasCd?'<span class="cdtag">⏱ counting down</span>':""}</div><div class="sub">${evWhen(ev,n)}${ev.location?esc(ev.location):esc(ev.cal)}</div></div>
       ${ev.location?`<a class="go" href="${gmaps(ev.location)}" target="_blank" rel="noopener" aria-label="Open ${esc(ev.location)} in Maps">${PIN}</a>`:"<span></span>"}
     </div>`;
   });
@@ -1101,7 +1284,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#addBtn2")){$("#addform").hidden=false;$("#addform").scrollIntoView({behavior:"smooth",block:"center"});$("#cdName").focus();return}
   if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
   if(e.target.closest("#radarHide")||e.target.closest("#radarScrim")){toggleRadar(false);return}
-  if(e.target.closest("#wx")){toggleRadar();return}
+  if(e.target.closest("#wx")||e.target.closest("#ringTemp")){toggleRadar();return}
   if(e.target.closest("#drive")){driveManual=!document.documentElement.classList.contains("drive");setDrive();return}
   if(e.target.closest("#status")){load();return}
   if(e.target.id==="scrim"||e.target.closest("#closeSheet"))$("#scrim").hidden=true;
