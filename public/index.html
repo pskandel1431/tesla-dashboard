@@ -609,6 +609,15 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
 .driveband .dtxt span{font-size:17px;color:var(--dim)}
 @media (prefers-reduced-motion:reduce){.driveband .lanes,.driveband .car{animation:none!important}}
 </style>
+<style>
+.driveband .road{width:300px;height:80px}
+.driveband .car{left:40px;bottom:6px;width:210px;height:68px;color:inherit;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.driveband .lanes{bottom:6px}
+.driveband .car .spk{transform-origin:0 0}
+.driveband.moving .car .spk{animation:spin .5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.driveband.moving .car{animation:bob .7s ease-in-out infinite alternate}
+</style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <div class="wrap">
@@ -627,7 +636,26 @@ html.drive .driveband{display:flex;animation:rise .4s ease both}
   </header>
 
   <div class="driveband" id="driveBand" aria-live="polite">
-    <div class="road"><div class="lanes"></div><svg class="car" viewBox="0 0 64 28"><path d="M6 20h52l-2-6c-.8-2.2-2.8-3.4-5-3.6L40 9 33 3.5C31.8 2.6 30.4 2 29 2H17c-2.3 0-4.3 1.3-5.4 3.3L8.5 11C6.6 11.7 5 13.6 5 16z" fill="currentColor"/><circle cx="17" cy="21" r="5" class="wh"/><circle cx="47" cy="21" r="5" class="wh"/><path d="M15 9l3.5-5H28v5zM31 9V4h-1l7 5z" class="win"/></svg></div>
+    <div class="road"><div class="lanes"></div><svg class="car" viewBox="0 0 160 52" aria-label="Model 3 Performance">
+      <defs>
+        <linearGradient id="m3Body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d8188"/><stop offset=".6" stop-color="#6a6e74"/><stop offset="1" stop-color="#55595e"/></linearGradient>
+        <linearGradient id="m3Glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a1d22"/><stop offset=".6" stop-color="#2a2f37"/><stop offset="1" stop-color="#14161a"/></linearGradient>
+        <radialGradient id="m3Rim" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3a3d42"/><stop offset=".7" stop-color="#22252a"/><stop offset="1" stop-color="#101114"/></radialGradient>
+      </defs>
+      <g transform="translate(160 0) scale(-1 1)">
+      <ellipse cx="81" cy="47" rx="68" ry="3" fill="rgba(0,0,0,.5)"/>
+      <path fill="url(#m3Body)" d="M8 38C6 36 6 33 9 31.5L30 27.2C36.5 26 42 24.6 46.5 22.8C54 18.2 62 13.2 72 12.2L97 12.1C109.5 12.5 123.5 17.8 137.5 23.4L150 25.4C153 25.9 154.6 28 154.6 31V37C154.6 39.4 153 41 151 41H10.5C9 41 8 39.6 8 38Z"/>
+      <path fill="url(#m3Glass)" d="M49.5 23.4C56.8 18.9 63.4 14.9 72.4 14.1L96.8 14C107.4 14.4 119.6 18.6 131.8 23.4Z"/>
+      <path stroke="#62666d" stroke-width="1.6" d="M86 14v9.4"/>
+      <path fill="#33363b" d="M146.5 24.7l7.2.7c.7.1.8.8.2 1.1l-7.6-.6z"/>
+      <path fill="none" stroke="rgba(255,255,255,.16)" stroke-width=".8" d="M18 30.6C48 28.6 100 28.2 150 29.8"/>
+      <path fill="none" stroke="rgba(0,0,0,.35)" stroke-width=".7" d="M62 24v14M104 24v14"/>
+      <path fill="#e9eef5" opacity=".9" d="M9.6 31.4l9-2c.7-.1.9.7.3 1l-8.2 2.6c-.9.3-1.6-1-1.1-1.6z"/>
+      <path fill="#c3202a" d="M147.6 28.2l6.4.4c.5 0 .6.8.1.9l-6.5 1z"/>
+      <g transform="translate(36 40)"><circle r="10.6" fill="#0b0c0e"/><circle r="8.2" fill="url(#m3Rim)"/><path d="M-6.4-2.6A6.9 6.9 0 0 1 2.6-6.4" stroke="#e1252f" stroke-width="3.4" stroke-linecap="round" fill="none"/><path class="spk" d="M0-7.4v14.8M-7.4 0h14.8M-5.2-5.2l10.4 10.4M-5.2 5.2l10.4-10.4" stroke="#3e4248" stroke-width="1.5"/><circle r="1.5" fill="#55595f"/></g>
+      <g transform="translate(126 40)"><circle r="10.6" fill="#0b0c0e"/><circle r="8.2" fill="url(#m3Rim)"/><path d="M-6.4-2.6A6.9 6.9 0 0 1 2.6-6.4" stroke="#e1252f" stroke-width="3.4" stroke-linecap="round" fill="none"/><path class="spk" d="M0-7.4v14.8M-7.4 0h14.8M-5.2-5.2l10.4 10.4M-5.2 5.2l10.4-10.4" stroke="#3e4248" stroke-width="1.5"/><circle r="1.5" fill="#55595f"/></g>
+      </g>
+    </svg></div>
     <div class="dtxt"><b id="driveWord">Driving</b><span id="driveSub">Drive mode is on</span></div>
   </div>
   <section class="alerts" id="alerts" hidden></section>
