@@ -661,10 +661,10 @@ html.drive .ring2 .dw{display:block;font-size:11px;letter-spacing:.06em;color:va
 html.drive.hasnext .driveband .dtxt b{font-size:30px}
 html.drive.hasnext .driveband .dtxt span{font-size:15px}
 html.drive.hasnext main.simple .col.right{display:none}
-html.drive.hasnext main.simple .col.left{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,3fr);align-items:stretch}
+html.drive.hasnext main.simple .col.left{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);align-items:stretch}
 html.drive.hasnext main.simple .wx{grid-template-columns:auto minmax(0,1fr);gap:8px 16px;align-content:start;padding:16px 18px}
-html.drive.hasnext main.simple .wx .fc{display:grid!important;grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}
-html.drive.hasnext main.simple .wx .fc>:nth-child(n+4){display:none}
+html.drive.hasnext main.simple .wx .fc{display:grid!important;grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))}
+html.drive.hasnext main.simple .wx .fc>:nth-child(n+5){display:none}
 .hero-what{display:flex;align-items:center;gap:16px}
 .hero-ic{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--accent);background:#11161f;box-shadow:0 0 18px -4px var(--accent)}
 .hero-ic svg{width:28px;height:28px;fill:none;stroke:var(--fg);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -695,6 +695,18 @@ html.drive header.top{margin-bottom:10px}
 html.drive .greet{font-size:16px}
 html.drive .reasons li:nth-child(n+4){display:none}
 html.drive main.simple{gap:16px}
+/* drive: fill the screen height; bottom cards stretch and text scales with height */
+html.drive .wrap{height:100vh;box-sizing:border-box;display:flex;flex-direction:column;padding-bottom:14px}
+html.drive main.simple{flex:1;min-height:0;align-items:stretch}
+html.drive.hasnext main.simple .col.left{height:100%}
+html.drive.hasnext main.simple .col.left>*{min-height:0}
+html.drive .roadhead b{font-size:clamp(40px,6.2vh,64px)}
+html.drive .reasons li{font-size:clamp(18px,3vh,28px)}
+html.drive.hasnext main.simple .wx .temp{font-size:clamp(56px,9vh,96px)}
+html.drive .clock{font-size:clamp(72px,11.5vh,128px)}
+html.drive.hasnext .driveband{padding-block:clamp(12px,2.4vh,26px)}
+html.drive.hasnext .ns-cd{font-size:clamp(48px,7.5vh,76px)}
+html.drive.hasnext main.simple .wx{align-content:space-evenly}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -901,9 +913,10 @@ function renderNextStop(n){
 }
 // greeting while moving: one line per trip, picked at random
 const TRIP_LINES=["We're off and running, {n}","We're on the move, {n}","Rolling, {n}","On the road, {n}"];let tripLine=null;
+// drive: shrink the page if it would overflow the screen (extra room is filled by CSS)
 function fitDrive(){const w=$(".wrap"),on=document.documentElement.classList.contains("drive");
   w.style.zoom="";if(!on)return;
-  const need=w.getBoundingClientRect().height+8,have=innerHeight;if(need>have)w.style.zoom=String(Math.max(.6,have/need))}
+  const need=w.scrollHeight+4,have=innerHeight;if(need>have)w.style.zoom=String(Math.max(.6,have/need))}
 addEventListener("resize",()=>fitDrive());
 function setDrive(){const on=driveManual??moving;
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
