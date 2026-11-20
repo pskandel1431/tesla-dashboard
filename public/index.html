@@ -115,6 +115,7 @@ button{cursor:pointer;border:0;background:none}
 
 /* tasks */
 .pri{display:flex;flex-direction:column;gap:10px}
+.pri>*{flex-shrink:0}
 .task{display:flex;align-items:center;gap:14px;min-height:var(--tap);padding:10px 14px;border-radius:12px;background:var(--panel-2);width:100%;text-align:left}
 .task .box{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--p,var(--faint));flex:none;display:grid;place-items:center}
 .task.done .box{background:var(--p,var(--faint))}
@@ -710,9 +711,11 @@ function renderTimeline(n){
 }
 
 // ---- tasks ----
+// Todoist titles can hold markdown links like [label](url); show just the label
+const cleanTitle=s=>String(s).replace(/\[((?:\\.|[^\]])*)\]\((?:[^()]|\([^)]*\))*\)/g,"$1").replace(/\\([\[\]\\])/g,"$1");
 const pending=new Set();
 function taskHTML(t){const done=pending.has(t.id);return`<div class="task p${t.p} ${done?"done":""}" role="button" tabindex="0" data-task="${t.id}"${t.p===1&&!t.recurring?' data-snooze="1"':""}>
-  <span class="box"></span><span class="tx"><div class="tt">${esc(t.title)}</div><div class="meta">${dueTxt(t)}</div></span>
+  <span class="box"></span><span class="tx"><div class="tt">${esc(cleanTitle(t.title))}</div><div class="meta">${dueTxt(t)}</div></span>
   ${t.p<3?`<span class="tag">P${t.p}</span>`:""}<a class="open" href="https://app.todoist.com/app/task/${encodeURIComponent(t.id)}" target="_blank" rel="noopener" aria-label="Open in Todoist">↗</a></div>`}
 let holdT=null,held=false;
 document.addEventListener("pointerdown",e=>{const el=e.target.closest("[data-snooze]");if(!el||e.target.closest("a"))return;held=false;
