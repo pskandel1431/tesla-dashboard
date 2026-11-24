@@ -848,7 +848,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
       <div class="cap" id="clCond"></div>
       <div class="minis"><div class="mini" id="mWind"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Wind</span></div><div class="mini" id="mHum"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Humidity</span></div><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div></div>
     </div>
-    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div><div class="trip" id="clTrip"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><span class="l">Regen</span><b class="num">0</b><span class="r">hp est.</span></div></div></div>
+    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><span class="l">Regen</span><b class="num">0</b><span class="r">hp est.</span></div></div></div>
     <div class="side r">
       <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
       <ul class="why" id="clWhy"></ul>
@@ -1143,8 +1143,6 @@ function renderCluster(n){
     el.querySelector("b").textContent=Math.abs(hp);el.classList.toggle("regen",hp<0);
     const g=fresh2?CL.acc/9.81:0;clMini("#mG",Math.abs(g)/.8,Math.abs(g).toFixed(2),g<-.03?"Braking":g>.03?"Accel":"G-force");$("#mG").classList.toggle("neg",g<-.03);
     clMini("#mPeak",(CL.trip?.peak||0)/CAR.hpMax,Math.round(CL.trip?.peak||0));}
-  if(CL.trip){const m=Math.floor((Date.now()-CL.trip.t0)/6e4),mi=CL.trip.km*.6214;
-    $("#clTrip").innerHTML=`<span>Trip <b class="num">${mi<10?mi.toFixed(1):Math.round(mi)} mi</b></span><span><b class="num">${m>=60?`${Math.floor(m/60)}:${pad(m%60)}`:`${m} min`}</b></span>`}
   // everything else changes slowly
   const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length].join();if(sig===CL.sig)return;CL.sig=sig;
   if(WX){
