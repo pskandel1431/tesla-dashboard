@@ -118,20 +118,24 @@ const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, header
 // the browser keeps only zones near the car. The docs don't say how the key is sent, so try the
 // common styles and remember the one that works.
 const WZ_URL = "https://api.massdot-swzm.com/api/v1/cwz/work-zone-feed";
+const WZ_PUBLIC = "https://feed.massdot-swzm.com/massdot_wzdx_v4.1_work_zone_feed.geojson"; // public WZDx 4.1 file, no key
 let wzStyle = -1;
 async function workZones(env, ctx) {
-  const key = env.MASSDOT_WZ_KEY;
-  if (!key) return json({ error: "MASSDOT_WZ_KEY not set" }, 404);
+  const key = env.MASSDOT_WZ_KEY || "";
   const cache = caches.default, ck = new Request("https://cache.local/workzones");
   const hit = await cache.match(ck);
   if (hit) return hit;
   const styles = [
+    () => [WZ_PUBLIC, {}],
     () => [WZ_URL, { "x-api-key": key }],
     () => [`${WZ_URL}?api_key=${encodeURIComponent(key)}`, {}],
     () => [WZ_URL, { Authorization: `Bearer ${key}` }],
     () => [`${WZ_URL}?apiKey=${encodeURIComponent(key)}`, {}],
     () => [`${WZ_URL}?key=${encodeURIComponent(key)}`, {}],
     () => [WZ_URL, { Authorization: key }],
+    () => [`${WZ_URL}?api-key=${encodeURIComponent(key)}`, {}],
+    () => [WZ_URL, { "Ocp-Apim-Subscription-Key": key }],
+    () => [WZ_URL, { ApiKey: key }],
   ];
   const order = wzStyle >= 0 ? [wzStyle, ...styles.keys()].filter((v, i, a) => a.indexOf(v) === i) : [...styles.keys()];
   const tried = [];
@@ -146,6 +150,7 @@ async function workZones(env, ctx) {
       return out;
     }
     tried.push(`${i}:${r.status}`);
+    if (i === 0) { if (!key) break; continue; }
     if (r.status !== 401 && r.status !== 403 && r.status !== 400) break;
   }
   return json({ error: `MassDOT work zones unavailable (${tried.join(", ")})` }, 502);
