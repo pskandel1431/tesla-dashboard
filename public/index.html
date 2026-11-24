@@ -960,6 +960,10 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 .cl-wx .wh{font-size:calc(var(--u)*2.2)}.cl-wx .wc{font-size:calc(var(--u)*1.6);flex-wrap:nowrap;overflow:hidden}.cl-wx .wc span{white-space:nowrap}.cl-wx .wc span:nth-child(n+4){display:none}}
 html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
 .side .why{color:#d2e0ee}
+
+/* banner text a touch smaller */
+.cl-wx .wh{font-size:calc(var(--u)*2.15)}.cl-wx .wc{font-size:calc(var(--u)*1.55)}.cl-wx .wi{width:calc(var(--u)*5.2);height:calc(var(--u)*5.2)}
+@media (min-aspect-ratio:3/2){.cl-wx .wh{font-size:calc(var(--u)*1.9)}.cl-wx .wc{font-size:calc(var(--u)*1.4)}.cl-wx .wi{width:calc(var(--u)*4.2);height:calc(var(--u)*4.2)}}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -1631,11 +1635,19 @@ function roadOutlook(n){
   else if(tmax>=90)add("caution",`Hot, ${Math.round(tmax)}°: cabin heats fast when parked`);
   if(WX?.gust>=40)add("hazard",`Wind gusts ${WX.gust} mph`);else if(WX?.gust>=30)add("caution",`Gusty, up to ${WX.gust} mph`);
   if(WX&&(WX.code===45||WX.code===48))add("caution","Fog, low visibility");
-  if(WX&&WX.code>=95)add("hazard","Thunderstorms");
-  (ALERTS||[]).forEach(a=>{const ev=a.event||"";if(/winter|ice|snow|blizzard|flood|wind|fog|freez|storm|tornado/i.test(ev))add(/warning/i.test(ev)?"hazard":"caution",ev)});
+  // thunderstorms (lightning) now or in the next 6 hours
+  const ts=H.filter(h=>h.code>=95&&h.t<=new Date(+n+6*36e5));
+  if(WX&&WX.code>=95)add("hazard","Thunderstorms now, lightning nearby","bolt");
+  else if(ts.length)add(ts[0].t<=new Date(+n+36e5)?"hazard":"caution",`Thunderstorms ${span(ts)}, lightning possible`,"bolt");
+  // National Weather Service alerts: warnings are hazards, watches and advisories are cautions
+  (ALERTS||[]).forEach(a=>{const ev=a.event||"";if(/test|statement$/i.test(ev)&&!/warning/i.test(ev))return;
+    const sev=/warning|emergency/i.test(ev)||/extreme/i.test(a.severity||"");if(!sev&&!/watch|advisory/i.test(ev)&&!/winter|ice|snow|blizzard|flood|wind|fog|freez|storm|tornado/i.test(ev))return;
+    const end=a.ends||a.expires,until=end?` until ${hr(new Date(end))}`:"";
+    const ic=/tornado|thunder|lightning/i.test(ev)?"bolt":/snow|blizzard|winter/i.test(ev)?"snow":/ice|freez/i.test(ev)?"ice":/flood|rain/i.test(ev)?"rain":/wind/i.test(ev)?"wind":/fog/i.test(ev)?"fog":/heat/i.test(ev)?"heat":"warn";
+    add(sev?"hazard":"caution",`NWS ${ev}${until}`,ic);R[R.length-1].alert=true});
   if(PLACE){const st=sunTimes(n,PLACE.lat,PLACE.lon);if(n<st.set&&st.set-n<3*36e5)add("info",`Dark by ${fmtT(st.set)}`);else if(n>=st.set||n<st.rise)add("info","Dark out, sunrise "+fmtT(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise))}
   const lvl=R.reduce((m,r)=>Math.max(m,LV[r.lvl]),0);
-  R.sort((a,b)=>LV[b.lvl]-LV[a.lvl]);
+  R.sort((a,b)=>(LV[b.lvl]*2+!!b.alert)-(LV[a.lvl]*2+!!a.alert));
   return{lvl,reasons:R,word:["Good","Caution","Hazard"][lvl],title:["Good driving","Use caution","Hazardous roads"][lvl]};
 }
 function renderRoad(n){
