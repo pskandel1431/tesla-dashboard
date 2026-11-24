@@ -745,7 +745,8 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-comp::after{content:"";position:absolute;left:50%;top:-2px;margin-left:-5px;border:5px solid transparent;border-top:7px solid #4fd8ff;filter:drop-shadow(0 0 4px #4fd8ff)}
 .cl-road{font-size:calc(var(--u)*1.3);color:#9fb3c8;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(var(--u)*40)}
 .cl-road b{color:#e8f4ff;font-weight:500}
-#mVis{--mc:#c9d6ff} #mVis.low{--mc:#ffb340}
+.cl-road .elv{color:#7f93ab}
+#mAqi{--mc:var(--aq,#3fe0a0)} #mVis{--mc:#c9d6ff} #mVis.low{--mc:#ffb340}
 .cl-exit{display:flex;align-items:center;gap:calc(var(--u)*.6);min-height:56px;padding:0 calc(var(--u)*1.8);border-radius:999px;border:1px solid rgba(79,216,255,.3)!important;background:rgba(79,216,255,.06)!important;color:#bfe9ff!important;font:600 calc(var(--u)*1.3)/1 var(--body)!important;letter-spacing:.12em;text-transform:uppercase}
 .cl-exit svg{width:1.2em;height:1.2em}
 .cl-main{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;min-height:0}
@@ -758,7 +759,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .gauge .tl{fill:#7f93ab;font:500 9px var(--body);text-anchor:middle;dominant-baseline:middle}
 .gauge .ctr{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center}
 /* speed */
-.g-speed{width:calc(var(--u)*38);height:calc(var(--u)*38);margin-inline:calc(var(--u)*1)}
+.g-speed{width:calc(var(--u)*41);height:calc(var(--u)*41);margin-inline:calc(var(--u)*.5)}
 .g-speed .trk{stroke-width:9}
 .g-speed .val{stroke:url(#clSpd);stroke-width:9;filter:url(#clGlow)}
 .g-speed .rpmtrk{fill:none;stroke:rgba(180,140,255,.12);stroke-width:3;stroke-linecap:round}
@@ -803,18 +804,20 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill.next .ncd{font:500 1.3em/1 var(--display);color:var(--cy);text-shadow:0 0 .6em rgba(79,216,255,.5)}
 .cl-pill.next.soon{border-color:rgba(255,179,64,.5);background:rgba(255,179,64,.08)}
 .cl-pill.next.soon .ncd{color:var(--warn);text-shadow:0 0 .6em rgba(255,179,64,.5)}
+.cl-pill.warn{color:#ffd38a;border-color:rgba(255,179,64,.55);background:rgba(255,179,64,.1);box-shadow:0 0 14px rgba(255,179,64,.25)}
+.cl-pill .drv{color:#7f93ab;font-size:.85em}.cl-pill .drv.late{color:#ffb340}
 .cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
 .cl-pill[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
 /* taller windows (car browser not full-screen): big speedometer on top, temp + roads side by side below */
 @media (max-aspect-ratio:3/2){
-html.drive .cluster{--u:min(1.02vw,calc(var(--vh,1vh)*1.12))}
+html.drive .cluster{--u:min(1.02vw,calc(var(--vh,1vh)*1.05))}
 .cl-main{grid-template-columns:1fr 1fr;grid-template-areas:"s s" "t r";row-gap:calc(var(--u)*1.2);align-content:center}
-.g-speed{grid-area:s;width:calc(var(--u)*44);height:calc(var(--u)*44)}
-.g-speed .sp{font-size:calc(var(--u)*14)}
+.g-speed{grid-area:s;width:calc(var(--u)*52);height:calc(var(--u)*52)}
+.g-speed .sp{font-size:calc(var(--u)*17)}
 .side.l{grid-area:t}.side.r{grid-area:r}
 .side{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr auto 1fr;column-gap:calc(var(--u)*1.4);align-items:center;justify-items:center}
-.side>.gauge{grid-row:1/4;width:calc(var(--u)*21);height:calc(var(--u)*21)}
+.side>.gauge{grid-row:1/4;width:calc(var(--u)*19);height:calc(var(--u)*19)}
 .side>.cap,.side>.why{grid-row:2/3;grid-column:2;align-self:start}
 .side>.minis{grid-row:3/4;grid-column:2;align-self:start;gap:calc(var(--u)*1)}
 .side>.cap{grid-row:1/2;align-self:end}.side>.why{grid-row:1/2;align-self:end}
@@ -864,6 +867,27 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 @keyframes clBreath{50%{transform:scale(1.07);opacity:.55}}
 .g-speed .val{filter:url(#clGlow) brightness(calc(1 + var(--spd,0)*.35))}
 @media (prefers-reduced-motion:reduce){.g-speed::before{animation:none}.cl-fx{display:none}}
+
+/* dynamic speedometer: color climbs with speed, ticks light as you pass them, shimmer runs along the arc, surge flash on acceleration */
+.cluster{--sc:#4fd8ff;--sc0:#2a7bff}
+.g-speed .tick{transition:stroke .4s,filter .4s}
+.g-speed .tick.lit{stroke:var(--sc);filter:drop-shadow(0 0 2.5px var(--sc))}
+.g-speed .tick.lit.mj{stroke:#fff;filter:drop-shadow(0 0 4px var(--sc))}
+.g-speed .tl{transition:fill .4s}
+.g-speed .tl.lit{fill:#e8f4ff}
+.g-speed .shine{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;filter:url(#clGlow);opacity:calc(.25 + var(--spd,0)*.6);mix-blend-mode:screen}
+.g-speed .rpmshine{fill:none;stroke:#f0e6ff;stroke-width:3;stroke-linecap:round;filter:url(#clGlow);opacity:calc(.2 + var(--spd,0)*.6)}
+.g-speed .val{stroke-width:calc(9px + var(--spd,0)*3px)}
+.g-speed .sp{color:color-mix(in srgb,#fff 78%,var(--sc));text-shadow:0 0 calc(var(--u)*(1.6 + var(--spd,0)*3.2)) color-mix(in srgb,var(--sc) calc(45% + var(--spd,0)*45%),transparent),0 0 calc(var(--u)*.5) var(--sc);transition:color .5s}
+.g-speed .unit{color:var(--sc);transition:color .5s}
+.g-speed::after{content:"";position:absolute;inset:4%;border-radius:50%;pointer-events:none;box-shadow:0 0 0 0 transparent;opacity:0}
+.g-speed.surge::after{animation:clSurge .7s ease-out}
+.g-speed.regen::after{animation:clRegen .7s ease-out}
+@keyframes clSurge{0%{opacity:1;box-shadow:0 0 calc(var(--u)*1) calc(var(--u)*.3) var(--sc),inset 0 0 calc(var(--u)*3) color-mix(in srgb,var(--sc) 40%,transparent)}100%{opacity:0;transform:scale(1.08);box-shadow:0 0 calc(var(--u)*4) calc(var(--u)*1) transparent}}
+@keyframes clRegen{0%{opacity:1;box-shadow:0 0 calc(var(--u)*1) calc(var(--u)*.3) #3fe0a0}100%{opacity:0;transform:scale(.96)}}
+.g-speed.surge .val{animation:clVal .7s ease-out}
+@keyframes clVal{30%{filter:url(#clGlow) brightness(1.8)}}
+@media (prefers-reduced-motion:reduce){.g-speed.surge::after,.g-speed.regen::after,.g-speed.surge .val{animation:none}}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -890,12 +914,14 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
     <div class="side r">
       <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
       <ul class="why" id="clWhy"></ul>
-      <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div><div class="mini" id="mVis"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Visibility</span></div></div>
+      <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div><div class="mini" id="mVis"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Visibility</span></div><div class="mini" id="mAqi"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Air quality</span></div></div>
     </div>
   </div>
   <div class="cl-bot">
     <div class="cl-pill next" id="clNext" hidden></div>
     <div class="cl-pill" id="clRain" hidden></div>
+    <div class="cl-pill warn" id="clIce" hidden></div>
+    <div class="cl-pill warn" id="clGlare" hidden></div>
     <div class="cl-pill" id="clSun" hidden></div>
   </div>
 </section>
@@ -1050,14 +1076,14 @@ async function loadWx(){
   if(!PLACE)return;
   loadFcst();loadAlerts();
   try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=visibility,temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability,weather_code,temperature_2m,precipitation,snowfall&minutely_15=precipitation,snowfall&forecast_minutely_15=8&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=5`;
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=visibility,temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability,weather_code,temperature_2m,precipitation,snowfall,soil_temperature_0cm,dew_point_2m&minutely_15=precipitation,snowfall&forecast_minutely_15=8&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=5`;
     const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
     const dirs=["N","NE","E","SE","S","SW","W","NW"];
     WX={temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),hum:c.relative_humidity_2m,vis:c.visibility,
       wind:`${dirs[Math.round(c.wind_direction_10m/45)%8]} ${Math.round(c.wind_speed_10m)} mph`,
       code:c.weather_code,...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
       windDir:c.wind_direction_10m,windMph:Math.round(c.wind_speed_10m),gust:Math.round(c.wind_gusts_10m??c.wind_speed_10m),
-      hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m?.[i],mm:j.hourly.precipitation?.[i]||0,snow:j.hourly.snowfall?.[i]||0})),
+      hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m?.[i],mm:j.hourly.precipitation?.[i]||0,snow:j.hourly.snowfall?.[i]||0,surf:j.hourly.soil_temperature_0cm?.[i],dew:j.hourly.dew_point_2m?.[i]})),elev:j.elevation,
       q15:(j.minutely_15?.time||[]).map((t,i)=>({t:new Date(t),mm:j.minutely_15.precipitation?.[i]||0,snow:j.minutely_15.snowfall?.[i]||0})),
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
   }catch{}
@@ -1135,20 +1161,21 @@ const clArc=r=>{const[a,b]=clPt(r,-135),[c,d]=clPt(r,135);return`M${a} ${b}A${r}
 const clDeg=f=>-135+270*Math.max(0,Math.min(1,f));
 function clGauge(sel,r,{max=100,minor=0,major=0,labels=[],extra=""}={}){
   let t="";
-  if(minor)for(let v=0;v<=max;v+=minor){const mj=major&&v%major===0,[x0,y0]=clPt(r-12,clDeg(v/max)),[x1,y1]=clPt(r-(mj?22:17),clDeg(v/max));t+=`<line class="tick${mj?" mj":""}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`}
+  if(minor)for(let v=0;v<=max;v+=minor){const mj=major&&v%major===0,[x0,y0]=clPt(r-12,clDeg(v/max)),[x1,y1]=clPt(r-(mj?22:17),clDeg(v/max));t+=`<line data-v="${v}" class="tick${mj?" mj":""}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`}
   labels.forEach(v=>{const[x,y]=clPt(r-33,clDeg(v/max));t+=`<text class="tl" x="${x}" y="${y}">${v}</text>`});
   $(sel+">svg").innerHTML=`${extra}<path class="trk" d="${clArc(r)}"/>${t}<path class="val" d="${clArc(r)}" pathLength="100" stroke-dasharray="0 100"/><g class="tip" style="transition:transform .9s cubic-bezier(.3,.7,.3,1);transform:rotate(-135deg)"><circle cy="${-r}" r="4.5" fill="#fff" filter="url(#clGlow)"/></g>`;
 }
 clGauge("#gSpeed",96,{max:TOP_MPH,minor:5,major:20,labels:[20,40,60,80,100,120,140,160],extra:`<circle class="dec1" r="118"/><circle class="dec2" r="126"/><path class="redl" d="${(()=>{const[a,b]=clPt(89,clDeg(140/TOP_MPH)),[c,d]=clPt(89,135);return`M${a} ${b}A89 89 0 0 1 ${c} ${d}`})()}"/><path class="rpmtrk" d="${clArc(107)}"/><path class="rpm" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`});
+$("#gSpeed>svg").insertAdjacentHTML("beforeend",`<path class="shine" d="${clArc(96)}" pathLength="100" stroke-dasharray="0 100"/><path class="rpmshine" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`);
 clGauge("#gTemp",94,{max:100,minor:10,extra:(()=>{const[x0,y0]=clPt(80,clDeg(.32)),[x1,y1]=clPt(70,clDeg(.32)),[lx,ly]=clPt(108,clDeg(.32));return`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#8fd3ff" stroke-width="2.4"/><text class="tl fz" x="${lx}" y="${ly}">32°</text>`})()});
 clGauge("#gRoad",94);
 function clSet(sel,f){const el=$(sel);f=Math.max(0,Math.min(1,f));el.querySelector(".val").setAttribute("stroke-dasharray",`${(f*100).toFixed(1)} 100`);el.querySelector(".tip").style.transform=`rotate(${clDeg(f)}deg)`;el.querySelector(".tip").style.opacity=f>0?1:0;el.querySelector(".val").style.opacity=f>0?1:0}
 function clTrack(p){
-  const c=p.coords,h=c.heading;CL.fixAt=Date.now();
+  const c=p.coords,h=c.heading;CL.fixAt=Date.now();if(c.altitude!=null&&!isNaN(c.altitude)&&(c.altitudeAccuracy??0)<60)CL.alt=c.altitude;
   const v=c.speed,t=p.timestamp||Date.now();
   if(v!=null&&!isNaN(v)){
     if(CL.pv!=null){const dt=(t-CL.pt)/1e3;if(dt>.3&&dt<6){const a=(v-CL.pv)/dt;CL.acc=CL.acc*.4+a*.6}}
-    CL.pv=v;CL.pt=t;
+    CL.pv=v;CL.pt=t;speedSurge(CL.acc);
     const W=CAR.kg*CL.acc*v+.5*1.2*CAR.cda*v**3+CAR.crr*CAR.kg*9.81*v;
     CL.hp=v<.5?0:Math.max(-CAR.regenMax,Math.min(CAR.hpMax,W/745.7));
     if(CL.trip&&CL.hp>CL.trip.peak)CL.trip.peak=CL.hp;
@@ -1170,7 +1197,7 @@ function fxSeed(p,fresh){p.x=Math.random()*2-1;p.y=Math.random()*2-1;p.z=fresh?M
 function fxLoop(t){
   const cv=$("#clFx");if(!document.documentElement.classList.contains("drive")||document.hidden){FX.run=false;return}
   requestAnimationFrame(fxLoop);
-  if(t-FX.last<32)return;const dt=Math.min(.1,(t-FX.last)/1e3);FX.last=t;
+  if(t-FX.last<32)return;speedShine(t);const dt=Math.min(.1,(t-FX.last)/1e3);FX.last=t;
   const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
   const kind=FX.kind,n={snow:110,rain:130,fog:30,clear:55}[kind];
   while(FX.ps.length<n)FX.ps.push(fxSeed({},true));FX.ps.length=n;
@@ -1217,10 +1244,77 @@ async function clRevGeo(){
 }
 function clRoadLine(){
   clRevGeo();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
+  const ft=CL.alt!=null?Math.round(CL.alt*3.281):WX?.elev!=null?Math.round(WX.elev*3.281):null,elv=ft!=null?` <span class="elv">· ${ft.toLocaleString()} ft</span>`:"";
   if(!where){el.textContent=moving&&h!=null?`Heading ${DIRW[Math.round(h/45)%8]}`:"";return}
   const on=GEO2.road?`on <b>${esc(GEO2.road)}</b>`:`in <b>${esc(GEO2.town)}</b>`;
-  el.innerHTML=moving&&h!=null?`Driving ${DIRW[Math.round(h/45)%8]} ${on}`:moving?`Driving ${on}`:`Stopped ${on}`;
+  el.innerHTML=(moving&&h!=null?`Driving ${DIRW[Math.round(h/45)%8]} ${on}`:moving?`Driving ${on}`:`Stopped ${on}`)+elv;
 }
+
+// ---- free extras: black ice, sun glare, air quality, elevation ----
+// Black ice: road surface (ground temp at 0 cm) at/below freezing while there is moisture: recent or coming precip, or air near its dew point (frost)
+function blackIce(n){
+  const all=WX?.hourly||[];const H=all.filter(h=>h.t>new Date(+n-36e5)&&h.t<=new Date(+n+12*36e5)&&h.surf!=null);if(!H.length)return null;
+  const wetPast=all.some(h=>h.t>new Date(+n-8*36e5)&&h.t<=n&&(h.mm>0||h.snow>0));
+  const risky=H.filter(h=>h.surf<=32.5&&(wetPast||h.mm>0||(h.dew!=null&&h.temp-h.dew<=3)));
+  if(!risky.length)return null;const first=risky[0],sMin=Math.round(Math.min(...risky.map(h=>h.surf)));
+  return{now:first.t<=new Date(+n+36e5),at:first.t,text:`Black ice risk${first.t<=new Date(+n+36e5)?" now":` from ${first.t.toLocaleTimeString([], {hour:"numeric"})}`}: road surface near ${sMin}°`};
+}
+// Sun position (NOAA approximation): azimuth clockwise from north, elevation in degrees
+function sunPos(d,lat,lon){
+  const rad=Math.PI/180,doy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),hr=d.getUTCHours()+d.getUTCMinutes()/60;
+  const g=2*Math.PI/365*(doy-1+(hr-12)/24);
+  const eqt=229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
+  const dec=0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g);
+  const ha=((hr*60+eqt+4*lon)/4-180)*rad,la=lat*rad;
+  const cz=Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(ha),z=Math.acos(Math.max(-1,Math.min(1,cz)));
+  let az=Math.acos(Math.max(-1,Math.min(1,(Math.sin(la)*Math.cos(z)-Math.sin(dec))/(Math.cos(la)*Math.sin(z)))))/rad;
+  az=ha>0?(az+180)%360:(540-az)%360;return{az,el:90-z/rad};
+}
+const AQ={at:0,v:null,key:""};
+async function loadAqi(){
+  const pl=HERE||PLACE;if(!pl)return;const key=`${pl.lat.toFixed(1)},${pl.lon.toFixed(1)}`;if(key===AQ.key&&Date.now()-AQ.at<30*60e3)return;AQ.key=key;AQ.at=Date.now();
+  try{const j=await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${pl.lat}&longitude=${pl.lon}&current=us_aqi`)).json();AQ.v=j.current?.us_aqi??null;CL.sig=""}catch{}
+}
+function renderExtras(n){
+  loadAqi();
+  if(AQ.v!=null){const v=Math.round(AQ.v),c=v<=50?"#3fe0a0":v<=100?"#ffd27a":v<=150?"#ffb340":"#ff4d5e";$("#mAqi").style.setProperty("--aq",c);clMini("#mAqi",v/200,v,v<=50?"Air good":v<=100?"Air fair":"Air poor")}
+  const ice=$("#clIce"),bi=WX?blackIce(n):null;ice.hidden=!bi;
+  if(bi)ice.innerHTML=`<svg viewBox="0 0 24 24">${RIC.ice}</svg>${bi.now?"Black ice risk":`Black ice from ${bi.at.toLocaleTimeString([], {hour:"numeric"})}`} <small>surface ${Math.round(Math.min(...WX.hourly.filter(h=>h.t>=new Date(+n-36e5)&&h.t<=new Date(+n+12*36e5)&&h.surf!=null).map(h=>h.surf)))}°</small>`;
+}
+function renderGlare(n){
+  const el=$("#clGlare"),pl=HERE||PLACE;if(!pl){el.hidden=true;return}
+  const sp=sunPos(n,pl.lat,pl.lon),h=CL.head,cloudy=WX&&WX.code>=3;
+  let dif=h==null?999:Math.abs(((sp.az-h)%360+540)%360-180);
+  const on=moving&&!cloudy&&sp.el>-1&&sp.el<25&&dif<35;el.hidden=!on;
+  if(on)el.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Sun glare ahead <small>low sun ${Math.max(0,Math.round(sp.el))}°</small>`;
+}
+
+// ---- dynamic speedometer ----
+const SPC=[[0,"#2a7bff","#4fd8ff"],[40,"#2a9bff","#4ff0ff"],[65,"#3b6bff","#8f7bff"],[85,"#6a4bff","#c46bff"],[105,"#a03bff","#ff5fd2"],[130,"#ff3b8a","#ff4d5e"]];
+const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mixc=(a,b,f)=>"#"+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*f).toString(16).padStart(2,"0")).join("");
+let spdLast=-1;
+function speedLook(mph){
+  mph=mph||0;if(Math.abs(mph-spdLast)<.5)return;spdLast=mph;
+  let k=0;while(k<SPC.length-1&&mph>=SPC[k+1][0])k++;
+  const a=SPC[k],b=SPC[Math.min(k+1,SPC.length-1)],f=b===a?0:(mph-a[0])/(b[0]-a[0]);
+  const c0=mixc(a[1],b[1],f),c1=mixc(a[2],b[2],f),cl=$("#cluster");
+  cl.style.setProperty("--sc",c1);cl.style.setProperty("--sc0",c0);
+  const st=$("#clSpd").querySelectorAll("stop");st[0].setAttribute("stop-color",c0);st[1].setAttribute("stop-color",mixc(c0,c1,.6));st[2].setAttribute("stop-color",mixc(c1,"#ffffff",.45));
+  $("#gSpeed>svg").querySelectorAll(".tick").forEach(t=>t.classList.toggle("lit",+t.dataset.v<=mph&&mph>0));
+  $("#gSpeed>svg").querySelectorAll(".tl").forEach(t=>t.classList.toggle("lit",+t.textContent<=mph));
+}
+// shimmer that runs along the lit arc; faster at higher speed (driven from the animation loop)
+function speedShine(t){
+  const f=Math.min(1,(FX.mph||0)/TOP_MPH)*100,sh=$("#gSpeed .shine"),rs=$("#gSpeed .rpmshine");if(!sh)return;
+  if(f<1){sh.style.opacity=rs.style.opacity="0";return}
+  const per=Math.max(.7,2.6-(FX.mph/60)),ph=(t/1000/per)%1,len=Math.min(7,f*.4+2),pos=ph*(f+len)-len;
+  const sl=Math.min(len,f-pos,len+pos);sh.style.opacity=sl>.2?"":"0";sh.setAttribute("stroke-dasharray",`${Math.max(.01,sl).toFixed(2)} 300`);sh.setAttribute("stroke-dashoffset",(-Math.max(0,pos)).toFixed(2));
+  const rf=Math.min(100,(FX.mph||0)*RPM_PER_MPH/RPM_MAX*100),rp=((t/1000/(per*.8))%1)*(rf+5)-5;
+  const rl=Math.min(5,rf-rp,5+rp);rs.style.opacity=rf<1||rl<.2?"0":"";rs.setAttribute("stroke-dasharray",`${Math.max(.01,rl).toFixed(2)} 300`);rs.setAttribute("stroke-dashoffset",(-Math.max(0,rp)).toFixed(2));
+}
+let surgeAt=0;
+function speedSurge(acc){if(Date.now()-surgeAt<2500)return;const g=$("#gSpeed");if(!g)return;
+  const cls=acc>2?"surge":acc<-2.5?"regen":null;if(!cls)return;surgeAt=Date.now();g.classList.remove("surge","regen");void g.offsetWidth;g.classList.add(cls)}
 function renderCluster(n){
   const de=document.documentElement;if(!de.classList.contains("drive"))return;
   $("#cluster").classList.toggle("moving",moving);
@@ -1228,11 +1322,11 @@ function renderCluster(n){
   $("#clDate").textContent=n.toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"});
   // speed (GPS); stale fixes read as 0 once we've stopped
   const fresh=Date.now()-CL.fixAt<20e3,mph=lastMph==null?null:(fresh||moving?lastMph:0);
-  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/TOP_MPH);fxUpdate(mph);
+  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/TOP_MPH);fxUpdate(mph);speedLook(mph);
   // estimated motor RPM: Model 3 Performance 9.04:1 single gear, 20in tires (~26.6in) => ~115 RPM per mph
   const rpm=Math.round((mph||0)*RPM_PER_MPH);const rr=$("#gSpeed .rpm");rr.setAttribute("stroke-dasharray",`${Math.min(100,rpm/RPM_MAX*100).toFixed(1)} 100`);rr.style.opacity=rpm>0?1:0;
   $("#clRpm").innerHTML=mph==null?"":`<b>${rpm.toLocaleString()}</b> RPM <small>est.</small>`;
-  clCompass();clRoadLine();
+  clCompass();clRoadLine();renderGlare(n);
   {const fresh2=Date.now()-CL.fixAt<8e3,hp=fresh2?Math.round(CL.hp):0,el=$("#clPwr");
     el.querySelector(".pw").style.width=(Math.max(0,hp)/CAR.hpMax*50).toFixed(1)+"%";
     el.querySelector(".rg").style.width=(Math.max(0,-hp)/CAR.regenMax*50).toFixed(1)+"%";
@@ -1257,7 +1351,7 @@ function renderCluster(n){
     if(i>=0){const sn=q[i].snow>0,what=sn?"Snow":"Rain",mins=Math.max(0,Math.round((q[i].t-n)/6e4));rn.className="cl-pill wet";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC[sn?"snow":"rain"]}</svg>${mins<10?`${what} now`:`${what} in ${mins} min`}`}
     else{rn.className="cl-pill";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC.ok}</svg>Dry next 2 hrs`}
     clMini("#mWind",WX.windMph/40,WX.gust>=WX.windMph+8?`${WX.windMph}<small>/${WX.gust}</small>`:WX.windMph,null,`<svg viewBox="0 0 24 24" style="transform:rotate(${(WX.windDir+180)%360}deg)"><path d="M12 3v18M6 9l6-6 6 6"/></svg>`);
-    clMini("#mHum",WX.hum/100,WX.hum+"%");
+    clMini("#mHum",WX.hum/100,WX.hum+"%");renderExtras(n);
     if(WX.vis!=null){const mi=WX.vis/1609;clMini("#mVis",mi/10,mi>=10?"10+":mi<1?mi.toFixed(1):Math.round(mi),"Visibility mi");$("#mVis").classList.toggle("low",mi<2)}
     const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
     if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4));clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,dark?"Night":"Daylight")}
@@ -1270,7 +1364,8 @@ function renderCluster(n){
   if(cd&&new Date(cd.d)-n<12*36e5&&(!nx||new Date(cd.d)<nx.t))nx={t:new Date(cd.d),title:cd.n,ev:{title:cd.n,location:""}};
   const ne=$("#clNext");ne.hidden=!nx;
   if(nx){const m=Math.max(0,Math.ceil((nx.t-n)/6e4)),h=Math.floor(m/60);ne.classList.toggle("soon",m<=15);
-    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${fmtT(nx.t)}</small><span class="ncd num">${m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>`}
+    const li=leaveInfo&&leaveInfo.ev===nx.ev?leaveInfo:null;
+    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${fmtT(nx.t)}</small><span class="ncd num">${m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>${li?`<span class="drv${li.late?" late":""}">· ${li.mins} min drive${li.late?", leave now":""}</span>`:""}`}
 }
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
@@ -1292,6 +1387,7 @@ async function updateLeave(){
   if(mins==null){try{const j=await (await fetch(`https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${dest[1]},${dest[0]}?overview=false`)).json();
     mins=Math.ceil(j.routes[0].duration/60);routeCache={[key]:{m:mins,at:Date.now()}}}catch{el.hidden=true;return}}
   const by=new Date(ev.s.getTime()-(mins+5)*60e3),late=by<=n;
+  leaveInfo={ev,mins,by,late};CL.sig="";
   el.hidden=false;el.className="leave"+(late?" now":"");
   el.innerHTML=`<div>${late?"<b>Leave now</b>":`Leave by <b>${fmtT(by)}</b>`} for ${esc(ev.title)} · ${mins} min drive</div><a href="${gmaps(ev.location)}" target="_blank" rel="noopener">Open in Maps</a>`;
 }
@@ -1407,7 +1503,8 @@ function roadOutlook(n){
   const temps=H.map(h=>h.temp).filter(t=>t!=null),tmin=temps.length?Math.min(...temps):WX.lo,tmax=temps.length?Math.max(...temps):WX.hi;
   const wetSoon=WX.code>=51||H.some(h=>h.mm>0||h.snow>0);
   const fz=H.filter(h=>h.temp!=null&&h.temp<=32);
-  if(fz.length&&wetSoon&&!ice.length)add("caution",`Below freezing ${span(fz)}; icy patches likely`);
+  const bi=blackIce(n);if(bi)add("caution",bi.text,"ice");
+  if(fz.length&&wetSoon&&!ice.length&&!bi)add("caution",`Below freezing ${span(fz)}; icy patches likely`);
   else if(fz.length)add("info",`Below freezing ${span(fz)}; watch bridges and shaded spots`);
   else if(tmin<=36&&wetSoon)add("caution","Near freezing; bridges and overpasses may ice");
   if(tmin<=10)add("caution",`Very cold, ${Math.round(tmin)}°: expect less range, precondition before leaving`);
