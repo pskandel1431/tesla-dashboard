@@ -113,6 +113,44 @@ export class Store {
 // ---------- router ----------
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
+// ---------- MassDOT work zones (CWZ / WZDx GeoJSON) ----------
+// The key stays server-side. The feed is passed through untouched (no parsing: free-plan CPU limit);
+// the browser keeps only zones near the car. The docs don't say how the key is sent, so try the
+// common styles and remember the one that works.
+const WZ_URL = "https://api.massdot-swzm.com/api/v1/cwz/work-zone-feed";
+let wzStyle = -1;
+async function workZones(env, ctx) {
+  const key = env.MASSDOT_WZ_KEY;
+  if (!key) return json({ error: "MASSDOT_WZ_KEY not set" }, 404);
+  const cache = caches.default, ck = new Request("https://cache.local/workzones");
+  const hit = await cache.match(ck);
+  if (hit) return hit;
+  const styles = [
+    () => [WZ_URL, { "x-api-key": key }],
+    () => [`${WZ_URL}?api_key=${encodeURIComponent(key)}`, {}],
+    () => [WZ_URL, { Authorization: `Bearer ${key}` }],
+    () => [`${WZ_URL}?apiKey=${encodeURIComponent(key)}`, {}],
+    () => [`${WZ_URL}?key=${encodeURIComponent(key)}`, {}],
+    () => [WZ_URL, { Authorization: key }],
+  ];
+  const order = wzStyle >= 0 ? [wzStyle, ...styles.keys()].filter((v, i, a) => a.indexOf(v) === i) : [...styles.keys()];
+  const tried = [];
+  for (const i of order) {
+    const [u, h] = styles[i]();
+    let r;
+    try { r = await fetch(u, { headers: { accept: "application/geo+json, application/json", ...h } }); } catch (e) { tried.push(`${i}:${e.message}`); continue; }
+    if (r.ok) {
+      wzStyle = i;
+      const out = new Response(r.body, { headers: { "content-type": "application/json", "cache-control": "private, max-age=120" } });
+      ctx && ctx.waitUntil && ctx.waitUntil(cache.put(ck, out.clone()));
+      return out;
+    }
+    tried.push(`${i}:${r.status}`);
+    if (r.status !== 401 && r.status !== 403 && r.status !== 400) break;
+  }
+  return json({ error: `MassDOT work zones unavailable (${tried.join(", ")})` }, 502);
+}
+
 // Tolerate stray spaces in secret names typed on a phone ("DASH_PASSWORD ").
 function cleanEnv(env) {
   const out = { ...env };
@@ -120,7 +158,7 @@ function cleanEnv(env) {
     const t = k.trim();
     if (t !== k && !(t in out)) out[t] = env[k];
   }
-  for (const k of ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN"]) {
+  for (const k of ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN", "MASSDOT_WZ_KEY"]) {
     if (typeof out[k] === "string") out[k] = out[k].trim();
   }
   return out;
@@ -179,6 +217,7 @@ async function handle(req, rawEnv) {
     if (m && req.method === "POST") return setTask(env, m[1], m[2]);
     const sz = url.pathname.match(/^\/api\/tasks\/([\w-]+)\/snooze$/);
     if (sz && req.method === "POST") return snoozeTask(env, sz[1]);
+    if (url.pathname === "/api/workzones") return workZones(env, ctx);
     if (url.pathname === "/api/cds") {
       if (!env.STORE) return json(null);
       return env.STORE.get(env.STORE.idFromName("main")).fetch(req);
