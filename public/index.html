@@ -1318,7 +1318,7 @@ function clCompass(){
     if(mj){const L=DIRS[a/45];t+=`<text x="${x}" y="13.5" class="${L.length===1?"card":""}${L==="N"?" n":""}">${L}</text>`}}
   const sv=$("#clComp svg");sv.innerHTML=t;sv.style.opacity=h==null?.35:1;
 }
-const GEO2={at:0,pos:null,road:"",town:""},POI={pos:null,name:"",at:0};
+const GEO2={at:0,pos:null,road:"",town:""},POI={pos:null,name:"",at:0},WZ={at:0,list:[],off:false};
 async function clRevGeo(){
   if(!HERE||Date.now()-GEO2.at<15e3)return;if(GEO2.pos&&km(GEO2.pos,HERE)<.12&&GEO2.road)return;
   GEO2.at=Date.now();const pos={...HERE};
@@ -1336,7 +1336,7 @@ async function clPoi(){
     POI.pos=pos;POI.name=best?best.n:"";CL.sig=""}catch{}
 }
 function clRoadLine(){
-  clRevGeo();clPoi();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
+  clRevGeo();clPoi();loadWz();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
   const ft=CL.alt!=null?Math.round(CL.alt*3.281):WX?.elev!=null?Math.round(WX.elev*3.281):null,elv=ft!=null?` <span class="elv">· ${ft.toLocaleString()} ft</span>`:"";
   if(POI.name&&stillSince&&Date.now()-stillSince>15e3){el.innerHTML=`Parked at <b>${esc(POI.name)}</b>${GEO2.road?` · ${esc(GEO2.road)}`:""}`+elv;return}
   if(!where){el.textContent=moving&&h!=null?`Heading ${DIRW[Math.round(h/45)%8]}`:"";return}
@@ -1419,7 +1419,7 @@ function snowTotals(n){
 function renderWxBanner(n,o){
   const el=$("#clWx"),hr=t=>t.toDateString()===n.toDateString()?t.toLocaleTimeString([], {hour:"numeric"}):t.toLocaleString([], {weekday:"short",hour:"numeric"});
   const wint=r=>r.ic==="snow"||r.ic==="ice";
-  const items=o.reasons.filter(r=>r.ic!=="moon"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"));
+  const items=o.reasons.filter(r=>r.ic!=="moon"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"||r.ic==="cone"));
   const c=WX.code,nowTxt=[71,73,75,77,85,86].includes(c)?"Snowing now":[56,57,66,67].includes(c)?"Freezing rain now":(c>=51&&c<=67)||(c>=80&&c<=82)?"Raining now":"";
   const sn=snowTotals(n),chips=[];
   if(sn.past>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.past)}</b> fell last 24 hrs`});
@@ -1452,7 +1452,7 @@ function renderCluster(n){
     el.querySelector(".puse i").textContent=Math.abs(hp);el.classList.toggle("idle",hp===0);el.classList.toggle("regen",hp<0);
 }
   // everything else changes slowly
-  const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length,(errors||[]).length].join();if(sig===CL.sig)return;CL.sig=sig;
+  const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length,(errors||[]).length,WZ.list.length].join();if(sig===CL.sig)return;CL.sig=sig;
   if(WX){
     const g=$("#gTemp"),tc=WX.temp<=32?"#8fd3ff":WX.temp<70?"#bfe9ff":WX.temp<85?"#ffd27a":"#ff7a45";
     g.style.setProperty("--tc",tc);g.querySelector(".big").textContent=WX.temp+"°";g.querySelector(".sub").textContent=`Feels ${WX.feels}°`;clSet("#gTemp",WX.temp/100);
@@ -1460,7 +1460,7 @@ function renderCluster(n){
     const ic=dark?({sun:"moon",pcloud:"pmoon"}[WX.icon]||WX.icon):WX.icon;
     $("#clCond").innerHTML=`${IC[ic]||""}<span>${esc(WX.cond)} · H ${WX.hi}° L ${WX.lo}°</span>`;
     const o=roadOutlook(n),cls=["ok","caution","hazard"][o.lvl],r=$("#gRoad");
-    const top=o.reasons.find(x=>x.lvl!=="info"),SH={snow:"Snow",ice:"Icy",rain:"Wet",wind:"Windy",fog:"Fog",heat:"Hot",bolt:"Storms"};
+    const top=o.reasons.find(x=>x.lvl!=="info"),SH={snow:"Snow",ice:"Icy",rain:"Wet",wind:"Windy",fog:"Fog",heat:"Hot",bolt:"Storms",cone:"Work"};
     r.className="gauge g-side g-road "+cls;r.querySelector(".ic").innerHTML=RIC[o.lvl&&top?top.ic:"ok"]||RIC.warn;
     r.querySelector(".word").textContent=o.lvl&&top?(SH[top.ic]||o.word):"Good";clSet("#gRoad",[.34,.67,1][o.lvl]);
     const why=o.reasons.filter(x=>x.ic!=="moon").slice(0,2);
@@ -1611,7 +1611,19 @@ const LV={ok:0,info:0,caution:1,hazard:2};
 const RIC={snow:'<path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11M9 4l3 2 3-2M9 20l3-2 3 2"/>',ice:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
  rain:'<path d="M7 15a4 4 0 0 1 .5-8A6 6 0 0 1 19 9a3.5 3.5 0 0 1-1 6z"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/>',wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',
  fog:'<path d="M3 9h18M5 13h14M3 17h18"/>',heat:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 8v8M17 4l2-1M18 8h2"/>',moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
- bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',warn:'<path d="M12 3 2 20h20zM12 10v4M12 17h.01"/>',ok:'<path d="M5 12l4 4L19 6"/>'};
+ bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',cone:'<path d="M10 3h4l4.5 15h-13zM8.6 8.5h6.8M7.4 13h9.2M3.5 21h17"/>',warn:'<path d="M12 3 2 20h20zM12 10v4M12 17h.01"/>',ok:'<path d="M5 12l4 4L19 6"/>'};
+// ---- MassDOT work zones near the car (feed proxied by the server, which holds the key) ----
+async function loadWz(){
+  if(WZ.off||Date.now()-WZ.at<5*60e3)return;WZ.at=Date.now();
+  try{const r=await fetch("/api/workzones");if(r.status===404){WZ.off=true;return}if(!r.ok)return;const j=await r.json();
+    WZ.list=(j.features||[]).map(f=>{const p=f.properties||{},c=p.core_details||p,g=f.geometry||{};
+      const raw=g.type==="Point"?[g.coordinates]:g.type==="LineString"||g.type==="MultiPoint"?g.coordinates:g.type==="MultiLineString"?g.coordinates.flat():[];
+      const step=Math.max(1,Math.floor(raw.length/24)),pts=raw.filter((_,i)=>i%step===0||i===raw.length-1).map(([lon,lat])=>({lat,lon}));
+      return{pts,road:(c.road_names||[])[0]||c.road_name||"",desc:c.description||"",impact:String(p.vehicle_impact||""),s:p.start_date?new Date(p.start_date):null,e:p.end_date?new Date(p.end_date):null}}).filter(z=>z.pts.length);
+    CL.sig="";wxSig=""}catch{}
+}
+function nearWz(n){const here=HERE||PLACE;if(!here||!WZ.list.length)return[];
+  return WZ.list.filter(z=>(!z.s||z.s<=new Date(+n+36e5))&&(!z.e||z.e>n)).map(z=>({...z,d:Math.min(...z.pts.map(p=>km(here,p)))})).filter(z=>z.d<8).sort((a,b)=>a.d-b.d)}
 function roadOutlook(n){
   const R=[],add=(lvl,text,ic)=>R.push({lvl,text,ic:ic||(/snow/i.test(text)?"snow":/freez|ice|icy|cold/i.test(text)?"ice":/rain|wet/i.test(text)?"rain":/wind|gust/i.test(text)?"wind":/fog/i.test(text)?"fog":/heat|hot/i.test(text)?"heat":/dark/i.test(text)?"moon":/thunder/i.test(text)?"bolt":"warn")});
   const H=(WX?.hourly||[]).filter(h=>h.t>new Date(n.getTime()-36e5)&&h.t<=new Date(n.getTime()+24*36e5));
@@ -1639,6 +1651,10 @@ function roadOutlook(n){
   const ts=H.filter(h=>h.code>=95&&h.t<=new Date(+n+6*36e5));
   if(WX&&WX.code>=95)add("hazard","Thunderstorms now, lightning nearby","bolt");
   else if(ts.length)add(ts[0].t<=new Date(+n+36e5)?"hazard":"caution",`Thunderstorms ${span(ts)}, lightning possible`,"bolt");
+  // nearby work zones and closures (within ~5 mi)
+  nearWz(n).slice(0,2).forEach(z=>{const closed=/all-lanes-closed|road-closed|closed$/i.test(z.impact)&&!/some/i.test(z.impact),mi=z.d/1.609;
+    const imp=/some-lanes-closed/i.test(z.impact)?", lane closed":/alternating/i.test(z.impact)?", one lane alternating":/shift|merge/i.test(z.impact)?", lanes shifted":"";
+    add(closed?"caution":"info",`${closed?"Road closed":"Work zone"} ${mi<.95?mi.toFixed(1):Math.round(mi)} mi${z.road?`: ${z.road}`:""}${imp}`,"cone")});
   // National Weather Service alerts: warnings are hazards, watches and advisories are cautions
   (ALERTS||[]).forEach(a=>{const ev=a.event||"";if(/test|statement$/i.test(ev)&&!/warning/i.test(ev))return;
     const sev=/warning|emergency/i.test(ev)||/extreme/i.test(a.severity||"");if(!sev&&!/watch|advisory/i.test(ev)&&!/winter|ice|snow|blizzard|flood|wind|fog|freez|storm|tornado/i.test(ev))return;
