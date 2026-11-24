@@ -412,9 +412,6 @@ html.night .clock{background-image:linear-gradient(180deg,#fff2e2 30%,rgba(238,2
 .date{font:300 28px/1.1 var(--display);color:var(--dim);letter-spacing:-.005em}
 .date b{font-weight:400;color:var(--fg)}
 .dateline{align-items:center}
-.moonchip{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--dim);letter-spacing:.02em;white-space:nowrap}
-.moonchip svg{width:16px;height:16px;filter:drop-shadow(0 0 5px rgba(240,235,210,.35))}
-html.drive .moonchip{display:none}
 .brief{font:400 18px/1.45 var(--body);margin-top:10px;color:var(--fg);opacity:.92}
 .sunarc .times b,.sunarc .mid b{font-family:var(--display);font-weight:300;letter-spacing:-.01em}
 .sunarc .mid{margin-top:-80px;height:76px}
@@ -728,7 +725,7 @@ html.drive.hasnext main.simple .wx{align-content:space-evenly}
     <div>
       <div class="greet" id="greet">Hello, Paul</div>
       <div class="clock num" id="clock">--:--</div>
-      <div class="dateline"><span class="date" id="date"></span><span class="moonchip" id="moonChip"><svg viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.14)"/><path id="moonChipLit" fill="#f4f1e6"/></svg><span id="moonName"></span></span><button class="stat" id="status" title="Tap to refresh">Loading…</button></div>
+      <div class="dateline"><span class="date" id="date"></span><button class="stat" id="status" title="Tap to refresh">Loading…</button></div>
       <div class="brief" id="brief"></div>
     </div>
     <div class="rings">
@@ -1214,13 +1211,8 @@ function drawMoon(n){
   const p=moonPhase(n),sig=Math.round(p*200);if(sig===moonSig)return;moonSig=sig;
   const r=19,rx=Math.abs(Math.cos(2*Math.PI*p))*r,wax=p<.5;
   const outer=wax?1:0,inner=wax?(p<.25?0:1):(p<.75?0:1);
-  const d=`M0 ${-r}A${r} ${r} 0 0 ${outer} 0 ${r}A${rx.toFixed(2)} ${r} 0 0 ${inner} 0 ${-r}Z`;
-  $("#moonLit").setAttribute("d",d);$("#moonChipLit").setAttribute("d",d);
-  const name=moonName(p),age=Math.round(p*29.53);
-  $("#moonName").textContent=name;$("#moonChip").title=`${name} · day ${age} of 29.5 · ${Math.round((1-Math.cos(2*Math.PI*p))*50)}% lit`;
+  $("#moonLit").setAttribute("d",`M0 ${-r}A${r} ${r} 0 0 ${outer} 0 ${r}A${rx.toFixed(2)} ${r} 0 0 ${inner} 0 ${-r}Z`);
 }
-function moonName(p){const a=p*29.530588853;
-  return a<1.85||a>27.68?"New Moon":a<5.54?"Waxing Crescent":a<9.23?"First Quarter":a<12.92?"Waxing Gibbous":a<16.61?"Full Moon":a<20.30?"Waning Gibbous":a<23.99?"Last Quarter":"Waning Crescent"}
 // ---- NWS watches and warnings ----
 let ALERTS=[];
 async function loadAlerts(){
