@@ -808,6 +808,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill .drv{color:#7f93ab;font-size:.85em}.cl-pill .drv.late{color:#ffb340}
 .cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
 .cl-pill[hidden]{display:none}
+.cl-pill.next{order:-1}
 #clCalErr{max-width:calc(var(--u)*60);overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
 /* taller windows (car browser not full-screen): same sporty three-dial row, sized by width so the center dial is as big as possible */
@@ -995,7 +996,6 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
     <div class="cl-pill" id="clRain" hidden></div>
     <div class="cl-pill warn" id="clIce" hidden></div>
     <div class="cl-pill warn" id="clGlare" hidden></div>
-    <div class="cl-pill" id="clSun" hidden></div>
   </div>
 </section>
 <div class="wrap">
@@ -1412,6 +1412,7 @@ function renderWxBanner(n,o){
   if(!items.length&&!chips.length&&!nowTxt){el.hidden=true;$("#clWhy").hidden=false;return}
   const top=items[0],lvl=items.reduce((m,r)=>Math.max(m,LV[r.lvl]),0),ic=top?top.ic:nowTxt?(/Snow/.test(nowTxt)?"snow":/Freez/.test(nowTxt)?"ice":"rain"):"snow";
   el.hidden=false;$("#clWhy").hidden=true;$("#clIce").hidden=true;
+  {const rn=$("#clRain");if(!rn.hidden&&!/now$/.test(rn.textContent)&&!/now/i.test(nowTxt)){chips.unshift({ic:/Snow/.test(rn.textContent)?"snow":"rain",t:`<b>${esc(rn.textContent)}</b>`})}rn.hidden=true}
   el.className="cl-wx "+["info","caution","hazard"][lvl]+(wint({ic})?" winter":"");
   const head=top?(nowTxt&&!/now/i.test(top.text)?`${nowTxt} · ${top.text}`:top.text):nowTxt;
   const rest=items.slice(1,3).map(r=>({ic:r.ic,t:esc(r.text),lvl:r.lvl}));
@@ -1459,9 +1460,8 @@ function renderCluster(n){
       if(!ms.hidden)clMini("#mSnow",v/6,fmtIn(v),sn.next>=.1?"Snow ahead":"Snow 24h",`<svg viewBox="0 0 24 24">${RIC.snow}</svg>`)}
     renderWxBanner(n,o);
     const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
-    if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4));clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,dark?"Night":"Daylight")}
-    if(st){const s=$("#clSun"),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;s.hidden=false;
-      s.innerHTML=`<svg viewBox="0 0 24 24">${dark?RIC.moon:SUNIC}</svg>${dark?"Sunrise":"Sunset"} ${fmtT(nx)}`}
+    if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4)),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;
+      clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,`${dark?"Rise":"Sets"} ${fmtT(nx).replace(/\s?[AP]M/i,"")}`,`<svg viewBox="0 0 24 24">${dark?RIC.moon:SUNIC}</svg>`)}
   }
   // next stop: one line, only if within 12 hours
   const evs=timed().filter(e=>e.s>n&&e.s-n<12*36e5).sort((a,b)=>a.s-b.s),cd=upcomingCds(n)[0];
