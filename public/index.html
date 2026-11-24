@@ -808,6 +808,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill .drv{color:#7f93ab;font-size:.85em}.cl-pill .drv.late{color:#ffb340}
 .cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
 .cl-pill[hidden]{display:none}
+#clCalErr{max-width:calc(var(--u)*60);overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
 /* taller windows (car browser not full-screen): same sporty three-dial row, sized by width so the center dial is as big as possible */
 @media (max-aspect-ratio:3/2){
@@ -990,6 +991,7 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
   <div class="cl-wx" id="clWx" hidden></div>
   <div class="cl-bot">
     <div class="cl-pill next" id="clNext" role="button" hidden></div>
+    <div class="cl-pill warn" id="clCalErr" hidden></div>
     <div class="cl-pill" id="clRain" hidden></div>
     <div class="cl-pill warn" id="clIce" hidden></div>
     <div class="cl-pill warn" id="clGlare" hidden></div>
@@ -1434,7 +1436,7 @@ function renderCluster(n){
     el.querySelector(".puse i").textContent=Math.abs(hp);el.classList.toggle("idle",hp===0);el.classList.toggle("regen",hp<0);
 }
   // everything else changes slowly
-  const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length].join();if(sig===CL.sig)return;CL.sig=sig;
+  const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length,(errors||[]).length].join();if(sig===CL.sig)return;CL.sig=sig;
   if(WX){
     const g=$("#gTemp"),tc=WX.temp<=32?"#8fd3ff":WX.temp<70?"#bfe9ff":WX.temp<85?"#ffd27a":"#ff7a45";
     g.style.setProperty("--tc",tc);g.querySelector(".big").textContent=WX.temp+"°";g.querySelector(".sub").textContent=`Feels ${WX.feels}°`;clSet("#gTemp",WX.temp/100);
@@ -1463,12 +1465,16 @@ function renderCluster(n){
   }
   // next stop: one line, only if within 12 hours
   const evs=timed().filter(e=>e.s>n&&e.s-n<12*36e5).sort((a,b)=>a.s-b.s),cd=upcomingCds(n)[0];
+  // an event already underway (e.g. a pickup window) stays up until it ends, unless another starts within 15 min
+  const cur=timed().filter(e=>e.s<=n&&e.e>n&&e.e-e.s<6*36e5).sort((a,b)=>a.e-b.e)[0];
   let nx=evs[0]?{t:evs[0].s,title:evs[0].title,ev:evs[0]}:null;
-  if(cd&&new Date(cd.d)-n<12*36e5&&(!nx||new Date(cd.d)<nx.t))nx={t:new Date(cd.d),title:cd.n,ev:{title:cd.n,location:""}};
+  if(cur&&(!nx||nx.t-n>15*6e4))nx={t:cur.s,title:cur.title,ev:cur,until:cur.e};
+  if(cd&&new Date(cd.d)-n<12*36e5&&(!nx||(!nx.until&&new Date(cd.d)<nx.t)))nx={t:new Date(cd.d),title:cd.n,ev:{title:cd.n,location:""}};
+  {const ce=$("#clCalErr"),bad=(errors||[]).filter(x=>!/todoist/i.test(x));ce.hidden=!bad.length;if(bad.length)ce.innerHTML=`<svg viewBox="0 0 24 24">${RIC.warn}</svg>Calendar not loading: ${esc(bad[0])}`}
   const ne=$("#clNext");ne.hidden=!nx;const ei=nx?EVENTS.indexOf(nx.ev):-1;if(ei>=0){ne.dataset.ev=ei;ne.classList.add("tap")}else{delete ne.dataset.ev;ne.classList.remove("tap")}
-  if(nx){const m=Math.max(0,Math.ceil((nx.t-n)/6e4)),h=Math.floor(m/60);ne.classList.toggle("soon",m<=15);
+  if(nx){const m=Math.max(0,Math.ceil((nx.t-n)/6e4)),h=Math.floor(m/60);ne.classList.toggle("soon",m<=15||!!nx.until);
     const li=leaveInfo&&leaveInfo.ev===nx.ev?leaveInfo:null;
-    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${fmtT(nx.t)}</small><span class="ncd num">${m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>${li?`<span class="drv${li.late?" late":""}">· ${li.mins} min drive${li.late?", leave now":""}</span>`:""}${ei>=0?'<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>':""}`}
+    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${nx.until?`until ${fmtT(nx.until)}`:fmtT(nx.t)}</small><span class="ncd num">${nx.until?"now":m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>${li?`<span class="drv${li.late?" late":""}">· ${li.mins} min drive${li.late?", leave now":""}</span>`:""}${ei>=0?'<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>':""}`}
 }
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
