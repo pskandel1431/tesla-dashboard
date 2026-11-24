@@ -1665,8 +1665,9 @@ function roadOutlook(n){
   // nearby work zones and closures (within ~5 mi)
   nearWz(n).slice(0,2).forEach(z=>{const lm0=/^(\d+)-of-(\d+)-lanes-closed$/.exec(z.impact),closed=/^(all-lanes-closed|road-closed)$/i.test(z.impact)||!!(lm0&&+lm0[1]>=+lm0[2]),mi=z.d/1.609;
     const lm=/^(\d+)-of-(\d+)-lanes-closed$/.exec(z.impact);
-    const imp=lm?(+lm[1]>=+lm[2]?", all lanes closed":`, ${lm[1]} of ${lm[2]} lanes closed`):/shoulder-closed/.test(z.impact)?", shoulder closed":/some-lanes-closed/i.test(z.impact)?", lane closed":/alternating/i.test(z.impact)?", one lane alternating":/shift|merge/i.test(z.impact)?", lanes shifted":"";
-    add(closed?"caution":"info",`${closed?"Road closed":"Work zone"} ${mi<.95?mi.toFixed(1):Math.round(mi)} mi${z.road?`: ${z.road}`:""}${imp}`,"cone")});
+    const alt=/alternating/i.test(z.impact),one=alt||!!(lm&&+lm[2]-+lm[1]===1&&+lm[2]>1);
+    const imp=alt?", alternating with flaggers":one?` (1 of ${lm[2]} open)`:lm?(+lm[1]>=+lm[2]?", all lanes closed":`, ${lm[1]} of ${lm[2]} lanes closed`):/shoulder-closed/.test(z.impact)?", shoulder closed":/some-lanes-closed/i.test(z.impact)?", lane closed":/alternating/i.test(z.impact)?", one lane alternating":/shift|merge/i.test(z.impact)?", lanes shifted":"";
+    add(closed||one?"caution":"info",`${closed?"Road closed":one?"One-lane traffic":"Work zone"} ${mi<.95?mi.toFixed(1):Math.round(mi)} mi${z.road?`: ${z.road}`:""}${imp}`,"cone")});
   // National Weather Service alerts: warnings are hazards, watches and advisories are cautions
   (ALERTS||[]).forEach(a=>{const ev=a.event||"";if(/test|statement$/i.test(ev)&&!/warning/i.test(ev))return;
     const sev=/warning|emergency/i.test(ev)||/extreme/i.test(a.severity||"");if(!sev&&!/watch|advisory/i.test(ev)&&!/winter|ice|snow|blizzard|flood|wind|fog|freez|storm|tornado/i.test(ev))return;
