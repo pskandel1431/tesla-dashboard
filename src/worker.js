@@ -176,7 +176,7 @@ export default {
   },
 };
 
-async function handle(req, rawEnv) {
+async function handle(req, rawEnv, ctx) {
   {
     const env = cleanEnv(rawEnv);
     const url = new URL(req.url);
