@@ -717,9 +717,116 @@ html.drive.hasnext .ns-cd{font-size:clamp(48px,calc(var(--vh,1vh)*8.5),92px)}
 html.drive.hasnext .ns-what b{font-size:clamp(26px,calc(var(--vh,1vh)*4),40px)}
 html.drive.hasnext .ns-track{height:clamp(40px,calc(var(--vh,1vh)*6),60px)}
 html.drive.hasnext main.simple .wx{align-content:space-evenly}
+/* ===== drive mode: glowing instrument cluster (replaces the dashboard while driving) ===== */
+.cluster{display:none}
+html.drive .wrap{display:none!important}
+html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidden;
+  --u:min(1vw,calc(var(--vh,1vh)*1.75));--cy:#4fd8ff;--cy2:#2a7bff;--ok:#3fe0a0;--warn:#ffb340;--bad:#ff4d5e;
+  grid-template-rows:auto minmax(0,1fr) auto;padding:calc(var(--u)*1.6) calc(var(--u)*2.4);gap:calc(var(--u)*1);
+  background:radial-gradient(ellipse 60% 55% at 50% 52%,rgba(79,216,255,.07),transparent 70%),radial-gradient(ellipse at 50% 120%,rgba(42,123,255,.10),transparent 60%),rgba(2,4,8,.9);
+  color:#e8f4ff;font-family:var(--body);animation:clIn .5s ease both}
+@keyframes clIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+.cluster .num{font-variant-numeric:tabular-nums}
+.cl-top{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*2)}
+.cl-time b{font:300 calc(var(--u)*4.4)/1 var(--display);letter-spacing:-.01em;text-shadow:0 0 calc(var(--u)*1.4) rgba(79,216,255,.35)}
+.cl-time span{display:block;font-size:calc(var(--u)*1.35);color:#7f93ab;margin-top:calc(var(--u)*.35);letter-spacing:.04em}
+.cl-head{display:flex;align-items:center;gap:calc(var(--u)*.7);font:500 calc(var(--u)*1.8)/1 var(--display);color:#bfe9ff;letter-spacing:.08em;opacity:.9}
+.cl-head svg{width:calc(var(--u)*3);height:calc(var(--u)*3);transition:transform .8s ease}
+.cl-head[hidden]{display:none}
+.cl-exit{display:flex;align-items:center;gap:calc(var(--u)*.6);min-height:56px;padding:0 calc(var(--u)*1.8);border-radius:999px;border:1px solid rgba(79,216,255,.3)!important;background:rgba(79,216,255,.06)!important;color:#bfe9ff!important;font:600 calc(var(--u)*1.3)/1 var(--body)!important;letter-spacing:.12em;text-transform:uppercase}
+.cl-exit svg{width:1.2em;height:1.2em}
+.cl-main{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;min-height:0}
+.gauge{position:relative;display:grid;place-items:center}
+.gauge>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.gauge .trk{fill:none;stroke:rgba(255,255,255,.07);stroke-linecap:round}
+.gauge .val{fill:none;stroke-linecap:round;transition:stroke-dasharray .9s cubic-bezier(.3,.7,.3,1),stroke .4s}
+.gauge .tick{stroke:rgba(200,230,255,.28);stroke-width:1.2}
+.gauge .tick.mj{stroke:rgba(200,230,255,.6);stroke-width:2}
+.gauge .tl{fill:#7f93ab;font:500 9px var(--body);text-anchor:middle;dominant-baseline:middle}
+.gauge .ctr{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center}
+/* speed */
+.g-speed{width:calc(var(--u)*38);height:calc(var(--u)*38);margin-inline:calc(var(--u)*1)}
+.g-speed .trk{stroke-width:9}
+.g-speed .val{stroke:url(#clSpd);stroke-width:9;filter:url(#clGlow)}
+.g-speed .rpmtrk{fill:none;stroke:rgba(180,140,255,.12);stroke-width:3;stroke-linecap:round}
+.g-speed .rpm{fill:none;stroke:url(#clRpmG);stroke-width:3;stroke-linecap:round;filter:url(#clGlow);transition:stroke-dasharray .9s cubic-bezier(.3,.7,.3,1)}
+.g-speed .rpmtxt{margin-top:calc(var(--u)*1);font-size:calc(var(--u)*1.35);color:#a99cff;letter-spacing:.08em}
+.g-speed .rpmtxt b{font:400 1.35em/1 var(--display);color:#d6ccff;text-shadow:0 0 .6em rgba(160,130,255,.6)}
+.g-speed .rpmtxt small{color:#7f93ab;font-size:.8em}
+.g-speed .sp{font:200 calc(var(--u)*12)/.9 var(--display);letter-spacing:-.04em;color:#f2fbff;text-shadow:0 0 calc(var(--u)*2.2) rgba(79,216,255,.55),0 0 calc(var(--u)*.5) rgba(79,216,255,.5)}
+.g-speed .unit{font:600 calc(var(--u)*1.3)/1 var(--body);letter-spacing:.3em;color:var(--cy);margin-top:calc(var(--u)*.6);text-indent:.3em}
+.g-speed .trip{margin-top:calc(var(--u)*.8);font-size:calc(var(--u)*1.3);color:#7f93ab;letter-spacing:.04em;display:flex;gap:calc(var(--u)*1.2)}
+.g-speed .trip b{color:#cfe6f7;font-weight:500}
+.cluster:not(.moving) .g-speed .sp{color:#9fb3c8;text-shadow:none}
+/* side gauges */
+.g-side{width:calc(var(--u)*23);height:calc(var(--u)*23)}
+.g-side .trk,.g-side .val{stroke-width:8}
+.g-side .val{filter:url(#clGlow)}
+.g-side .big{font:300 calc(var(--u)*6.4)/1 var(--display);letter-spacing:-.03em}
+.g-side .lbl{font:600 calc(var(--u)*1.05)/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:#7f93ab;margin-bottom:calc(var(--u)*.6)}
+.g-side .sub{font-size:calc(var(--u)*1.3);color:#9fb3c8;margin-top:calc(var(--u)*.5)}
+.g-temp .val{stroke:url(#clTemp)}
+.g-temp .big{text-shadow:0 0 calc(var(--u)*1.6) color-mix(in srgb,var(--tc,#4fd8ff) 60%,transparent)}
+.g-temp .fz{fill:#8fd3ff}
+.g-road{--rc:var(--ok)}
+.g-road.caution{--rc:var(--warn)} .g-road.hazard{--rc:var(--bad)}
+.g-road .val{stroke:var(--rc)}
+.g-road .ic{width:calc(var(--u)*4.6);height:calc(var(--u)*4.6);fill:none;stroke:var(--rc);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 calc(var(--u)*.8) var(--rc))}
+.g-road .word{font:400 calc(var(--u)*3.2)/1 var(--display);color:var(--rc);margin-top:calc(var(--u)*.6);text-shadow:0 0 calc(var(--u)*1.2) color-mix(in srgb,var(--rc) 55%,transparent)}
+.g-road.hazard .val{animation:clPulse 1.6s ease-in-out infinite}
+@keyframes clPulse{50%{opacity:.45}}
+.side{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.2);min-width:0;width:100%}
+.side .cap{display:flex;align-items:center;gap:calc(var(--u)*.6);font-size:calc(var(--u)*1.4);color:#cfe6f7;text-align:center;max-width:calc(var(--u)*26);line-height:1.25}
+.side .cap svg{width:calc(var(--u)*2.4);height:calc(var(--u)*2.4);flex:none}
+.side .why{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:calc(var(--u)*.45);font-size:calc(var(--u)*1.25);color:#9fb3c8;text-align:center;max-width:calc(var(--u)*26)}
+.side .why li{line-height:1.25}
+/* bottom strip */
+.cl-bot{display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*1.2);flex-wrap:wrap}
+.cl-pill{display:flex;align-items:center;gap:calc(var(--u)*.8);min-height:calc(var(--u)*4.4);padding:calc(var(--u)*.6) calc(var(--u)*1.6);border-radius:999px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);font-size:calc(var(--u)*1.4);color:#cfe6f7;white-space:nowrap;min-width:0}
+.cl-pill svg{width:calc(var(--u)*2.2);height:calc(var(--u)*2.2);flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cl-pill small{color:#7f93ab;font-size:.85em}
+.cl-pill.next{border-color:rgba(79,216,255,.3);background:rgba(79,216,255,.06);overflow:hidden}
+.cl-pill.next .nt{overflow:hidden;text-overflow:ellipsis;max-width:calc(var(--u)*26)}
+.cl-pill.next .ncd{font:500 1.3em/1 var(--display);color:var(--cy);text-shadow:0 0 .6em rgba(79,216,255,.5)}
+.cl-pill.next.soon{border-color:rgba(255,179,64,.5);background:rgba(255,179,64,.08)}
+.cl-pill.next.soon .ncd{color:var(--warn);text-shadow:0 0 .6em rgba(255,179,64,.5)}
+.cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
+.cl-pill[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
+@media (max-aspect-ratio:1/1){html.drive .cluster{--u:min(1.5vw,calc(var(--vh,1vh)*1.1))}.cl-main{grid-template-columns:1fr 1fr;grid-template-areas:"s s" "t r";row-gap:calc(var(--u)*3)}.g-speed{grid-area:s}.side.l{grid-area:t}.side.r{grid-area:r}}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
+<section class="cluster" id="cluster" aria-label="Driving">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <filter id="clGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="clSpd" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2a7bff"/><stop offset=".6" stop-color="#4fd8ff"/><stop offset="1" stop-color="#b8f3ff"/></linearGradient>
+    <linearGradient id="clRpmG" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6a5cff"/><stop offset="1" stop-color="#d08bff"/></linearGradient>
+    <linearGradient id="clTemp" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5aa9ff"/><stop offset=".45" stop-color="#bfe9ff"/><stop offset=".7" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>
+  </defs></svg>
+  <div class="cl-top">
+    <div class="cl-time"><b class="num" id="clClock">--:--</b><span id="clDate"></span></div>
+    <div class="cl-head" id="clHead" hidden><svg viewBox="-12 -12 24 24"><circle r="10.5" fill="none" stroke="rgba(79,216,255,.35)"/><path d="M0-8 4 5 0 2.5-4 5z" fill="#4fd8ff"/></svg><b>N</b></div>
+    <button class="cl-exit" id="clExit" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>Exit</button>
+  </div>
+  <div class="cl-main">
+    <div class="side l">
+      <div class="gauge g-side g-temp" id="gTemp"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Outside</div><div class="big num">--°</div><div class="sub"></div></div></div>
+      <div class="cap" id="clCond"></div>
+    </div>
+    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div><div class="trip" id="clTrip"></div></div></div>
+    <div class="side r">
+      <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
+      <ul class="why" id="clWhy"></ul>
+    </div>
+  </div>
+  <div class="cl-bot">
+    <div class="cl-pill next" id="clNext" hidden></div>
+    <div class="cl-pill" id="clRain" hidden></div>
+    <div class="cl-pill" id="clWind" hidden></div>
+    <div class="cl-pill" id="clSun" hidden></div>
+  </div>
+</section>
 <div class="wrap">
   <header class="top">
     <div>
@@ -891,6 +998,7 @@ function locate(){
   if(!navigator.geolocation||locate.on)return;locate.on=true;
   navigator.geolocation.watchPosition(p=>{
     HERE={lat:p.coords.latitude,lon:p.coords.longitude};
+    clTrack(p);
     const sp=p.coords.speed;if(sp!=null&&!isNaN(sp))lastMph=Math.round(sp*2.237);
     if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>STOP_MS)moving=false}if(was!==moving)driveManual=null;setDrive()}
     const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
@@ -941,9 +1049,79 @@ setInterval(()=>{if(document.documentElement.classList.contains("drive"))fitDriv
 if(/[?&]size\b/.test(location.search)){const d=document.createElement("div");d.id="sizeDbg";d.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99;font:600 14px/1.3 monospace;background:#000c;color:#7df;padding:6px 10px;border-radius:8px;pointer-events:none";document.body.appendChild(d);
   setInterval(()=>{const w=$(".wrap"),r=w.getBoundingClientRect();d.textContent=`win ${innerWidth}×${innerHeight} · vv ${Math.round(visualViewport?.height||0)} · screen ${screen.width}×${screen.height} · dpr ${devicePixelRatio} · wrap ${Math.round(r.height)} · zoom ${w.style.zoom||1} · ${document.documentElement.className}`},1000)}
 function setDrive(){const on=driveManual??moving;
+  if(on&&!document.documentElement.classList.contains("drive")){CL.trip={t0:Date.now(),km:0};CL.sig=""}
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
   $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 1 min";
-  $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive";requestAnimationFrame(fitDrive)}
+  $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive";renderCluster(new Date());requestAnimationFrame(fitDrive)}
+// ---- drive mode cluster: speed gauge, outside temp, road risk, next stop ----
+const RPM_PER_MPH=115,RPM_MAX=20000;
+const CL={head:null,fixAt:0,trip:null,last:null,sig:""};
+const clPt=(r,deg)=>{const a=deg*Math.PI/180;return[+(r*Math.sin(a)).toFixed(2),+(-r*Math.cos(a)).toFixed(2)]};
+const clArc=r=>{const[a,b]=clPt(r,-135),[c,d]=clPt(r,135);return`M${a} ${b}A${r} ${r} 0 1 1 ${c} ${d}`};
+const clDeg=f=>-135+270*Math.max(0,Math.min(1,f));
+function clGauge(sel,r,{max=100,minor=0,major=0,labels=[],extra=""}={}){
+  let t="";
+  if(minor)for(let v=0;v<=max;v+=minor){const mj=major&&v%major===0,[x0,y0]=clPt(r-12,clDeg(v/max)),[x1,y1]=clPt(r-(mj?22:17),clDeg(v/max));t+=`<line class="tick${mj?" mj":""}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`}
+  labels.forEach(v=>{const[x,y]=clPt(r-33,clDeg(v/max));t+=`<text class="tl" x="${x}" y="${y}">${v}</text>`});
+  $(sel+">svg").innerHTML=`${extra}<path class="trk" d="${clArc(r)}"/>${t}<path class="val" d="${clArc(r)}" pathLength="100" stroke-dasharray="0 100"/><g class="tip" style="transition:transform .9s cubic-bezier(.3,.7,.3,1);transform:rotate(-135deg)"><circle cy="${-r}" r="4.5" fill="#fff" filter="url(#clGlow)"/></g>`;
+}
+clGauge("#gSpeed",96,{max:100,minor:5,major:10,labels:[20,40,60,80],extra:`<path class="rpmtrk" d="${clArc(107)}"/><path class="rpm" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`});
+clGauge("#gTemp",94,{max:100,minor:10,extra:(()=>{const[x0,y0]=clPt(80,clDeg(.32)),[x1,y1]=clPt(70,clDeg(.32)),[lx,ly]=clPt(108,clDeg(.32));return`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#8fd3ff" stroke-width="2.4"/><text class="tl fz" x="${lx}" y="${ly}">32°</text>`})()});
+clGauge("#gRoad",94);
+function clSet(sel,f){const el=$(sel);f=Math.max(0,Math.min(1,f));el.querySelector(".val").setAttribute("stroke-dasharray",`${(f*100).toFixed(1)} 100`);el.querySelector(".tip").style.transform=`rotate(${clDeg(f)}deg)`;el.querySelector(".tip").style.opacity=f>0?1:0;el.querySelector(".val").style.opacity=f>0?1:0}
+function clTrack(p){
+  const c=p.coords,h=c.heading;CL.fixAt=Date.now();
+  if(h!=null&&!isNaN(h)&&(c.speed??0)>1.5)CL.head=h;
+  const here={lat:c.latitude,lon:c.longitude};
+  if(CL.trip&&CL.last&&(c.accuracy??0)<60){const d=km(CL.last,here);if(d>.005&&d<2)CL.trip.km+=d}
+  CL.last=here;
+}
+const SUNIC='<path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 7V4M5.6 10.6 3.5 8.5M18.4 10.6l2.1-2.1"/>';
+function renderCluster(n){
+  const de=document.documentElement;if(!de.classList.contains("drive"))return;
+  $("#cluster").classList.toggle("moving",moving);
+  $("#clClock").textContent=n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+  $("#clDate").textContent=n.toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"});
+  // speed (GPS); stale fixes read as 0 once we've stopped
+  const fresh=Date.now()-CL.fixAt<20e3,mph=lastMph==null?null:(fresh||moving?lastMph:0);
+  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/100);
+  // estimated motor RPM: Model 3 Performance 9.04:1 single gear, 20in tires (~26.6in) => ~115 RPM per mph
+  const rpm=Math.round((mph||0)*RPM_PER_MPH);const rr=$("#gSpeed .rpm");rr.setAttribute("stroke-dasharray",`${Math.min(100,rpm/RPM_MAX*100).toFixed(1)} 100`);rr.style.opacity=rpm>0?1:0;
+  $("#clRpm").innerHTML=mph==null?"":`<b>${rpm.toLocaleString()}</b> RPM <small>est.</small>`;
+  const hd=$("#clHead");hd.hidden=CL.head==null||!moving;
+  if(CL.head!=null){hd.querySelector("svg").style.transform=`rotate(${CL.head}deg)`;hd.querySelector("b").textContent=["N","NE","E","SE","S","SW","W","NW"][Math.round(CL.head/45)%8]}
+  if(CL.trip){const m=Math.floor((Date.now()-CL.trip.t0)/6e4),mi=CL.trip.km*.6214;
+    $("#clTrip").innerHTML=`<span>Trip <b class="num">${mi<10?mi.toFixed(1):Math.round(mi)} mi</b></span><span><b class="num">${m>=60?`${Math.floor(m/60)}:${pad(m%60)}`:`${m} min`}</b></span>`}
+  // everything else changes slowly
+  const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length].join();if(sig===CL.sig)return;CL.sig=sig;
+  if(WX){
+    const g=$("#gTemp"),tc=WX.temp<=32?"#8fd3ff":WX.temp<70?"#bfe9ff":WX.temp<85?"#ffd27a":"#ff7a45";
+    g.style.setProperty("--tc",tc);g.querySelector(".big").textContent=WX.temp+"°";g.querySelector(".sub").textContent=`Feels ${WX.feels}°`;clSet("#gTemp",WX.temp/100);
+    const st=PLACE?sunTimes(n,PLACE.lat,PLACE.lon):null,dark=st&&(n<st.rise||n>=st.set);
+    const ic=dark?({sun:"moon",pcloud:"pmoon"}[WX.icon]||WX.icon):WX.icon;
+    $("#clCond").innerHTML=`${IC[ic]||""}<span>${esc(WX.cond)} · H ${WX.hi}° L ${WX.lo}°</span>`;
+    const o=roadOutlook(n),cls=["ok","caution","hazard"][o.lvl],r=$("#gRoad");
+    const top=o.reasons.find(x=>x.lvl!=="info"),SH={snow:"Snow",ice:"Icy",rain:"Wet",wind:"Windy",fog:"Fog",heat:"Hot",bolt:"Storms"};
+    r.className="gauge g-side g-road "+cls;r.querySelector(".ic").innerHTML=RIC[o.lvl&&top?top.ic:"ok"]||RIC.warn;
+    r.querySelector(".word").textContent=o.lvl&&top?(SH[top.ic]||o.word):"Good";clSet("#gRoad",[.34,.67,1][o.lvl]);
+    const why=o.reasons.filter(x=>x.ic!=="moon").slice(0,2);
+    $("#clWhy").innerHTML=(why.length?why:[{text:"No rain, snow or ice expected"}]).map(x=>`<li>${esc(x.text)}</li>`).join("");
+    // precip next 2 hours
+    const q=WX.q15||[],i=q.findIndex(x=>x.mm>0||x.snow>0),rn=$("#clRain");rn.hidden=false;
+    if(i>=0){const sn=q[i].snow>0,what=sn?"Snow":"Rain",mins=Math.max(0,Math.round((q[i].t-n)/6e4));rn.className="cl-pill wet";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC[sn?"snow":"rain"]}</svg>${mins<10?`${what} now`:`${what} in ${mins} min`}`}
+    else{rn.className="cl-pill";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC.ok}</svg>Dry next 2 hrs`}
+    const w=$("#clWind");w.hidden=WX.gust<20;w.innerHTML=`<svg viewBox="0 0 24 24">${RIC.wind}</svg>Gusts ${WX.gust} mph`;
+    if(st){const s=$("#clSun"),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;s.hidden=false;
+      s.innerHTML=`<svg viewBox="0 0 24 24">${dark?RIC.moon:SUNIC}</svg>${dark?"Sunrise":"Sunset"} ${fmtT(nx)}`}
+  }
+  // next stop: one line, only if within 12 hours
+  const evs=timed().filter(e=>e.s>n&&e.s-n<12*36e5).sort((a,b)=>a.s-b.s),cd=upcomingCds(n)[0];
+  let nx=evs[0]?{t:evs[0].s,title:evs[0].title,ev:evs[0]}:null;
+  if(cd&&new Date(cd.d)-n<12*36e5&&(!nx||new Date(cd.d)<nx.t))nx={t:new Date(cd.d),title:cd.n,ev:{title:cd.n,location:""}};
+  const ne=$("#clNext");ne.hidden=!nx;
+  if(nx){const m=Math.max(0,Math.ceil((nx.t-n)/6e4)),h=Math.floor(m/60);ne.classList.toggle("soon",m<=15);
+    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${fmtT(nx.t)}</small><span class="ncd num">${m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>`}
+}
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
 async function geocode(q){
@@ -1458,6 +1636,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#addBtn")){const f=$("#addform");f.hidden=!f.hidden;if(!f.hidden)$("#cdName").focus();return}
   if(e.target.closest("#radarHide")||e.target.closest("#radarScrim")){toggleRadar(false);return}
   if(e.target.closest("#wx")||e.target.closest("#ringTemp")){toggleRadar();return}
+  if(e.target.closest("#clExit")){driveManual=false;setDrive();return}
   if(e.target.closest("#drive")){driveManual=!document.documentElement.classList.contains("drive");setDrive();return}
   if(e.target.closest("#status")){load();return}
   if(e.target.id==="scrim"||e.target.closest("#closeSheet"))$("#scrim").hidden=true;
@@ -1475,7 +1654,7 @@ function tick(){const n=new Date();
   if(moving){tripLine??=TRIP_LINES[Math.floor(Math.random()*TRIP_LINES.length)];$("#greet").textContent=tripLine.replace("{n}",NAME)}
   else{tripLine=null;$("#greet").textContent=`Good ${hr<5?"evening":hr<12?"morning":hr<17?"afternoon":"evening"}, ${NAME}`}
   $("#date").innerHTML=`<b>${n.toLocaleDateString([], {weekday:"long"})}</b> ${n.toLocaleDateString([], {month:"long",day:"numeric"})}`;
-  renderHero(n);renderCds(n);renderWx(n);setSky(n);renderNextStop(n);
+  renderHero(n);renderCds(n);renderWx(n);setSky(n);renderNextStop(n);renderCluster(n);
   if(n.getMinutes()!==lastMin){lastMin=n.getMinutes();renderTimeline(n);renderDayBar(n);renderStatus();renderBrief(n);fitDrive();if(n.getMinutes()%2===0)updateLeave()}
 }
 renderAll();setInterval(tick,1000);
