@@ -1627,8 +1627,6 @@ function roadOutlook(n){
   if(fz.length&&wetSoon&&!ice.length&&!bi)add("caution",`Below freezing ${span(fz)}; icy patches likely`);
   else if(fz.length)add("info",`Below freezing ${span(fz)}; watch bridges and shaded spots`);
   else if(tmin<=36&&wetSoon)add("caution","Near freezing; bridges and overpasses may ice");
-  if(tmin<=10)add("caution",`Very cold, ${Math.round(tmin)}°: expect less range, precondition before leaving`);
-  else if(tmin<=25)add("info",`Cold, low ${Math.round(tmin)}°: range will dip, precondition helps`);
   if(tmax>=100)add("hazard",`Extreme heat, ${Math.round(tmax)}°: keep Cabin Overheat Protection on`);
   else if(tmax>=90)add("caution",`Hot, ${Math.round(tmax)}°: cabin heats fast when parked`);
   if(WX?.gust>=40)add("hazard",`Wind gusts ${WX.gust} mph`);else if(WX?.gust>=30)add("caution",`Gusty, up to ${WX.gust} mph`);
