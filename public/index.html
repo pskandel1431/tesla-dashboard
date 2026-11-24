@@ -794,6 +794,39 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
 @media (max-aspect-ratio:1/1){html.drive .cluster{--u:min(1.5vw,calc(var(--vh,1vh)*1.1))}.cl-main{grid-template-columns:1fr 1fr;grid-template-areas:"s s" "t r";row-gap:calc(var(--u)*3)}.g-speed{grid-area:s}.side.l{grid-area:t}.side.r{grid-area:r}}
+
+/* cluster round 2: redline, decor rings, power bar, mini rings */
+.g-speed .redl{fill:none;stroke:#ff4d5e;stroke-width:3;opacity:.7;filter:url(#clGlow)}
+.g-speed .dec1{fill:none;stroke:rgba(79,216,255,.08);stroke-width:1;stroke-dasharray:1 5}
+.g-speed .dec2{fill:none;stroke:rgba(79,216,255,.05);stroke-width:.6;stroke-dasharray:30 8 2 8;transform-origin:0 0;animation:clSpin 90s linear infinite}
+@keyframes clSpin{to{transform:rotate(360deg)}}
+.cl-main{position:relative}
+.cl-decor{position:absolute;inset:0;pointer-events:none}
+.cl-decor .rail{position:absolute;top:50%;height:1px;width:18%;background:linear-gradient(90deg,transparent,rgba(79,216,255,.35),transparent);box-shadow:0 0 8px rgba(79,216,255,.4)}
+.cl-decor .rail.l{left:24%} .cl-decor .rail.r{right:24%}
+.pwr{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);width:52%;display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.5)}
+.pbar{position:relative;width:100%;height:calc(var(--u)*.7);border-radius:99px;background:rgba(255,255,255,.07)}
+.pbar u{position:absolute;left:50%;top:-40%;bottom:-40%;width:2px;margin-left:-1px;background:rgba(220,240,255,.6);border-radius:2px}
+.pbar i{position:absolute;top:0;bottom:0;border-radius:99px;transition:width .5s ease;width:0}
+.pbar .pw{left:50%;background:linear-gradient(90deg,#4fd8ff,#a98bff);box-shadow:0 0 10px rgba(140,160,255,.7)}
+.pbar .rg{right:50%;background:linear-gradient(270deg,#3fe0a0,#2fb37a);box-shadow:0 0 10px rgba(63,224,160,.7)}
+.ptxt{white-space:nowrap;display:flex;align-items:baseline;gap:calc(var(--u)*.5);font-size:calc(var(--u)*1.15);color:#7f93ab;letter-spacing:.06em}
+.ptxt b{font:400 calc(var(--u)*2)/1 var(--display);color:#d6ccff;text-shadow:0 0 .6em rgba(160,130,255,.6)}
+.ptxt .l{display:none;color:#3fe0a0}
+.pwr.regen .ptxt .l{display:inline} .pwr.regen .ptxt b{color:#9ff0cc;text-shadow:0 0 .6em rgba(63,224,160,.6)}
+.minis{display:flex;gap:calc(var(--u)*1.6);justify-content:center}
+.mini{position:relative;width:calc(var(--u)*6.6);display:flex;flex-direction:column;align-items:center}
+.mini svg{width:calc(var(--u)*6.6);height:calc(var(--u)*6.6);transform:rotate(-90deg)}
+.mini .mt{fill:rgba(255,255,255,.02);stroke:rgba(255,255,255,.08);stroke-width:2.6}
+.mini .mv{fill:none;stroke:var(--mc,#4fd8ff);stroke-width:2.6;stroke-linecap:round;filter:drop-shadow(0 0 3px var(--mc,#4fd8ff));transition:stroke-dasharray .8s ease}
+.mini b{position:absolute;top:calc(var(--u)*3.3);left:0;right:0;transform:translateY(-50%);text-align:center;font:400 calc(var(--u)*1.6)/1 var(--display);color:#e8f4ff}
+.mini b small{font-size:.65em;color:#7f93ab}
+.mini .mi{position:absolute;top:calc(var(--u)*.9);left:0;right:0;display:flex;justify-content:center}
+.mini .mi svg{width:calc(var(--u)*1.3);height:calc(var(--u)*1.3);fill:none;stroke:#8fd3ff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mini:has(.mi svg) b{top:calc(var(--u)*3.8)}
+.mini span{margin-top:calc(var(--u)*.5);font-size:calc(var(--u)*.95);letter-spacing:.14em;text-transform:uppercase;color:#7f93ab;white-space:nowrap}
+#mHum{--mc:#5aa9ff} #mDay{--mc:#ffd27a} #mPrec{--mc:#8fd3ff} #mG{--mc:#a98bff} #mG.neg{--mc:#3fe0a0} #mPeak{--mc:#d08bff}
+@media (prefers-reduced-motion:reduce){.g-speed .dec2{animation:none}}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -809,21 +842,22 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
     <div class="cl-head" id="clHead" hidden><svg viewBox="-12 -12 24 24"><circle r="10.5" fill="none" stroke="rgba(79,216,255,.35)"/><path d="M0-8 4 5 0 2.5-4 5z" fill="#4fd8ff"/></svg><b>N</b></div>
     <button class="cl-exit" id="clExit" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>Exit</button>
   </div>
-  <div class="cl-main">
+  <div class="cl-main"><div class="cl-decor" aria-hidden="true"><i class="rail l"></i><i class="rail r"></i></div>
     <div class="side l">
       <div class="gauge g-side g-temp" id="gTemp"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Outside</div><div class="big num">--°</div><div class="sub"></div></div></div>
       <div class="cap" id="clCond"></div>
+      <div class="minis"><div class="mini" id="mWind"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Wind</span></div><div class="mini" id="mHum"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Humidity</span></div><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div></div>
     </div>
-    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div><div class="trip" id="clTrip"></div></div></div>
+    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div><div class="trip" id="clTrip"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><span class="l">Regen</span><b class="num">0</b><span class="r">hp est.</span></div></div></div>
     <div class="side r">
       <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
       <ul class="why" id="clWhy"></ul>
+      <div class="minis"><div class="mini" id="mPrec"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Precip 2h</span></div><div class="mini" id="mG"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>G-force</span></div><div class="mini" id="mPeak"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Peak hp</span></div></div>
     </div>
   </div>
   <div class="cl-bot">
     <div class="cl-pill next" id="clNext" hidden></div>
     <div class="cl-pill" id="clRain" hidden></div>
-    <div class="cl-pill" id="clWind" hidden></div>
     <div class="cl-pill" id="clSun" hidden></div>
   </div>
 </section>
@@ -1000,7 +1034,7 @@ function locate(){
     HERE={lat:p.coords.latitude,lon:p.coords.longitude};
     clTrack(p);
     const sp=p.coords.speed;if(sp!=null&&!isNaN(sp))lastMph=Math.round(sp*2.237);
-    if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>4){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>STOP_MS)moving=false}if(was!==moving)driveManual=null;setDrive()}
+    if(sp!=null&&!isNaN(sp)){const was=moving;if(sp>2.235){moving=true;stillSince=0}else if(sp<1){stillSince||=Date.now();if(Date.now()-stillSince>STOP_MS)moving=false}if(was!==moving)driveManual=null;setDrive()}
     const g={name:"Current location",lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};
     if(GEO&&km(GEO,g)<5)return;
     GEO=g;if(!PLACE||km(PLACE,g)>=5){PLACE=g;loadWx();setRadar()}
@@ -1049,13 +1083,15 @@ setInterval(()=>{if(document.documentElement.classList.contains("drive"))fitDriv
 if(/[?&]size\b/.test(location.search)){const d=document.createElement("div");d.id="sizeDbg";d.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99;font:600 14px/1.3 monospace;background:#000c;color:#7df;padding:6px 10px;border-radius:8px;pointer-events:none";document.body.appendChild(d);
   setInterval(()=>{const w=$(".wrap"),r=w.getBoundingClientRect();d.textContent=`win ${innerWidth}×${innerHeight} · vv ${Math.round(visualViewport?.height||0)} · screen ${screen.width}×${screen.height} · dpr ${devicePixelRatio} · wrap ${Math.round(r.height)} · zoom ${w.style.zoom||1} · ${document.documentElement.className}`},1000)}
 function setDrive(){const on=driveManual??moving;
-  if(on&&!document.documentElement.classList.contains("drive")){CL.trip={t0:Date.now(),km:0};CL.sig=""}
+  if(on&&!document.documentElement.classList.contains("drive")){CL.trip={t0:Date.now(),km:0,peak:0};CL.sig=""}
   $("#driveWord").textContent=moving?"Driving":"Drive mode";
   $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 1 min";
   $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive";renderCluster(new Date());requestAnimationFrame(fitDrive)}
 // ---- drive mode cluster: speed gauge, outside temp, road risk, next stop ----
-const RPM_PER_MPH=115,RPM_MAX=20000;
-const CL={head:null,fixAt:0,trip:null,last:null,sig:""};
+const RPM_PER_MPH=115,RPM_MAX=20000,TOP_MPH=163;
+// 2024 Model 3 Performance: ~1,910 kg with driver, Cd 0.22, ~2.2 m2 frontal area, 510 hp peak
+const CAR={kg:1910,cda:.22*2.2,crr:.011,hpMax:510,regenMax:170};
+const CL={acc:0,hp:0,pv:null,pt:0,head:null,fixAt:0,trip:null,last:null,sig:""};
 const clPt=(r,deg)=>{const a=deg*Math.PI/180;return[+(r*Math.sin(a)).toFixed(2),+(-r*Math.cos(a)).toFixed(2)]};
 const clArc=r=>{const[a,b]=clPt(r,-135),[c,d]=clPt(r,135);return`M${a} ${b}A${r} ${r} 0 1 1 ${c} ${d}`};
 const clDeg=f=>-135+270*Math.max(0,Math.min(1,f));
@@ -1065,18 +1101,29 @@ function clGauge(sel,r,{max=100,minor=0,major=0,labels=[],extra=""}={}){
   labels.forEach(v=>{const[x,y]=clPt(r-33,clDeg(v/max));t+=`<text class="tl" x="${x}" y="${y}">${v}</text>`});
   $(sel+">svg").innerHTML=`${extra}<path class="trk" d="${clArc(r)}"/>${t}<path class="val" d="${clArc(r)}" pathLength="100" stroke-dasharray="0 100"/><g class="tip" style="transition:transform .9s cubic-bezier(.3,.7,.3,1);transform:rotate(-135deg)"><circle cy="${-r}" r="4.5" fill="#fff" filter="url(#clGlow)"/></g>`;
 }
-clGauge("#gSpeed",96,{max:100,minor:5,major:10,labels:[20,40,60,80],extra:`<path class="rpmtrk" d="${clArc(107)}"/><path class="rpm" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`});
+clGauge("#gSpeed",96,{max:TOP_MPH,minor:5,major:20,labels:[20,40,60,80,100,120,140,160],extra:`<circle class="dec1" r="118"/><circle class="dec2" r="126"/><path class="redl" d="${(()=>{const[a,b]=clPt(89,clDeg(140/TOP_MPH)),[c,d]=clPt(89,135);return`M${a} ${b}A89 89 0 0 1 ${c} ${d}`})()}"/><path class="rpmtrk" d="${clArc(107)}"/><path class="rpm" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`});
 clGauge("#gTemp",94,{max:100,minor:10,extra:(()=>{const[x0,y0]=clPt(80,clDeg(.32)),[x1,y1]=clPt(70,clDeg(.32)),[lx,ly]=clPt(108,clDeg(.32));return`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#8fd3ff" stroke-width="2.4"/><text class="tl fz" x="${lx}" y="${ly}">32°</text>`})()});
 clGauge("#gRoad",94);
 function clSet(sel,f){const el=$(sel);f=Math.max(0,Math.min(1,f));el.querySelector(".val").setAttribute("stroke-dasharray",`${(f*100).toFixed(1)} 100`);el.querySelector(".tip").style.transform=`rotate(${clDeg(f)}deg)`;el.querySelector(".tip").style.opacity=f>0?1:0;el.querySelector(".val").style.opacity=f>0?1:0}
 function clTrack(p){
   const c=p.coords,h=c.heading;CL.fixAt=Date.now();
+  const v=c.speed,t=p.timestamp||Date.now();
+  if(v!=null&&!isNaN(v)){
+    if(CL.pv!=null){const dt=(t-CL.pt)/1e3;if(dt>.3&&dt<6){const a=(v-CL.pv)/dt;CL.acc=CL.acc*.4+a*.6}}
+    CL.pv=v;CL.pt=t;
+    const W=CAR.kg*CL.acc*v+.5*1.2*CAR.cda*v**3+CAR.crr*CAR.kg*9.81*v;
+    CL.hp=v<.5?0:Math.max(-CAR.regenMax,Math.min(CAR.hpMax,W/745.7));
+    if(CL.trip&&CL.hp>CL.trip.peak)CL.trip.peak=CL.hp;
+  }
   if(h!=null&&!isNaN(h)&&(c.speed??0)>1.5)CL.head=h;
   const here={lat:c.latitude,lon:c.longitude};
   if(CL.trip&&CL.last&&(c.accuracy??0)<60){const d=km(CL.last,here);if(d>.005&&d<2)CL.trip.km+=d}
   CL.last=here;
 }
 const SUNIC='<path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 7V4M5.6 10.6 3.5 8.5M18.4 10.6l2.1-2.1"/>';
+function clMini(sel,f,val,lbl,icon){const el=$(sel);if(!el)return;f=Math.max(0,Math.min(1,f||0));
+  el.querySelector(".mv").setAttribute("stroke-dasharray",`${(f*100).toFixed(1)} 100`);el.querySelector(".mv").style.opacity=f>0?1:0;el.querySelector("b").innerHTML=val;
+  if(lbl)el.querySelector("span").textContent=lbl;if(icon!=null)el.querySelector(".mi").innerHTML=icon}
 function renderCluster(n){
   const de=document.documentElement;if(!de.classList.contains("drive"))return;
   $("#cluster").classList.toggle("moving",moving);
@@ -1084,12 +1131,18 @@ function renderCluster(n){
   $("#clDate").textContent=n.toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"});
   // speed (GPS); stale fixes read as 0 once we've stopped
   const fresh=Date.now()-CL.fixAt<20e3,mph=lastMph==null?null:(fresh||moving?lastMph:0);
-  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/100);
+  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/TOP_MPH);
   // estimated motor RPM: Model 3 Performance 9.04:1 single gear, 20in tires (~26.6in) => ~115 RPM per mph
   const rpm=Math.round((mph||0)*RPM_PER_MPH);const rr=$("#gSpeed .rpm");rr.setAttribute("stroke-dasharray",`${Math.min(100,rpm/RPM_MAX*100).toFixed(1)} 100`);rr.style.opacity=rpm>0?1:0;
   $("#clRpm").innerHTML=mph==null?"":`<b>${rpm.toLocaleString()}</b> RPM <small>est.</small>`;
   const hd=$("#clHead");hd.hidden=CL.head==null||!moving;
   if(CL.head!=null){hd.querySelector("svg").style.transform=`rotate(${CL.head}deg)`;hd.querySelector("b").textContent=["N","NE","E","SE","S","SW","W","NW"][Math.round(CL.head/45)%8]}
+  {const fresh2=Date.now()-CL.fixAt<8e3,hp=fresh2?Math.round(CL.hp):0,el=$("#clPwr");
+    el.querySelector(".pw").style.width=(Math.max(0,hp)/CAR.hpMax*50).toFixed(1)+"%";
+    el.querySelector(".rg").style.width=(Math.max(0,-hp)/CAR.regenMax*50).toFixed(1)+"%";
+    el.querySelector("b").textContent=Math.abs(hp);el.classList.toggle("regen",hp<0);
+    const g=fresh2?CL.acc/9.81:0;clMini("#mG",Math.abs(g)/.8,Math.abs(g).toFixed(2),g<-.03?"Braking":g>.03?"Accel":"G-force");$("#mG").classList.toggle("neg",g<-.03);
+    clMini("#mPeak",(CL.trip?.peak||0)/CAR.hpMax,Math.round(CL.trip?.peak||0));}
   if(CL.trip){const m=Math.floor((Date.now()-CL.trip.t0)/6e4),mi=CL.trip.km*.6214;
     $("#clTrip").innerHTML=`<span>Trip <b class="num">${mi<10?mi.toFixed(1):Math.round(mi)} mi</b></span><span><b class="num">${m>=60?`${Math.floor(m/60)}:${pad(m%60)}`:`${m} min`}</b></span>`}
   // everything else changes slowly
@@ -1110,7 +1163,10 @@ function renderCluster(n){
     const q=WX.q15||[],i=q.findIndex(x=>x.mm>0||x.snow>0),rn=$("#clRain");rn.hidden=false;
     if(i>=0){const sn=q[i].snow>0,what=sn?"Snow":"Rain",mins=Math.max(0,Math.round((q[i].t-n)/6e4));rn.className="cl-pill wet";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC[sn?"snow":"rain"]}</svg>${mins<10?`${what} now`:`${what} in ${mins} min`}`}
     else{rn.className="cl-pill";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC.ok}</svg>Dry next 2 hrs`}
-    const w=$("#clWind");w.hidden=WX.gust<20;w.innerHTML=`<svg viewBox="0 0 24 24">${RIC.wind}</svg>Gusts ${WX.gust} mph`;
+    clMini("#mWind",WX.windMph/40,WX.gust>=WX.windMph+8?`${WX.windMph}<small>/${WX.gust}</small>`:WX.windMph,null,`<svg viewBox="0 0 24 24" style="transform:rotate(${(WX.windDir+180)%360}deg)"><path d="M12 3v18M6 9l6-6 6 6"/></svg>`);
+    clMini("#mHum",WX.hum/100,WX.hum+"%");
+    const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
+    if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4));clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,dark?"Night":"Daylight")}
     if(st){const s=$("#clSun"),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;s.hidden=false;
       s.innerHTML=`<svg viewBox="0 0 24 24">${dark?RIC.moon:SUNIC}</svg>${dark?"Sunrise":"Sunset"} ${fmtT(nx)}`}
   }
