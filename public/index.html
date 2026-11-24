@@ -827,10 +827,20 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .mini span{margin-top:calc(var(--u)*.5);font-size:calc(var(--u)*.95);letter-spacing:.14em;text-transform:uppercase;color:#7f93ab;white-space:nowrap}
 #mHum{--mc:#5aa9ff} #mDay{--mc:#ffd27a} #mPrec{--mc:#8fd3ff} #mG{--mc:#a98bff} #mG.neg{--mc:#3fe0a0} #mPeak{--mc:#d08bff}
 @media (prefers-reduced-motion:reduce){.g-speed .dec2{animation:none}}
+
+/* cluster round 3: weather/speed animation */
+.cl-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.cluster>:not(.cl-fx){position:relative;z-index:1}
+html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-mix(in srgb,var(--tint,#4fd8ff) 9%,transparent),transparent 70%),radial-gradient(ellipse at 50% 120%,color-mix(in srgb,var(--tint,#2a7bff) 12%,transparent),transparent 60%),rgba(2,4,8,.92);transition:background 2s}
+.g-speed::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle,rgba(79,216,255,calc(.05 + var(--spd,0)*.16)),transparent 68%);animation:clBreath calc(4.5s - var(--spd,0)*3.3s) ease-in-out infinite;pointer-events:none}
+@keyframes clBreath{50%{transform:scale(1.07);opacity:.55}}
+.g-speed .val{filter:url(#clGlow) brightness(calc(1 + var(--spd,0)*.35))}
+@media (prefers-reduced-motion:reduce){.g-speed::before{animation:none}.cl-fx{display:none}}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
 <section class="cluster" id="cluster" aria-label="Driving">
+  <canvas class="cl-fx" id="clFx" aria-hidden="true"></canvas>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
     <filter id="clGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <linearGradient id="clSpd" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2a7bff"/><stop offset=".6" stop-color="#4fd8ff"/><stop offset="1" stop-color="#b8f3ff"/></linearGradient>
@@ -848,7 +858,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
       <div class="cap" id="clCond"></div>
       <div class="minis"><div class="mini" id="mWind"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Wind</span></div><div class="mini" id="mHum"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Humidity</span></div><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div></div>
     </div>
-    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div><div class="trip" id="clTrip"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><span class="l">Regen</span><b class="num">0</b><span class="r">hp est.</span></div></div></div>
+    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><span class="l">Regen</span><b class="num">0</b><span class="r">hp est.</span></div></div></div>
     <div class="side r">
       <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
       <ul class="why" id="clWhy"></ul>
@@ -1124,6 +1134,40 @@ const SUNIC='<path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 7V4M5.6 10.6 3.5 8.5M18.4 
 function clMini(sel,f,val,lbl,icon){const el=$(sel);if(!el)return;f=Math.max(0,Math.min(1,f||0));
   el.querySelector(".mv").setAttribute("stroke-dasharray",`${(f*100).toFixed(1)} 100`);el.querySelector(".mv").style.opacity=f>0?1:0;el.querySelector("b").innerHTML=val;
   if(lbl)el.querySelector("span").textContent=lbl;if(icon!=null)el.querySelector(".mi").innerHTML=icon}
+
+// ---- cluster animation: particles stream from the speedometer like a windshield view; type follows the weather, pace follows speed ----
+const FX={kind:"clear",mph:0,ps:[],last:0,run:false};
+function fxKind(){if(!WX)return"clear";const q=WX.q15?.[0];if(q?.snow>0||(WX.icon==="snow"&&WX.code>=71))return"snow";if(q?.mm>0||(WX.icon==="rain"&&WX.code>=51))return"rain";if(WX.code===45||WX.code===48)return"fog";return"clear"}
+function fxSeed(p,fresh){p.x=Math.random()*2-1;p.y=Math.random()*2-1;p.z=fresh?Math.random()*.9+.1:1;p.px=null;return p}
+function fxLoop(t){
+  const cv=$("#clFx");if(!document.documentElement.classList.contains("drive")||document.hidden){FX.run=false;return}
+  requestAnimationFrame(fxLoop);
+  if(t-FX.last<32)return;const dt=Math.min(.1,(t-FX.last)/1e3);FX.last=t;
+  const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+  const kind=FX.kind,n={snow:110,rain:130,fog:30,clear:55}[kind];
+  while(FX.ps.length<n)FX.ps.push(fxSeed({},true));FX.ps.length=n;
+  const c=cv.getContext("2d"),cx=w/2,cy=h*.52,sc=Math.min(w,h)*.55,sp=Math.min(1,FX.mph/90);
+  c.clearRect(0,0,w,h);
+  const vz=.04+sp*1.1,fall=kind==="snow"?.12*(1-sp*.7):kind==="rain"?.9*(1-sp*.6):0;
+  c.lineCap="round";
+  for(const p of FX.ps){
+    p.z-=vz*dt;p.y+=fall*dt*p.z;if(kind==="snow")p.x+=Math.sin(t/900+p.y*6)*.02*dt;
+    const X=cx+p.x/p.z*sc,Y=cy+p.y/p.z*sc;
+    if(p.z<.04||X<-20||X>w+20||Y<-20||Y>h+20){fxSeed(p,false);continue}
+    const near=1-p.z,r=(kind==="snow"?2.6:1.3)*near+.3;
+    // fade out around the speed readout so it stays clean
+    const dc=Math.hypot(X-cx,Y-cy)/sc,a=Math.min(1,Math.max(0,(dc-.25)*2))*near;
+    if(p.px!=null&&(kind==="rain"||sp>.15)){
+      let dx=(p.px-X)*(kind==="rain"?1+sp:sp*.8),dy=(p.py-Y)*(kind==="rain"?1+sp:sp*.8);const ln=Math.hypot(dx,dy),mx=14+near*40;if(ln>mx){dx*=mx/ln;dy*=mx/ln}
+      c.strokeStyle=kind==="rain"?`rgba(143,211,255,${.32*a})`:kind==="snow"?`rgba(235,245,255,${.38*a})`:`rgba(79,216,255,${.25*a})`;
+      c.lineWidth=r;c.beginPath();c.moveTo(X+dx,Y+dy-(kind==="rain"?8*near:0));c.lineTo(X,Y);c.stroke();
+    }else{c.fillStyle=kind==="snow"?`rgba(235,245,255,${.6*a})`:kind==="fog"?`rgba(200,215,230,${.08*a})`:`rgba(79,216,255,${.4*a})`;c.beginPath();c.arc(X,Y,kind==="fog"?r*18:r,0,7);c.fill()}
+    p.px=X;p.py=Y;
+  }
+}
+function fxUpdate(mph){FX.mph=mph||0;FX.kind=fxKind();const cl=$("#cluster");cl.style.setProperty("--spd",Math.min(1,FX.mph/90).toFixed(2));
+  if(WX)cl.style.setProperty("--tint",WX.temp<=32?"#5aa9ff":WX.temp<55?"#4fd8ff":WX.temp<80?"#7fe0c0":WX.temp<90?"#ffb347":"#ff7a45");
+  if(!FX.run&&!matchMedia("(prefers-reduced-motion: reduce)").matches){FX.run=true;FX.last=performance.now();requestAnimationFrame(fxLoop)}}
 function renderCluster(n){
   const de=document.documentElement;if(!de.classList.contains("drive"))return;
   $("#cluster").classList.toggle("moving",moving);
@@ -1131,7 +1175,7 @@ function renderCluster(n){
   $("#clDate").textContent=n.toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"});
   // speed (GPS); stale fixes read as 0 once we've stopped
   const fresh=Date.now()-CL.fixAt<20e3,mph=lastMph==null?null:(fresh||moving?lastMph:0);
-  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/TOP_MPH);
+  $("#gSpeed .sp").textContent=mph==null?"--":mph;clSet("#gSpeed",(mph||0)/TOP_MPH);fxUpdate(mph);
   // estimated motor RPM: Model 3 Performance 9.04:1 single gear, 20in tires (~26.6in) => ~115 RPM per mph
   const rpm=Math.round((mph||0)*RPM_PER_MPH);const rr=$("#gSpeed .rpm");rr.setAttribute("stroke-dasharray",`${Math.min(100,rpm/RPM_MAX*100).toFixed(1)} 100`);rr.style.opacity=rpm>0?1:0;
   $("#clRpm").innerHTML=mph==null?"":`<b>${rpm.toLocaleString()}</b> RPM <small>est.</small>`;
@@ -1143,8 +1187,6 @@ function renderCluster(n){
     el.querySelector("b").textContent=Math.abs(hp);el.classList.toggle("regen",hp<0);
     const g=fresh2?CL.acc/9.81:0;clMini("#mG",Math.abs(g)/.8,Math.abs(g).toFixed(2),g<-.03?"Braking":g>.03?"Accel":"G-force");$("#mG").classList.toggle("neg",g<-.03);
     clMini("#mPeak",(CL.trip?.peak||0)/CAR.hpMax,Math.round(CL.trip?.peak||0));}
-  if(CL.trip){const m=Math.floor((Date.now()-CL.trip.t0)/6e4),mi=CL.trip.km*.6214;
-    $("#clTrip").innerHTML=`<span>Trip <b class="num">${mi<10?mi.toFixed(1):Math.round(mi)} mi</b></span><span><b class="num">${m>=60?`${Math.floor(m/60)}:${pad(m%60)}`:`${m} min`}</b></span>`}
   // everything else changes slowly
   const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length].join();if(sig===CL.sig)return;CL.sig=sig;
   if(WX){
