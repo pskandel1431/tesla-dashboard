@@ -1314,16 +1314,27 @@ function clCompass(){
     if(mj){const L=DIRS[a/45];t+=`<text x="${x}" y="13.5" class="${L.length===1?"card":""}${L==="N"?" n":""}">${L}</text>`}}
   const sv=$("#clComp svg");sv.innerHTML=t;sv.style.opacity=h==null?.35:1;
 }
-const GEO2={at:0,pos:null,road:"",town:""};
+const GEO2={at:0,pos:null,road:"",town:""},POI={pos:null,name:"",at:0};
 async function clRevGeo(){
   if(!HERE||Date.now()-GEO2.at<15e3)return;if(GEO2.pos&&km(GEO2.pos,HERE)<.12&&GEO2.road)return;
   GEO2.at=Date.now();const pos={...HERE};
   try{const j=await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=${pos.lat}&lon=${pos.lon}`)).json(),a=j.address||{};
     GEO2.pos=pos;GEO2.road=a.road||a.pedestrian||"";GEO2.town=a.city||a.town||a.village||a.hamlet||a.suburb||""}catch{}
 }
+// when stopped, name the business we're parked at: nearest named shop/amenity within ~70 m (OpenStreetMap via Overpass)
+const POI_SKIP=/^(parking|parking_space|parking_entrance|bench|waste_basket|recycling|bicycle_parking|charging_station|atm|vending_machine|post_box|telephone|toilets|shelter|drinking_water|fire_hydrant)$/;
+async function clPoi(){
+  const parked=stillSince&&Date.now()-stillSince>15e3;if(!parked||!HERE){if(!parked)POI.name="";return}
+  if(POI.pos&&km(POI.pos,HERE)<.05)return;if(Date.now()-POI.at<20e3)return;POI.at=Date.now();const pos={...HERE};
+  const q=`[out:json][timeout:8];nwr(around:70,${pos.lat},${pos.lon})[name][~"^(shop|amenity|leisure|tourism|office|healthcare|craft|sport)$"~"."];out center 20;`;
+  try{const j=await (await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q))).json();
+    const best=(j.elements||[]).filter(e=>!POI_SKIP.test(e.tags.amenity||"")).map(e=>{const c=e.center||e;return{n:e.tags.name,d:km(pos,{lat:c.lat,lon:c.lon})}}).sort((a,b)=>a.d-b.d)[0];
+    POI.pos=pos;POI.name=best?best.n:"";CL.sig=""}catch{}
+}
 function clRoadLine(){
-  clRevGeo();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
+  clRevGeo();clPoi();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
   const ft=CL.alt!=null?Math.round(CL.alt*3.281):WX?.elev!=null?Math.round(WX.elev*3.281):null,elv=ft!=null?` <span class="elv">· ${ft.toLocaleString()} ft</span>`:"";
+  if(POI.name&&stillSince&&Date.now()-stillSince>15e3){el.innerHTML=`Parked at <b>${esc(POI.name)}</b>${GEO2.road?` · ${esc(GEO2.road)}`:""}`+elv;return}
   if(!where){el.textContent=moving&&h!=null?`Heading ${DIRW[Math.round(h/45)%8]}`:"";return}
   const on=GEO2.road?`on <b>${esc(GEO2.road)}</b>`:`in <b>${esc(GEO2.town)}</b>`;
   el.innerHTML=(moving&&h!=null?`Driving ${DIRW[Math.round(h/45)%8]} ${on}`:moving?`Driving ${on}`:`Stopped ${on}`)+elv;
