@@ -809,19 +809,13 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
 .cl-pill[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
-/* taller windows (car browser not full-screen): big speedometer on top, temp + roads side by side below */
+/* taller windows (car browser not full-screen): same sporty three-dial row, sized by width so the center dial is as big as possible */
 @media (max-aspect-ratio:3/2){
-html.drive .cluster{--u:min(1.02vw,calc(var(--vh,1vh)*1.05))}
-.cl-main{grid-template-columns:1fr 1fr;grid-template-areas:"s s" "t r";row-gap:calc(var(--u)*1.2);align-content:center}
-.g-speed{grid-area:s;width:calc(var(--u)*52);height:calc(var(--u)*52)}
-.g-speed .sp{font-size:calc(var(--u)*17)}
-.side.l{grid-area:t}.side.r{grid-area:r}
-.side{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr auto 1fr;column-gap:calc(var(--u)*1.4);align-items:center;justify-items:center}
-.side>.gauge{grid-row:1/4;width:calc(var(--u)*19);height:calc(var(--u)*19)}
-.side>.cap,.side>.why{grid-row:2/3;grid-column:2;align-self:start}
-.side>.minis{grid-row:3/4;grid-column:2;align-self:start;gap:calc(var(--u)*1)}
-.side>.cap{grid-row:1/2;align-self:end}.side>.why{grid-row:1/2;align-self:end}
-.side .why li:nth-child(n+2){display:none}
+html.drive .cluster{--u:min(1vw,calc(var(--vh,1vh)*1.2))}
+.g-speed{width:calc(var(--u)*49);height:calc(var(--u)*49);margin-inline:0}
+.g-speed .sp{font-size:calc(var(--u)*15)}
+.g-side{width:calc(var(--u)*22);height:calc(var(--u)*22)}
+.cl-main{align-content:center}
 .cl-decor{display:none}
 }
 @media (max-aspect-ratio:1/1){html.drive .cluster{--u:min(1.5vw,calc(var(--vh,1vh)*1.1))}}
@@ -888,6 +882,25 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 .g-speed.surge .val{animation:clVal .7s ease-out}
 @keyframes clVal{30%{filter:url(#clGlow) brightness(1.8)}}
 @media (prefers-reduced-motion:reduce){.g-speed.surge::after,.g-speed.regen::after,.g-speed.surge .val{animation:none}}
+
+/* bigger text for reading at a glance */
+.cl-road{font-size:calc(var(--u)*2.1);max-width:calc(var(--u)*56)}
+.cl-time span{font-size:calc(var(--u)*1.7)}
+.g-side .lbl{font-size:calc(var(--u)*1.35)}
+.g-side .sub{font-size:calc(var(--u)*1.75)}
+.g-side .big{font-size:calc(var(--u)*6.8)}
+.side .cap{font-size:calc(var(--u)*1.75);max-width:calc(var(--u)*25)}
+.side .why{font-size:calc(var(--u)*1.6);max-width:calc(var(--u)*25)}
+.side .why li:nth-child(n+2){display:none}
+.mini b{font-size:calc(var(--u)*2)}
+.mini span{font-size:calc(var(--u)*1.2);letter-spacing:.08em}
+.minis{gap:calc(var(--u)*1.5)}
+.mini,.mini svg{width:calc(var(--u)*7)}.mini svg{height:calc(var(--u)*7)}.mini b{top:calc(var(--u)*3.5)}
+.cl-pill{font-size:calc(var(--u)*1.75)}
+.g-speed .rpmtxt{font-size:calc(var(--u)*1.5)}
+.ptxt{font-size:calc(var(--u)*1.45)}.ptxt b{font-size:calc(var(--u)*2.4)}
+.g-speed .unit{font-size:calc(var(--u)*1.6)}
+.gauge .tl{font-size:11px}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -1277,7 +1290,7 @@ async function loadAqi(){
 }
 function renderExtras(n){
   loadAqi();
-  if(AQ.v!=null){const v=Math.round(AQ.v),c=v<=50?"#3fe0a0":v<=100?"#ffd27a":v<=150?"#ffb340":"#ff4d5e";$("#mAqi").style.setProperty("--aq",c);clMini("#mAqi",v/200,v,v<=50?"Air good":v<=100?"Air fair":"Air poor")}
+  if(AQ.v!=null){const v=Math.round(AQ.v),c=v<=50?"#3fe0a0":v<=100?"#ffd27a":v<=150?"#ffb340":"#ff4d5e";$("#mAqi").style.setProperty("--aq",c);clMini("#mAqi",v/200,v,"AQI")}
   const ice=$("#clIce"),bi=WX?blackIce(n):null;ice.hidden=!bi;
   if(bi)ice.innerHTML=`<svg viewBox="0 0 24 24">${RIC.ice}</svg>${bi.now?"Black ice risk":`Black ice from ${bi.at.toLocaleTimeString([], {hour:"numeric"})}`} <small>surface ${Math.round(Math.min(...WX.hourly.filter(h=>h.t>=new Date(+n-36e5)&&h.t<=new Date(+n+12*36e5)&&h.surf!=null).map(h=>h.surf)))}°</small>`;
 }
@@ -1349,10 +1362,10 @@ function renderCluster(n){
     // precip next 2 hours
     const q=WX.q15||[],i=q.findIndex(x=>x.mm>0||x.snow>0),rn=$("#clRain");rn.hidden=false;
     if(i>=0){const sn=q[i].snow>0,what=sn?"Snow":"Rain",mins=Math.max(0,Math.round((q[i].t-n)/6e4));rn.className="cl-pill wet";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC[sn?"snow":"rain"]}</svg>${mins<10?`${what} now`:`${what} in ${mins} min`}`}
-    else{rn.className="cl-pill";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC.ok}</svg>Dry next 2 hrs`}
+    else rn.hidden=true;
     clMini("#mWind",WX.windMph/40,WX.gust>=WX.windMph+8?`${WX.windMph}<small>/${WX.gust}</small>`:WX.windMph,null,`<svg viewBox="0 0 24 24" style="transform:rotate(${(WX.windDir+180)%360}deg)"><path d="M12 3v18M6 9l6-6 6 6"/></svg>`);
     clMini("#mHum",WX.hum/100,WX.hum+"%");renderExtras(n);
-    if(WX.vis!=null){const mi=WX.vis/1609;clMini("#mVis",mi/10,mi>=10?"10+":mi<1?mi.toFixed(1):Math.round(mi),"Visibility mi");$("#mVis").classList.toggle("low",mi<2)}
+    if(WX.vis!=null){const mi=WX.vis/1609;clMini("#mVis",mi/10,(mi>=10?"10+":mi<1?mi.toFixed(1):Math.round(mi))+"<small>mi</small>","Visibility");$("#mVis").classList.toggle("low",mi<2)}
     const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
     if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4));clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,dark?"Night":"Daylight")}
     if(st){const s=$("#clSun"),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;s.hidden=false;
