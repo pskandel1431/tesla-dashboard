@@ -808,6 +808,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill .drv{color:#7f93ab;font-size:.85em}.cl-pill .drv.late{color:#ffb340}
 .cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
 .cl-pill[hidden]{display:none}
+.cl-pill.next{order:-1}
 #clCalErr{max-width:calc(var(--u)*60);overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
 /* taller windows (car browser not full-screen): same sporty three-dial row, sized by width so the center dial is as big as possible */
@@ -995,7 +996,6 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
     <div class="cl-pill" id="clRain" hidden></div>
     <div class="cl-pill warn" id="clIce" hidden></div>
     <div class="cl-pill warn" id="clGlare" hidden></div>
-    <div class="cl-pill" id="clSun" hidden></div>
   </div>
 </section>
 <div class="wrap">
@@ -1314,16 +1314,27 @@ function clCompass(){
     if(mj){const L=DIRS[a/45];t+=`<text x="${x}" y="13.5" class="${L.length===1?"card":""}${L==="N"?" n":""}">${L}</text>`}}
   const sv=$("#clComp svg");sv.innerHTML=t;sv.style.opacity=h==null?.35:1;
 }
-const GEO2={at:0,pos:null,road:"",town:""};
+const GEO2={at:0,pos:null,road:"",town:""},POI={pos:null,name:"",at:0};
 async function clRevGeo(){
   if(!HERE||Date.now()-GEO2.at<15e3)return;if(GEO2.pos&&km(GEO2.pos,HERE)<.12&&GEO2.road)return;
   GEO2.at=Date.now();const pos={...HERE};
   try{const j=await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=${pos.lat}&lon=${pos.lon}`)).json(),a=j.address||{};
     GEO2.pos=pos;GEO2.road=a.road||a.pedestrian||"";GEO2.town=a.city||a.town||a.village||a.hamlet||a.suburb||""}catch{}
 }
+// when stopped, name the business we're parked at: nearest named shop/amenity within ~70 m (OpenStreetMap via Overpass)
+const POI_SKIP=/^(parking|parking_space|parking_entrance|bench|waste_basket|recycling|bicycle_parking|charging_station|atm|vending_machine|post_box|telephone|toilets|shelter|drinking_water|fire_hydrant)$/;
+async function clPoi(){
+  const parked=stillSince&&Date.now()-stillSince>15e3;if(!parked||!HERE){if(!parked)POI.name="";return}
+  if(POI.pos&&km(POI.pos,HERE)<.05)return;if(Date.now()-POI.at<20e3)return;POI.at=Date.now();const pos={...HERE};
+  const q=`[out:json][timeout:8];nwr(around:70,${pos.lat},${pos.lon})[name][~"^(shop|amenity|leisure|tourism|office|healthcare|craft|sport)$"~"."];out center 20;`;
+  try{const j=await (await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q))).json();
+    const best=(j.elements||[]).filter(e=>!POI_SKIP.test(e.tags.amenity||"")).map(e=>{const c=e.center||e;return{n:e.tags.name,d:km(pos,{lat:c.lat,lon:c.lon})}}).sort((a,b)=>a.d-b.d)[0];
+    POI.pos=pos;POI.name=best?best.n:"";CL.sig=""}catch{}
+}
 function clRoadLine(){
-  clRevGeo();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
+  clRevGeo();clPoi();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
   const ft=CL.alt!=null?Math.round(CL.alt*3.281):WX?.elev!=null?Math.round(WX.elev*3.281):null,elv=ft!=null?` <span class="elv">· ${ft.toLocaleString()} ft</span>`:"";
+  if(POI.name&&stillSince&&Date.now()-stillSince>15e3){el.innerHTML=`Parked at <b>${esc(POI.name)}</b>${GEO2.road?` · ${esc(GEO2.road)}`:""}`+elv;return}
   if(!where){el.textContent=moving&&h!=null?`Heading ${DIRW[Math.round(h/45)%8]}`:"";return}
   const on=GEO2.road?`on <b>${esc(GEO2.road)}</b>`:`in <b>${esc(GEO2.town)}</b>`;
   el.innerHTML=(moving&&h!=null?`Driving ${DIRW[Math.round(h/45)%8]} ${on}`:moving?`Driving ${on}`:`Stopped ${on}`)+elv;
@@ -1412,6 +1423,7 @@ function renderWxBanner(n,o){
   if(!items.length&&!chips.length&&!nowTxt){el.hidden=true;$("#clWhy").hidden=false;return}
   const top=items[0],lvl=items.reduce((m,r)=>Math.max(m,LV[r.lvl]),0),ic=top?top.ic:nowTxt?(/Snow/.test(nowTxt)?"snow":/Freez/.test(nowTxt)?"ice":"rain"):"snow";
   el.hidden=false;$("#clWhy").hidden=true;$("#clIce").hidden=true;
+  {const rn=$("#clRain");if(!rn.hidden&&!/now$/.test(rn.textContent)&&!/now/i.test(nowTxt)){chips.unshift({ic:/Snow/.test(rn.textContent)?"snow":"rain",t:`<b>${esc(rn.textContent)}</b>`})}rn.hidden=true}
   el.className="cl-wx "+["info","caution","hazard"][lvl]+(wint({ic})?" winter":"");
   const head=top?(nowTxt&&!/now/i.test(top.text)?`${nowTxt} · ${top.text}`:top.text):nowTxt;
   const rest=items.slice(1,3).map(r=>({ic:r.ic,t:esc(r.text),lvl:r.lvl}));
@@ -1459,9 +1471,8 @@ function renderCluster(n){
       if(!ms.hidden)clMini("#mSnow",v/6,fmtIn(v),sn.next>=.1?"Snow ahead":"Snow 24h",`<svg viewBox="0 0 24 24">${RIC.snow}</svg>`)}
     renderWxBanner(n,o);
     const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
-    if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4));clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,dark?"Night":"Daylight")}
-    if(st){const s=$("#clSun"),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;s.hidden=false;
-      s.innerHTML=`<svg viewBox="0 0 24 24">${dark?RIC.moon:SUNIC}</svg>${dark?"Sunrise":"Sunset"} ${fmtT(nx)}`}
+    if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4)),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;
+      clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,`${dark?"Rise":"Sets"} ${fmtT(nx).replace(/\s?[AP]M/i,"")}`,`<svg viewBox="0 0 24 24">${dark?RIC.moon:SUNIC}</svg>`)}
   }
   // next stop: one line, only if within 12 hours
   const evs=timed().filter(e=>e.s>n&&e.s-n<12*36e5).sort((a,b)=>a.s-b.s),cd=upcomingCds(n)[0];
@@ -1616,8 +1627,6 @@ function roadOutlook(n){
   if(fz.length&&wetSoon&&!ice.length&&!bi)add("caution",`Below freezing ${span(fz)}; icy patches likely`);
   else if(fz.length)add("info",`Below freezing ${span(fz)}; watch bridges and shaded spots`);
   else if(tmin<=36&&wetSoon)add("caution","Near freezing; bridges and overpasses may ice");
-  if(tmin<=10)add("caution",`Very cold, ${Math.round(tmin)}°: expect less range, precondition before leaving`);
-  else if(tmin<=25)add("info",`Cold, low ${Math.round(tmin)}°: range will dip, precondition helps`);
   if(tmax>=100)add("hazard",`Extreme heat, ${Math.round(tmax)}°: keep Cabin Overheat Protection on`);
   else if(tmax>=90)add("caution",`Hot, ${Math.round(tmax)}°: cabin heats fast when parked`);
   if(WX?.gust>=40)add("hazard",`Wind gusts ${WX.gust} mph`);else if(WX?.gust>=30)add("caution",`Gusty, up to ${WX.gust} mph`);
