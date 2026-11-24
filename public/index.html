@@ -722,7 +722,7 @@ html.drive.hasnext main.simple .wx{align-content:space-evenly}
 html.drive .wrap{display:none!important}
 html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidden;
   --u:min(1vw,calc(var(--vh,1vh)*1.55));--cy:#4fd8ff;--cy2:#2a7bff;--ok:#3fe0a0;--warn:#ffb340;--bad:#ff4d5e;
-  grid-template-rows:auto minmax(0,1fr) auto;padding:calc(var(--u)*1.6) calc(var(--u)*2.4);gap:calc(var(--u)*1);
+  grid-template-rows:auto minmax(0,1fr) auto auto;padding:calc(var(--u)*1.6) calc(var(--u)*2.4);gap:calc(var(--u)*1);
   background:radial-gradient(ellipse 60% 55% at 50% 52%,rgba(79,216,255,.07),transparent 70%),radial-gradient(ellipse at 50% 120%,rgba(42,123,255,.10),transparent 60%),rgba(2,4,8,.9);
   color:#e8f4ff;font-family:var(--body);animation:clIn .5s ease both}
 @keyframes clIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
@@ -909,6 +909,55 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 .cl-pill.next .ncd{font-size:1.45em}
 .cl-pill.next small{font-size:.75em}
 .cl-pill.next.soon{border-color:#ffb340;box-shadow:0 0 18px rgba(255,179,64,.35),inset 0 0 12px rgba(255,179,64,.12)}
+
+/* sunlight: stronger dial tracks and ticks */
+.gauge .trk{stroke:rgba(200,225,255,.26);filter:drop-shadow(0 0 1.5px rgba(200,230,255,.35))}
+.g-speed .trk{stroke-width:9px}
+.mini .mt{stroke:rgba(200,225,255,.3)}
+.g-speed .rpmtrk{stroke:rgba(190,160,255,.34)}
+.gauge .tick{stroke:rgba(210,235,255,.5)}
+.gauge .tick.mj{stroke:rgba(225,242,255,.9)}
+.gauge .tl{fill:#b4c6da}
+.g-speed .dec1{stroke:rgba(79,216,255,.22)}
+/* available horsepower with rocket */
+.pwr{bottom:2.5%}
+.ptxt{align-items:center;color:#c9b8ff;font-size:calc(var(--u)*1.5);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.ptxt b{font-size:calc(var(--u)*3.1);color:#fff;text-shadow:0 0 .5em rgba(255,140,60,.55)}
+.rkt{width:calc(var(--u)*3.2);height:calc(var(--u)*3.2);fill:none;stroke:#e8dcff;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;transform:rotate(45deg);filter:drop-shadow(0 0 4px rgba(200,170,255,.6))}
+.rkt .fl{fill:#ff9a3c;stroke:#ffd27a;stroke-width:1;transform-origin:12px 17px;transform:scaleY(calc(.55 + var(--pf,0)*1.6));opacity:calc(.6 + var(--pf,0)*.4);filter:drop-shadow(0 0 3px #ff7a2a);animation:clFlame .18s ease-in-out infinite alternate}
+@keyframes clFlame{to{transform:scaleY(calc(.45 + var(--pf,0)*1.9))}}
+@media (prefers-reduced-motion:reduce){.rkt .fl{animation:none}}
+.puse{font-size:calc(var(--u)*1.3);color:#8fa3bb;letter-spacing:.06em}
+.puse i{font-style:normal;color:#d6ccff}.puse .l{display:none;color:#3fe0a0}
+.pwr.regen .puse .l{display:inline}.pwr.regen .puse .u{display:none}.pwr.regen .puse i{color:#9ff0cc}
+.pwr.idle .puse{visibility:hidden}
+/* next stop opens its details */
+.cl-pill.next.tap{cursor:pointer}
+.cl-pill.next .chev{width:calc(var(--u)*2.2);height:calc(var(--u)*2.2);opacity:.75;margin-left:calc(var(--u)*.2)}
+.cl-pill.next.tap:active{transform:scale(.98)}
+#mSnow{--mc:#cfe8ff} #mSnow[hidden]{display:none}
+/* weather + road banner */
+.cl-wx{justify-self:center;display:flex;align-items:center;gap:calc(var(--u)*1.6);max-width:min(100%,calc(var(--u)*100));padding:calc(var(--u)*1) calc(var(--u)*2.2);border-radius:calc(var(--u)*2.2);border:2px solid rgba(79,216,255,.45);background:rgba(10,30,50,.7);box-shadow:0 0 24px rgba(79,216,255,.18)}
+.cl-wx[hidden]{display:none}
+.cl-wx.caution{border-color:#ffb340;background:rgba(60,36,4,.6);box-shadow:0 0 24px rgba(255,179,64,.3)}
+.cl-wx.hazard{border-color:#ff4d5e;background:rgba(70,8,16,.62);box-shadow:0 0 28px rgba(255,77,94,.4);animation:clHaz 2.4s ease-in-out infinite}
+@keyframes clHaz{50%{box-shadow:0 0 40px rgba(255,77,94,.6)}}
+@media (prefers-reduced-motion:reduce){.cl-wx.hazard{animation:none}}
+.cl-wx .wi{flex:none;display:grid;place-items:center;width:calc(var(--u)*6);height:calc(var(--u)*6);border-radius:50%;background:rgba(255,255,255,.08);border:2px solid currentColor;color:#ffd38a}
+.cl-wx.hazard .wi{color:#ff8a96}.cl-wx.info .wi{color:#8fd3ff}.cl-wx.winter .wi{color:#cfe8ff;background:rgba(143,211,255,.15);box-shadow:0 0 18px rgba(143,211,255,.45)}
+.cl-wx .wi svg{width:62%;height:62%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cl-wx .wb{min-width:0;display:flex;flex-direction:column;gap:calc(var(--u)*.6)}
+.cl-wx .wh{font-size:calc(var(--u)*2.5);font-weight:700;color:#fff;line-height:1.2}
+.cl-wx .wc{display:flex;flex-wrap:wrap;gap:calc(var(--u)*.5) calc(var(--u)*1.6);font-size:calc(var(--u)*1.8);color:#e2ecf6;font-weight:500}
+.cl-wx .wc span{display:inline-flex;align-items:center;gap:calc(var(--u)*.5)}
+.cl-wx .wc b{color:#fff;font-weight:800}
+.cl-wx .wc .hazard{color:#ffb0b8}.cl-wx .wc .caution{color:#ffd38a}
+.cl-wx .wc svg{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@media (min-aspect-ratio:3/2){html.drive .cluster:has(#clWx:not([hidden])){--u:min(1vw,calc(var(--vh,1vh)*1.3))}
+.cl-wx{padding:calc(var(--u)*.7) calc(var(--u)*2)}.cl-wx .wi{width:calc(var(--u)*4.6);height:calc(var(--u)*4.6)}
+.cl-wx .wh{font-size:calc(var(--u)*2.2)}.cl-wx .wc{font-size:calc(var(--u)*1.6);flex-wrap:nowrap;overflow:hidden}.cl-wx .wc span{white-space:nowrap}.cl-wx .wc span:nth-child(n+4){display:none}}
+html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
+.side .why{color:#d2e0ee}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
@@ -931,15 +980,16 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
       <div class="cap" id="clCond"></div>
       <div class="minis"><div class="mini" id="mWind"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Wind</span></div><div class="mini" id="mPrec"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Precip 2h</span></div><div class="mini" id="mHum"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Humidity</span></div></div>
     </div>
-    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><span class="l">Regen</span><b class="num">0</b><span class="r">hp est.</span></div></div></div>
+    <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><svg class="rkt" viewBox="0 0 24 24"><path class="fl" d="M9.6 17.2c0 2.3 1.2 4 2.4 4.8 1.2-.8 2.4-2.5 2.4-4.8z"/><path d="M12 2c3 2.4 4.4 6 4.4 10v4.6H7.6V12C7.6 8 9 4.4 12 2z"/><circle cx="12" cy="9.2" r="1.7"/><path d="M7.6 12.6 5 15.4v2.4h2.6M16.4 12.6l2.6 2.8v2.4h-2.6"/></svg><b class="num">510</b><span class="r">HP available</span></div><div class="puse"><span class="l">Regen</span> <i class="num">0</i> hp<span class="u"> in use</span></div></div></div>
     <div class="side r">
       <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
       <ul class="why" id="clWhy"></ul>
-      <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div><div class="mini" id="mVis"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Visibility</span></div><div class="mini" id="mAqi"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Air quality</span></div></div>
+      <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div><div class="mini" id="mSnow" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Snow</span></div><div class="mini" id="mAqi"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Air quality</span></div></div>
     </div>
   </div>
+  <div class="cl-wx" id="clWx" hidden></div>
   <div class="cl-bot">
-    <div class="cl-pill next" id="clNext" hidden></div>
+    <div class="cl-pill next" id="clNext" role="button" hidden></div>
     <div class="cl-pill" id="clRain" hidden></div>
     <div class="cl-pill warn" id="clIce" hidden></div>
     <div class="cl-pill warn" id="clGlare" hidden></div>
@@ -1107,8 +1157,14 @@ async function loadWx(){
       hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m?.[i],mm:j.hourly.precipitation?.[i]||0,snow:j.hourly.snowfall?.[i]||0,surf:j.hourly.soil_temperature_0cm?.[i],dew:j.hourly.dew_point_2m?.[i]})),elev:j.elevation,
       q15:(j.minutely_15?.time||[]).map((t,i)=>({t:new Date(t),mm:j.minutely_15.precipitation?.[i]||0,snow:j.minutely_15.snowfall?.[i]||0})),
       days:d.time.map((t,i)=>({date:t,icon:wcode(d.weather_code[i]).icon,hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),pp:d.precipitation_probability_max[i]||0}))};
+    loadSnowPast();
   }catch{}
   wxSig="";
+}
+// snowfall over the past 24 hours (separate call so the forecast arrays still start today)
+async function loadSnowPast(){
+  try{const j=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&hourly=snowfall&past_hours=24&forecast_hours=1&precipitation_unit=inch&timezone=auto`)).json();
+    const n=Date.now();if(WX)WX.snowPast=j.hourly.time.reduce((a,t,i)=>new Date(t)<=n?a+(j.hourly.snowfall[i]||0):a,0);CL.sig=""}catch{}
 }
 // Use the car's GPS when the browser allows it; fall back to the server's PLACE
 function km(a,b){const r=Math.PI/180,x=(b.lon-a.lon)*r*Math.cos((a.lat+b.lat)*r/2),y=(b.lat-a.lat)*r;return Math.hypot(x,y)*6371}
@@ -1173,7 +1229,7 @@ function setDrive(){const on=driveManual??moving;
   $("#driveSub").textContent=moving?(lastMph!=null?`${lastMph} mph`:"On the move"):driveManual?"Turned on by you · tap Exit to leave":"Stopped · switches back after 1 min";
   $("#driveBand").classList.toggle("moving",moving);document.documentElement.classList.toggle("drive",on);$("#drive").classList.toggle("on",on);$("#drive .lb").textContent=on?"Exit":"Drive";renderCluster(new Date());requestAnimationFrame(fitDrive)}
 // ---- drive mode cluster: speed gauge, outside temp, road risk, next stop ----
-const RPM_PER_MPH=115,RPM_MAX=20000,TOP_MPH=163;
+const RPM_PER_MPH=115,RPM_MAX=20000,TOP_MPH=180;
 // 2024 Model 3 Performance: ~1,910 kg with driver, Cd 0.22, ~2.2 m2 frontal area, 510 hp peak
 const CAR={kg:1910,cda:.22*2.2,crr:.011,hpMax:510,regenMax:170};
 const CL={acc:0,hp:0,pv:null,pt:0,head:null,fixAt:0,trip:null,last:null,sig:""};
@@ -1186,7 +1242,7 @@ function clGauge(sel,r,{max=100,minor=0,major=0,labels=[],extra=""}={}){
   labels.forEach(v=>{const[x,y]=clPt(r-33,clDeg(v/max));t+=`<text class="tl" x="${x}" y="${y}">${v}</text>`});
   $(sel+">svg").innerHTML=`${extra}<path class="trk" d="${clArc(r)}"/>${t}<path class="val" d="${clArc(r)}" pathLength="100" stroke-dasharray="0 100"/><g class="tip" style="transition:transform .9s cubic-bezier(.3,.7,.3,1);transform:rotate(-135deg)"><circle cy="${-r}" r="4.5" fill="#fff" filter="url(#clGlow)"/></g>`;
 }
-clGauge("#gSpeed",96,{max:TOP_MPH,minor:5,major:20,labels:[20,40,60,80,100,120,140,160],extra:`<circle class="dec1" r="118"/><circle class="dec2" r="126"/><path class="redl" d="${(()=>{const[a,b]=clPt(89,clDeg(140/TOP_MPH)),[c,d]=clPt(89,135);return`M${a} ${b}A89 89 0 0 1 ${c} ${d}`})()}"/><path class="rpmtrk" d="${clArc(107)}"/><path class="rpm" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`});
+clGauge("#gSpeed",96,{max:TOP_MPH,minor:5,major:20,labels:[20,40,60,80,100,120,140,160,180],extra:`<circle class="dec1" r="118"/><circle class="dec2" r="126"/><path class="redl" d="${(()=>{const[a,b]=clPt(89,clDeg(155/TOP_MPH)),[c,d]=clPt(89,135);return`M${a} ${b}A89 89 0 0 1 ${c} ${d}`})()}"/><path class="rpmtrk" d="${clArc(107)}"/><path class="rpm" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`});
 $("#gSpeed>svg").insertAdjacentHTML("beforeend",`<path class="shine" d="${clArc(96)}" pathLength="100" stroke-dasharray="0 100"/><path class="rpmshine" d="${clArc(107)}" pathLength="100" stroke-dasharray="0 100"/>`);
 clGauge("#gTemp",94,{max:100,minor:10,extra:(()=>{const[x0,y0]=clPt(80,clDeg(.32)),[x1,y1]=clPt(70,clDeg(.32)),[lx,ly]=clPt(108,clDeg(.32));return`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#8fd3ff" stroke-width="2.4"/><text class="tl fz" x="${lx}" y="${ly}">32°</text>`})()});
 clGauge("#gRoad",94);
@@ -1336,6 +1392,29 @@ function speedShine(t){
 let surgeAt=0;
 function speedSurge(acc){if(Date.now()-surgeAt<2500)return;const g=$("#gSpeed");if(!g)return;
   const cls=acc>2?"surge":acc<-2.5?"regen":null;if(!cls)return;surgeAt=Date.now();g.classList.remove("surge","regen");void g.offsetWidth;g.classList.add(cls)}
+
+// ---- winter / weather banner: the road outlook in big type, with snow totals ----
+const fmtIn=v=>(v<1?v.toFixed(1):String(Math.round(v*2)/2))+"″";
+function snowTotals(n){
+  const H=(WX?.hourly||[]).filter(h=>h.t>new Date(+n-36e5)&&h.t<=new Date(+n+24*36e5)&&h.snow>0),next=H.reduce((a,h)=>a+h.snow,0);
+  return{past:WX?.snowPast||0,next,until:H.length?new Date(+H[H.length-1].t+36e5):null};
+}
+function renderWxBanner(n,o){
+  const el=$("#clWx"),hr=t=>t.toDateString()===n.toDateString()?t.toLocaleTimeString([], {hour:"numeric"}):t.toLocaleString([], {weekday:"short",hour:"numeric"});
+  const wint=r=>r.ic==="snow"||r.ic==="ice";
+  const items=o.reasons.filter(r=>r.ic!=="moon"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"));
+  const c=WX.code,nowTxt=[71,73,75,77,85,86].includes(c)?"Snowing now":[56,57,66,67].includes(c)?"Freezing rain now":(c>=51&&c<=67)||(c>=80&&c<=82)?"Raining now":"";
+  const sn=snowTotals(n),chips=[];
+  if(sn.past>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.past)}</b> fell last 24 hrs`});
+  if(sn.next>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.next)}</b> more${sn.until?` by ${hr(sn.until)}`:""}`});
+  if(!items.length&&!chips.length&&!nowTxt){el.hidden=true;$("#clWhy").hidden=false;return}
+  const top=items[0],lvl=items.reduce((m,r)=>Math.max(m,LV[r.lvl]),0),ic=top?top.ic:nowTxt?(/Snow/.test(nowTxt)?"snow":/Freez/.test(nowTxt)?"ice":"rain"):"snow";
+  el.hidden=false;$("#clWhy").hidden=true;$("#clIce").hidden=true;
+  el.className="cl-wx "+["info","caution","hazard"][lvl]+(wint({ic})?" winter":"");
+  const head=top?(nowTxt&&!/now/i.test(top.text)?`${nowTxt} · ${top.text}`:top.text):nowTxt;
+  const rest=items.slice(1,3).map(r=>({ic:r.ic,t:esc(r.text),lvl:r.lvl}));
+  el.innerHTML=`<i class="wi"><svg viewBox="0 0 24 24">${RIC[ic]||RIC.warn}</svg></i><div class="wb"><div class="wh">${esc(head)}</div>${chips.length||rest.length?`<div class="wc">${[...chips,...rest].map(x=>`<span class="${x.lvl||""}"><svg viewBox="0 0 24 24">${RIC[x.ic]||RIC.warn}</svg>${x.t}</span>`).join("")}</div>`:""}</div>`;
+}
 function renderCluster(n){
   const de=document.documentElement;if(!de.classList.contains("drive"))return;
   $("#cluster").classList.toggle("moving",moving);
@@ -1351,7 +1430,8 @@ function renderCluster(n){
   {const fresh2=Date.now()-CL.fixAt<8e3,hp=fresh2?Math.round(CL.hp):0,el=$("#clPwr");
     el.querySelector(".pw").style.width=(Math.max(0,hp)/CAR.hpMax*50).toFixed(1)+"%";
     el.querySelector(".rg").style.width=(Math.max(0,-hp)/CAR.regenMax*50).toFixed(1)+"%";
-    el.querySelector("b").textContent=Math.abs(hp);el.classList.toggle("regen",hp<0);
+    const av=Math.max(0,CAR.hpMax-Math.max(0,hp));el.querySelector(".ptxt b").textContent=av;el.style.setProperty("--pf",(Math.max(0,hp)/CAR.hpMax).toFixed(2));
+    el.querySelector(".puse i").textContent=Math.abs(hp);el.classList.toggle("idle",hp===0);el.classList.toggle("regen",hp<0);
 }
   // everything else changes slowly
   const sig=[n.getMinutes(),!!WX,ALERTS.length,EVENTS.length,cds.length].join();if(sig===CL.sig)return;CL.sig=sig;
@@ -1373,7 +1453,9 @@ function renderCluster(n){
     else rn.hidden=true;
     clMini("#mWind",WX.windMph/40,WX.gust>=WX.windMph+8?`${WX.windMph}<small>/${WX.gust}</small>`:WX.windMph,null,`<svg viewBox="0 0 24 24" style="transform:rotate(${(WX.windDir+180)%360}deg)"><path d="M12 3v18M6 9l6-6 6 6"/></svg>`);
     clMini("#mHum",WX.hum/100,WX.hum+"%");renderExtras(n);
-    if(WX.vis!=null){const mi=WX.vis/1609;clMini("#mVis",mi/10,(mi>=10?"10+":mi<1?mi.toFixed(1):Math.round(mi))+"<small>mi</small>","Visibility");$("#mVis").classList.toggle("low",mi<2)}
+    {const sn=snowTotals(n),ms=$("#mSnow"),v=sn.next>=.1?sn.next:sn.past;ms.hidden=!(sn.next>=.1||sn.past>=.1);
+      if(!ms.hidden)clMini("#mSnow",v/6,fmtIn(v),sn.next>=.1?"Snow ahead":"Snow 24h",`<svg viewBox="0 0 24 24">${RIC.snow}</svg>`)}
+    renderWxBanner(n,o);
     const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
     if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4));clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}h${pad(left%60)}`:`${left}m`,dark?"Night":"Daylight")}
     if(st){const s=$("#clSun"),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;s.hidden=false;
@@ -1383,10 +1465,10 @@ function renderCluster(n){
   const evs=timed().filter(e=>e.s>n&&e.s-n<12*36e5).sort((a,b)=>a.s-b.s),cd=upcomingCds(n)[0];
   let nx=evs[0]?{t:evs[0].s,title:evs[0].title,ev:evs[0]}:null;
   if(cd&&new Date(cd.d)-n<12*36e5&&(!nx||new Date(cd.d)<nx.t))nx={t:new Date(cd.d),title:cd.n,ev:{title:cd.n,location:""}};
-  const ne=$("#clNext");ne.hidden=!nx;
+  const ne=$("#clNext");ne.hidden=!nx;const ei=nx?EVENTS.indexOf(nx.ev):-1;if(ei>=0){ne.dataset.ev=ei;ne.classList.add("tap")}else{delete ne.dataset.ev;ne.classList.remove("tap")}
   if(nx){const m=Math.max(0,Math.ceil((nx.t-n)/6e4)),h=Math.floor(m/60);ne.classList.toggle("soon",m<=15);
     const li=leaveInfo&&leaveInfo.ev===nx.ev?leaveInfo:null;
-    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${fmtT(nx.t)}</small><span class="ncd num">${m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>${li?`<span class="drv${li.late?" late":""}">· ${li.mins} min drive${li.late?", leave now":""}</span>`:""}`}
+    ne.innerHTML=`${evIcon(nx.ev)}<span class="nt">${esc(nx.title)}</span><small>${fmtT(nx.t)}</small><span class="ncd num">${m<1?"now":h?`${h}h ${m%60}m`:`${m} min`}</span>${li?`<span class="drv${li.late?" late":""}">· ${li.mins} min drive${li.late?", leave now":""}</span>`:""}${ei>=0?'<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>':""}`}
 }
 // ---- leave-by: geocode next event's location, drive time from here (OpenStreetMap) ----
 const geoCache=store.get("geoCache",{});
