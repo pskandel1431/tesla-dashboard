@@ -806,7 +806,22 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-pill.wet{color:#8fd3ff;border-color:rgba(79,216,255,.25)}
 .cl-pill[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){html.drive .cluster,.g-road.hazard .val{animation:none}}
-@media (max-aspect-ratio:1/1){html.drive .cluster{--u:min(1.5vw,calc(var(--vh,1vh)*1.1))}.cl-main{grid-template-columns:1fr 1fr;grid-template-areas:"s s" "t r";row-gap:calc(var(--u)*3)}.g-speed{grid-area:s}.side.l{grid-area:t}.side.r{grid-area:r}}
+/* taller windows (car browser not full-screen): big speedometer on top, temp + roads side by side below */
+@media (max-aspect-ratio:3/2){
+html.drive .cluster{--u:min(1.02vw,calc(var(--vh,1vh)*1.12))}
+.cl-main{grid-template-columns:1fr 1fr;grid-template-areas:"s s" "t r";row-gap:calc(var(--u)*1.2);align-content:center}
+.g-speed{grid-area:s;width:calc(var(--u)*44);height:calc(var(--u)*44)}
+.g-speed .sp{font-size:calc(var(--u)*14)}
+.side.l{grid-area:t}.side.r{grid-area:r}
+.side{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr auto 1fr;column-gap:calc(var(--u)*1.4);align-items:center;justify-items:center}
+.side>.gauge{grid-row:1/4;width:calc(var(--u)*21);height:calc(var(--u)*21)}
+.side>.cap,.side>.why{grid-row:2/3;grid-column:2;align-self:start}
+.side>.minis{grid-row:3/4;grid-column:2;align-self:start;gap:calc(var(--u)*1)}
+.side>.cap{grid-row:1/2;align-self:end}.side>.why{grid-row:1/2;align-self:end}
+.side .why li:nth-child(n+2){display:none}
+.cl-decor{display:none}
+}
+@media (max-aspect-ratio:1/1){html.drive .cluster{--u:min(1.5vw,calc(var(--vh,1vh)*1.1))}}
 
 /* cluster round 2: redline, decor rings, power bar, mini rings */
 .g-speed .redl{fill:none;stroke:#ff4d5e;stroke-width:3;opacity:.7;filter:url(#clGlow)}
