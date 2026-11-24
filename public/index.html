@@ -721,7 +721,7 @@ html.drive.hasnext main.simple .wx{align-content:space-evenly}
 .cluster{display:none}
 html.drive .wrap{display:none!important}
 html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidden;
-  --u:min(1vw,calc(var(--vh,1vh)*1.75));--cy:#4fd8ff;--cy2:#2a7bff;--ok:#3fe0a0;--warn:#ffb340;--bad:#ff4d5e;
+  --u:min(1vw,calc(var(--vh,1vh)*1.55));--cy:#4fd8ff;--cy2:#2a7bff;--ok:#3fe0a0;--warn:#ffb340;--bad:#ff4d5e;
   grid-template-rows:auto minmax(0,1fr) auto;padding:calc(var(--u)*1.6) calc(var(--u)*2.4);gap:calc(var(--u)*1);
   background:radial-gradient(ellipse 60% 55% at 50% 52%,rgba(79,216,255,.07),transparent 70%),radial-gradient(ellipse at 50% 120%,rgba(42,123,255,.10),transparent 60%),rgba(2,4,8,.9);
   color:#e8f4ff;font-family:var(--body);animation:clIn .5s ease both}
@@ -901,6 +901,14 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 .ptxt{font-size:calc(var(--u)*1.45)}.ptxt b{font-size:calc(var(--u)*2.4)}
 .g-speed .unit{font-size:calc(var(--u)*1.6)}
 .gauge .tl{font-size:11px}
+
+/* next stop: the hero of the bottom row */
+.cl-pill.next{font-size:calc(var(--u)*2.4);min-height:calc(var(--u)*6.4);padding:calc(var(--u)*.8) calc(var(--u)*2.4);gap:calc(var(--u)*1.1);border-width:2px}
+.cl-pill.next svg{width:calc(var(--u)*3);height:calc(var(--u)*3)}
+.cl-pill.next .nt{max-width:calc(var(--u)*34);font-weight:500}
+.cl-pill.next .ncd{font-size:1.45em}
+.cl-pill.next small{font-size:.75em}
+.cl-pill.next.soon{border-color:#ffb340;box-shadow:0 0 18px rgba(255,179,64,.35),inset 0 0 12px rgba(255,179,64,.12)}
 </style>
 </head><body>
 <div id="sky" aria-hidden="true"><div class="l aurora"><i></i><i></i><i></i></div><div class="l glow"></div><div class="l stars"><canvas></canvas><canvas></canvas><svg id="moon" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="rgba(200,210,230,.07)"/><path id="moonLit" fill="#f4f1e6"/></svg></div><div class="l clouds"></div><div class="l fog"></div><div class="l rain"></div><div class="l snow"></div><div class="l flash"></div><div class="l shade"></div></div>
