@@ -960,6 +960,20 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 .cl-wx{padding:calc(var(--u)*.7) calc(var(--u)*2)}.cl-wx .wi{width:calc(var(--u)*4.6);height:calc(var(--u)*4.6)}
 .cl-wx .wh{font-size:calc(var(--u)*2.2)}.cl-wx .wc{font-size:calc(var(--u)*1.6);flex-wrap:nowrap;overflow:hidden}.cl-wx .wc span{white-space:nowrap}.cl-wx .wc span:nth-child(n+4){display:none}}
 html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
+.cl-alerts{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.8);min-width:0}.cl-alerts>*{max-width:100%}
+.cl-rd{display:flex;align-items:center;gap:calc(var(--u)*1.2);padding:calc(var(--u)*.6) calc(var(--u)*2) calc(var(--u)*.6) calc(var(--u)*1);border-radius:calc(var(--u)*1.2);
+  background:linear-gradient(90deg,rgba(255,170,0,.22),rgba(40,26,0,.75) 30%);border:2px solid #ffc21a;box-shadow:0 0 20px rgba(255,180,20,.28);
+  border-left:calc(var(--u)*.9) solid transparent;border-image:none;position:relative;overflow:hidden}
+.cl-rd::before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--u)*.9);background:repeating-linear-gradient(-45deg,#ffc21a 0 6px,#1a1200 6px 12px)}
+.cl-rd[hidden]{display:none}
+.cl-rd .ri{flex:none;display:grid;place-items:center;width:calc(var(--u)*3.6);height:calc(var(--u)*3.6)}
+.cl-rd .cn{width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(255,150,20,.6))}
+.cl-rd .cb{fill:#ff8a1a}.cl-rd .cs{stroke:#fff;stroke-width:2.2;stroke-linecap:round}.cl-rd .cg{stroke:#ffb340;stroke-width:2.2;stroke-linecap:round}
+.cl-rd .rb{min-width:0;display:flex;flex-direction:column;gap:calc(var(--u)*.2);font-size:calc(var(--u)*1.8);font-weight:600;color:#ffe28a;line-height:1.25}
+.cl-rd .rb div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-rd.hazard{border-color:#ff7a1a;box-shadow:0 0 22px rgba(255,110,20,.4)}.cl-rd.hazard .rb{color:#ffc38a}
+@media (min-aspect-ratio:3/2){.cl-rd .rb{font-size:calc(var(--u)*1.5)}.cl-rd .ri{width:calc(var(--u)*3);height:calc(var(--u)*3)}}
+
 .side .why{color:#d2e0ee}
 
 /* banner text a touch smaller */
@@ -1005,7 +1019,7 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
       <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div><div class="mini" id="mSnow" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Snow</span></div><div class="mini" id="mElev" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Elev.</span></div><div class="mini" id="mAqi"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Air quality</span></div></div>
     </div>
   </div>
-  <div class="cl-wx" id="clWx" hidden></div>
+  <div class="cl-alerts"><div class="cl-wx" id="clWx" hidden></div><div class="cl-rd" id="clRd" hidden></div></div>
   <div class="cl-bot">
     <div class="cl-pill next" id="clNext" role="button" hidden></div>
     <div class="cl-pill warn" id="clCalErr" hidden></div>
@@ -1435,12 +1449,16 @@ function snowTotals(n){
 function renderWxBanner(n,o){
   const el=$("#clWx"),hr=t=>t.toDateString()===n.toDateString()?t.toLocaleTimeString([], {hour:"numeric"}):t.toLocaleString([], {weekday:"short",hour:"numeric"});
   const wint=r=>r.ic==="snow"||r.ic==="ice";
-  const items=o.reasons.filter(r=>r.ic!=="moon"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"||r.ic==="cone"));
+  {const rd=$("#clRd"),rs=o.reasons.filter(r=>r.ic==="cone").slice(0,2);rd.hidden=!rs.length;
+   if(rs.length){const cone=`<svg viewBox="0 0 24 24" class="cn"><path class="cb" d="M10 3h4l4.5 15h-13z"/><path class="cs" d="M8.6 8.5h6.8M7.4 13h9.2"/><path class="cg" d="M3.5 21h17"/></svg>`;
+     rd.className="cl-rd"+(rs.some(r=>r.lvl==="hazard")?" hazard":"");
+     rd.innerHTML=`<i class="ri">${cone}</i><div class="rb">${rs.map(r=>`<div>${esc(r.text)}</div>`).join("")}</div>`}}
+  const items=o.reasons.filter(r=>r.ic!=="moon"&&r.ic!=="cone"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"));
   const c=WX.code,nowTxt=[71,73,75,77,85,86].includes(c)?"Snowing now":[56,57,66,67].includes(c)?"Freezing rain now":(c>=51&&c<=67)||(c>=80&&c<=82)?"Raining now":"";
   const sn=snowTotals(n),chips=[];
   if(sn.past>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.past)}</b> fell last 24 hrs`});
   if(sn.next>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.next)}</b> more${sn.until?` by ${hr(sn.until)}`:""}`});
-  if(!items.length&&!chips.length&&!nowTxt){el.hidden=true;$("#clWhy").hidden=false;return}
+  if(!items.length&&!chips.length&&!nowTxt){el.hidden=true;$("#clWhy").hidden=!$("#clRd").hidden;return}
   const top=items[0],lvl=items.reduce((m,r)=>Math.max(m,LV[r.lvl]),0),ic=top?top.ic:nowTxt?(/Snow/.test(nowTxt)?"snow":/Freez/.test(nowTxt)?"ice":"rain"):"snow";
   el.hidden=false;$("#clWhy").hidden=true;$("#clIce").hidden=true;
   {const rn=$("#clRain");if(!rn.hidden&&!/now$/.test(rn.textContent)&&!/now/i.test(nowTxt)){chips.unshift({ic:/Snow/.test(rn.textContent)?"snow":"rain",t:`<b>${esc(rn.textContent)}</b>`})}rn.hidden=true}
