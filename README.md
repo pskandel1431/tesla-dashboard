@@ -13,6 +13,8 @@ Runs as one Cloudflare Worker (free tier). The Worker serves the page behind a p
    - `DASH_PASSWORD`: what you'll type in the car
    - `SESSION_SECRET`: any long random string (e.g. 40+ characters)
    - `TODOIST_TOKEN`: from step 2
+   - `HOME_ADDRESS` (optional): home street address or `lat,lon`; shows "Parked at Home" when parked there
+   - `MASSDOT_WZ_KEY` (optional): MassDOT work-zone feed key
    - `CALENDARS`: JSON list, e.g.
      ```json
      [{"name":"Personal","url":"https://calendar.google.com/calendar/ical/.../basic.ics","color":"blue"},
