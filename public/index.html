@@ -1668,7 +1668,7 @@ async function loadWz(){
     CL.sig="";wxSig=""}catch{}
 }
 function nearWz(n){const here=HERE||PLACE;if(!here||!WZ.list.length)return[];
-  return WZ.list.filter(z=>(!z.s||z.s<=n)&&(!z.e||z.e>n)).map(z=>({...z,d:Math.min(...z.pts.map(p=>km(here,p)))})).filter(z=>z.d<16.1).sort((a,b)=>a.d-b.d)}
+  return WZ.list.filter(z=>(!z.s||z.s<=n)&&(!z.e||z.e>n)).map(z=>({...z,d:Math.min(...z.pts.map(p=>km(here,p)))})).filter(z=>z.d<8).sort((a,b)=>a.d-b.d)}
 function roadOutlook(n){
   const R=[],add=(lvl,text,ic)=>R.push({lvl,text,ic:ic||(/snow/i.test(text)?"snow":/freez|ice|icy|cold/i.test(text)?"ice":/rain|wet/i.test(text)?"rain":/wind|gust/i.test(text)?"wind":/fog/i.test(text)?"fog":/heat|hot/i.test(text)?"heat":/dark/i.test(text)?"moon":/thunder/i.test(text)?"bolt":"warn")});
   const H=(WX?.hourly||[]).filter(h=>h.t>new Date(n.getTime()-36e5)&&h.t<=new Date(n.getTime()+24*36e5));
@@ -1696,7 +1696,7 @@ function roadOutlook(n){
   const ts=H.filter(h=>h.code>=95&&h.t<=new Date(+n+6*36e5));
   if(WX&&WX.code>=95)add("hazard","Thunderstorms now, lightning nearby","bolt");
   else if(ts.length)add(ts[0].t<=new Date(+n+36e5)?"hazard":"caution",`Thunderstorms ${span(ts)}, lightning possible`,"bolt");
-  // nearby work zones and closures (within 10 mi)
+  // nearby work zones and closures (within ~5 mi)
   // merge zones that are the same road + impact in opposite directions (e.g. I-93 NB and SB)
   const DIRX=/\s*(?:-\s*)?\b(NB|SB|EB|WB|Northbound|Southbound|Eastbound|Westbound)\b\.?$/i,DAB={northbound:"NB",southbound:"SB",eastbound:"EB",westbound:"WB"};
   const wzG=[];nearWz(n).slice(0,8).forEach(z=>{const m=DIRX.exec(z.road||""),base=m?(z.road.slice(0,m.index).trim()):(z.road||""),dir=m?(DAB[m[1].toLowerCase()]||m[1].toUpperCase()):"";
