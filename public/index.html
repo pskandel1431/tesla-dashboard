@@ -971,6 +971,7 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
 .cl-rd .cb{fill:#ff8a1a}.cl-rd .cs{stroke:#fff;stroke-width:2.2;stroke-linecap:round}.cl-rd .cg{stroke:#ffb340;stroke-width:2.2;stroke-linecap:round}
 .cl-rd .rb{min-width:0;display:flex;flex-direction:column;gap:calc(var(--u)*.2);font-size:calc(var(--u)*1.8);font-weight:600;color:#ffe28a;line-height:1.25}
 .cl-rd .rb div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-rd .rm{flex:none;font-size:calc(var(--u)*1.4);font-weight:700;color:#1a1200;background:#ffc21a;border-radius:99px;padding:calc(var(--u)*.2) calc(var(--u)*.9)}
 .cl-rd.hazard{border-color:#ff7a1a;box-shadow:0 0 22px rgba(255,110,20,.4)}.cl-rd.hazard .rb{color:#ffc38a}
 @media (min-aspect-ratio:3/2){.cl-rd .rb{font-size:calc(var(--u)*1.5)}.cl-rd .ri{width:calc(var(--u)*3);height:calc(var(--u)*3)}}
 
@@ -1452,7 +1453,7 @@ function renderWxBanner(n,o){
   {const rd=$("#clRd"),rs=o.reasons.filter(r=>r.ic==="cone").slice(0,2);rd.hidden=!rs.length;
    if(rs.length){const cone=`<svg viewBox="0 0 24 24" class="cn"><path class="cb" d="M10 3h4l4.5 15h-13z"/><path class="cs" d="M8.6 8.5h6.8M7.4 13h9.2"/><path class="cg" d="M3.5 21h17"/></svg>`;
      rd.className="cl-rd"+(rs.some(r=>r.lvl==="hazard")?" hazard":"");
-     rd.innerHTML=`<i class="ri">${cone}</i><div class="rb">${rs.map(r=>`<div>${esc(r.text)}</div>`).join("")}</div>`}}
+     rd.innerHTML=`<i class="ri">${cone}</i><div class="rb"><div>${esc(rs[0].text)}</div></div>${rs.length>1?`<span class="rm">+${rs.length-1} more</span>`:""}`}}
   const items=o.reasons.filter(r=>r.ic!=="moon"&&r.ic!=="cone"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"));
   const c=WX.code,nowTxt=[71,73,75,77,85,86].includes(c)?"Snowing now":[56,57,66,67].includes(c)?"Freezing rain now":(c>=51&&c<=67)||(c>=80&&c<=82)?"Raining now":"";
   const sn=snowTotals(n),chips=[];
@@ -1696,7 +1697,12 @@ function roadOutlook(n){
   if(WX&&WX.code>=95)add("hazard","Thunderstorms now, lightning nearby","bolt");
   else if(ts.length)add(ts[0].t<=new Date(+n+36e5)?"hazard":"caution",`Thunderstorms ${span(ts)}, lightning possible`,"bolt");
   // nearby work zones and closures (within ~5 mi)
-  nearWz(n).slice(0,2).forEach(z=>{const lm0=/^(\d+)-of-(\d+)-lanes-closed$/.exec(z.impact),closed=/^(all-lanes-closed|road-closed)$/i.test(z.impact)||!!(lm0&&+lm0[1]>=+lm0[2]),mi=z.d/1.609;
+  // merge zones that are the same road + impact in opposite directions (e.g. I-93 NB and SB)
+  const DIRX=/\s*(?:-\s*)?\b(NB|SB|EB|WB|Northbound|Southbound|Eastbound|Westbound)\b\.?$/i,DAB={northbound:"NB",southbound:"SB",eastbound:"EB",westbound:"WB"};
+  const wzG=[];nearWz(n).slice(0,8).forEach(z=>{const m=DIRX.exec(z.road||""),base=m?(z.road.slice(0,m.index).trim()):(z.road||""),dir=m?(DAB[m[1].toLowerCase()]||m[1].toUpperCase()):"";
+    const g=wzG.find(g=>g.base===base&&g.impact===z.impact&&base);if(g){if(dir&&!g.dirs.includes(dir))g.dirs.push(dir)}else wzG.push({...z,base,dirs:dir?[dir]:[]})});
+  wzG.forEach(g=>{if(g.dirs.length)g.road=`${g.base} ${g.dirs.join("/")}`});
+  wzG.slice(0,2).forEach(z=>{const lm0=/^(\d+)-of-(\d+)-lanes-closed$/.exec(z.impact),closed=/^(all-lanes-closed|road-closed)$/i.test(z.impact)||!!(lm0&&+lm0[1]>=+lm0[2]),mi=z.d/1.609;
     const lm=/^(\d+)-of-(\d+)-lanes-closed$/.exec(z.impact);
     const alt=/alternating/i.test(z.impact),one=alt||!!(lm&&+lm[2]-+lm[1]===1&&+lm[2]>1);
     const imp=alt?", alternating with flaggers":one?` (1 of ${lm[2]} open)`:lm?(+lm[1]>=+lm[2]?", all lanes closed":`, ${lm[1]} of ${lm[2]} lanes closed`):/shoulder-closed/.test(z.impact)?", shoulder closed":/some-lanes-closed/i.test(z.impact)?", lane closed":/alternating/i.test(z.impact)?", one lane alternating":/shift|merge/i.test(z.impact)?", lanes shifted":"";
