@@ -157,13 +157,45 @@ async function workZones(env, ctx) {
 }
 
 // Tolerate stray spaces in secret names typed on a phone ("DASH_PASSWORD ").
+// Home geofence: HOME_ADDRESS secret is a street address or "lat,lon". Address is geocoded once (US Census, then OSM) and cached.
+let HOME_CACHE = null;
+async function homeSpot(env, ctx) {
+  const a = env.HOME_ADDRESS;
+  if (!a) return null;
+  if (HOME_CACHE && HOME_CACHE.a === a) return HOME_CACHE.v;
+  const ll = a.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  let v = ll ? { lat: +ll[1], lon: +ll[2] } : null;
+  if (!v) {
+    const key = new Request("https://cache.local/home/" + encodeURIComponent(a));
+    const hit = await caches.default.match(key).catch(() => null);
+    if (hit) v = await hit.json();
+    if (!v) {
+      try {
+        const r = await fetch(`https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=json&address=${encodeURIComponent(a)}`);
+        const m = (await r.json())?.result?.addressMatches?.[0]?.coordinates;
+        if (m) v = { lat: m.y, lon: m.x };
+      } catch {}
+      if (!v) {
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(a)}`, { headers: { "user-agent": "tesla-dashboard/1.0" } });
+          const m = (await r.json())?.[0];
+          if (m) v = { lat: +m.lat, lon: +m.lon };
+        } catch {}
+      }
+      if (v) ctx?.waitUntil?.(caches.default.put(key, new Response(JSON.stringify(v), { headers: { "cache-control": "max-age=2592000" } })));
+    }
+  }
+  if (v) HOME_CACHE = { a, v };
+  return v;
+}
+
 function cleanEnv(env) {
   const out = { ...env };
   for (const k of Object.keys(env)) {
     const t = k.trim();
     if (t !== k && !(t in out)) out[t] = env[k];
   }
-  for (const k of ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN", "MASSDOT_WZ_KEY"]) {
+  for (const k of ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN", "MASSDOT_WZ_KEY", "HOME_ADDRESS"]) {
     if (typeof out[k] === "string") out[k] = out[k].trim();
   }
   return out;
@@ -213,7 +245,7 @@ async function handle(req, rawEnv, ctx) {
       return json({
         calendars: cals.map((c, i) => ({ id: i, name: c.name || `Calendar ${i + 1}`, color: c.color || "blue" })),
         tasks: td.tasks, errors: [...errors, ...td.errors],
-        place: { name: env.PLACE, lat: +env.LAT, lon: +env.LON }, generated: new Date().toISOString(),
+        place: { name: env.PLACE, lat: +env.LAT, lon: +env.LON }, home: await homeSpot(env, ctx), generated: new Date().toISOString(),
       });
     }
     const c = url.pathname.match(/^\/api\/cal\/(\d+)$/);
