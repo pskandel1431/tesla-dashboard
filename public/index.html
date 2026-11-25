@@ -746,6 +746,7 @@ html.drive .cluster{display:grid;position:fixed;inset:0;z-index:5;overflow:hidde
 .cl-road{font-size:calc(var(--u)*1.3);color:#9fb3c8;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(var(--u)*40)}
 .cl-road b{color:#e8f4ff;font-weight:500}
 .cl-road .elv{color:#7f93ab}
+.cl-road svg.hm{width:1.05em;height:1.05em;vertical-align:-.12em;margin-right:.4em;fill:none;stroke:#7fe3a0;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #7fe3a0)}
 #mAqi{--mc:var(--aq,#3fe0a0)} #mVis{--mc:#c9d6ff} #mVis.low{--mc:#ffb340}
 .cl-exit{display:flex;align-items:center;gap:calc(var(--u)*.6);min-height:56px;padding:0 calc(var(--u)*1.8);border-radius:999px;border:1px solid rgba(79,216,255,.3)!important;background:rgba(79,216,255,.06)!important;color:#bfe9ff!important;font:600 calc(var(--u)*1.3)/1 var(--body)!important;letter-spacing:.12em;text-transform:uppercase}
 .cl-exit svg{width:1.2em;height:1.2em}
@@ -1142,7 +1143,7 @@ async function load(){
     if(r.status===401){location.href="/login";return}
     let j;try{j=await r.json()}catch{throw new Error(`Server returned ${r.status}`)}
     if(!r.ok||j.error)throw new Error(j.error||`Server returned ${r.status}`);
-    const errs=[...(j.errors||[])];
+    const errs=[...(j.errors||[])];HOME=j.home||null;
     // Window: yesterday through 4 days out. Parsing happens here, not on the server.
     const from=new Date(Date.now()-36*36e5),to=new Date(Date.now()+4*864e5);
     const lists=await Promise.all(j.calendars.map(async c=>{
@@ -1329,7 +1330,7 @@ function clCompass(){
     if(mj){const L=DIRS[a/45];t+=`<text x="${x}" y="13.5" class="${L.length===1?"card":""}${L==="N"?" n":""}">${L}</text>`}}
   const sv=$("#clComp svg");sv.innerHTML=t;sv.style.opacity=h==null?.35:1;
 }
-const GEO2={at:0,pos:null,road:"",town:""},POI={pos:null,name:"",at:0},WZ={at:0,list:[],off:false};
+let HOME=null;const GEO2={at:0,pos:null,road:"",town:""},POI={pos:null,name:"",at:0},WZ={at:0,list:[],off:false};
 async function clRevGeo(){
   if(!HERE||Date.now()-GEO2.at<15e3)return;if(GEO2.pos&&km(GEO2.pos,HERE)<.12&&GEO2.road)return;
   GEO2.at=Date.now();const pos={...HERE};
@@ -1340,16 +1341,19 @@ async function clRevGeo(){
 const POI_SKIP=/^(parking|parking_space|parking_entrance|bench|waste_basket|recycling|bicycle_parking|charging_station|atm|vending_machine|post_box|telephone|toilets|shelter|drinking_water|fire_hydrant)$/;
 async function clPoi(){
   const parked=stillSince&&Date.now()-stillSince>15e3;if(!parked||!HERE){if(!parked)POI.name="";return}
+  if(atHome())return;
   if(POI.pos&&km(POI.pos,HERE)<.05)return;if(Date.now()-POI.at<20e3)return;POI.at=Date.now();const pos={...HERE};
   const q=`[out:json][timeout:8];nwr(around:70,${pos.lat},${pos.lon})[name][~"^(shop|amenity|leisure|tourism|office|healthcare|craft|sport)$"~"."];out center 20;`;
   try{const j=await (await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q))).json();
     const best=(j.elements||[]).filter(e=>!POI_SKIP.test(e.tags.amenity||"")).map(e=>{const c=e.center||e;return{n:e.tags.name,d:km(pos,{lat:c.lat,lon:c.lon})}}).sort((a,b)=>a.d-b.d)[0];
     POI.pos=pos;POI.name=best?best.n:"";CL.sig=""}catch{}
 }
+function atHome(){return !!(HOME&&HERE&&km(HOME,HERE)<.12)}
 function clRoadLine(){
   clRevGeo();clPoi();loadWz();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
   const ft=CL.alt!=null?Math.round(CL.alt*3.281):WX?.elev!=null?Math.round(WX.elev*3.281):null,elv="";
   {const me=$("#mElev");me.hidden=ft==null;if(ft!=null&&me.dataset.v!==String(ft)){me.dataset.v=ft;clMini("#mElev",Math.max(.02,ft/2000),ft>=1000?`${(ft/1000).toFixed(1)}<small>k ft</small>`:`${ft}<small>ft</small>`)}}
+  if(stillSince&&Date.now()-stillSince>15e3&&atHome()){el.innerHTML=`<svg class="hm" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg>Parked at <b>Home</b>`;return}
   if(POI.name&&stillSince&&Date.now()-stillSince>15e3){el.innerHTML=`Parked at <b>${esc(POI.name)}</b>${GEO2.road?` · ${esc(GEO2.road)}`:""}`+elv;return}
   if(!where){el.textContent=moving&&h!=null?`Heading ${DIRW[Math.round(h/45)%8]}`:"";return}
   const on=GEO2.road?`on <b>${esc(GEO2.road)}</b>`:`in <b>${esc(GEO2.town)}</b>`;

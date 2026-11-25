@@ -5,7 +5,7 @@ import { writeFileSync, rmSync } from "node:fs";
 
 execSync("npx wrangler deploy", { stdio: "inherit" });
 
-const NAMES = ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN", "MASSDOT_WZ_KEY"];
+const NAMES = ["DASH_PASSWORD", "SESSION_SECRET", "CALENDARS", "TODOIST_TOKEN", "MASSDOT_WZ_KEY", "HOME_ADDRESS"];
 const secrets = Object.fromEntries(NAMES.filter(n => process.env[n]?.trim()).map(n => [n, process.env[n].trim()]));
 if (!Object.keys(secrets).length) {
   console.log("No secret build variables set; skipping secret upload.");
