@@ -930,8 +930,8 @@ html.drive .cluster{background:radial-gradient(ellipse 60% 55% at 50% 52%,color-
 .rkt .fl{fill:#ff9a3c;stroke:#ffd27a;stroke-width:1;transform-origin:12px 17px;transform:scaleY(calc(.55 + var(--pf,0)*1.6));opacity:calc(.6 + var(--pf,0)*.4);filter:drop-shadow(0 0 3px #ff7a2a);animation:clFlame .18s ease-in-out infinite alternate}
 @keyframes clFlame{to{transform:scaleY(calc(.45 + var(--pf,0)*1.9))}}
 @media (prefers-reduced-motion:reduce){.rkt .fl{animation:none}}
-.puse{font-size:calc(var(--u)*1.3);color:#8fa3bb;letter-spacing:.06em}
-.puse i{font-style:normal;color:#d6ccff}.puse .l{display:none;color:#3fe0a0}
+.puse{font-size:calc(var(--u)*1.9);color:#a9b8cc;letter-spacing:.04em;font-weight:500}
+.puse i{font-style:normal;color:#fff;font-weight:700;font-size:1.15em}.puse .l{display:none;color:#3fe0a0}
 .pwr.regen .puse .l{display:inline}.pwr.regen .puse .u{display:none}.pwr.regen .puse i{color:#9ff0cc}
 .pwr.idle .puse{visibility:hidden}
 /* next stop opens its details */
@@ -982,14 +982,20 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
 @media (min-aspect-ratio:3/2){.cl-wx .wh{font-size:calc(var(--u)*1.9)}.cl-wx .wc{font-size:calc(var(--u)*1.4)}.cl-wx .wi{width:calc(var(--u)*4.2);height:calc(var(--u)*4.2)}}
 
 /* tach ring: own scale, eases between readings, glows hot near the top */
-.g-speed .rpm{transition:stroke-dasharray .45s cubic-bezier(.3,.7,.3,1),stroke .3s}
+.g-speed .rpm{transition:stroke-dasharray .22s ease-out,stroke .3s}
 .g-speed .rpm.hot{stroke:#ff5fa2;filter:url(#clGlow) drop-shadow(0 0 4px #ff5fa2)}
 
 /* wind compass, roomier daylight, elevation */
 .mini.wind{--mc:#7fd8ff}.mini.wind.gusty{--mc:#ffb340}
 .mini .wdir{position:absolute;top:0;left:0;width:100%;aspect-ratio:1;transition:transform 1s ease;pointer-events:none}
 .mini .wdir::before{content:"";position:absolute;left:50%;top:3%;transform:translateX(-50%);border:calc(var(--u)*.75) solid transparent;border-top:calc(var(--u)*1.15) solid var(--mc);border-bottom:0;filter:drop-shadow(0 0 3px var(--mc))}
-#mDay b{font-size:calc(var(--u)*2.2)}
+.mini .wsv,.mini .dsv{transform:none}
+.wsv .war{transform-origin:20px 20px;transition:transform 1s ease}.wsv .war path{fill:var(--mc);filter:drop-shadow(0 0 4px var(--mc))}
+.mini.wind span{text-transform:none;letter-spacing:.02em;color:#cfe6f7;font-size:calc(var(--u)*1.35)}.mini.wind span{text-align:center;line-height:1.15}.mini.wind .gu{display:block;font-style:normal;font-size:.85em;color:#ffd38a}.mini.wind span b{position:static;transform:none;font:600 1.35em/1 var(--display);color:#fff}
+.dsv .hz{stroke:rgba(200,225,255,.35);stroke-width:1}.dsv .sa{fill:none;stroke:rgba(255,210,122,.25);stroke-width:1.4;stroke-dasharray:1.6 1.6}
+.dsv .sp{fill:none;stroke:#ffd27a;stroke-width:1.6;stroke-linecap:round}.dsv .sd{fill:#ffd27a;filter:drop-shadow(0 0 3px #ffb340)}
+.dsv .dl{fill:#e8f4ff;font:600 6.4px var(--body);text-anchor:middle}
+#mDay.night .sd{fill:#b9c8ff;filter:drop-shadow(0 0 3px #8fa6ff)}#mDay.night .sp{stroke:none}#mDay span{letter-spacing:.06em}
 #mElev{--mc:#b7f0a0} #mElev[hidden]{display:none}
 </style>
 </head><body>
@@ -1011,13 +1017,13 @@ html.drive .cluster{grid-template-columns:minmax(0,1fr)}.cl-wx{min-width:0}
     <div class="side l">
       <div class="gauge g-side g-temp" id="gTemp"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Outside</div><div class="big num">--°</div><div class="sub"></div></div></div>
       <div class="cap" id="clCond"></div>
-      <div class="minis"><div class="mini wind" id="mWind"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="wdir"></i><b class="num">--</b><span>Wind</span></div><div class="mini" id="mPrec"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Precip 2h</span></div><div class="mini" id="mHum"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Humidity</span></div></div>
+      <div class="minis"><div class="mini wind" id="mWind"><svg viewBox="0 0 40 40" class="wsv"><circle class="mt" cx="20" cy="20" r="16"/><g class="war"><path d="M20 6.5 29 19.5H23.6V33H16.4V19.5H11Z"/></g></svg><span>Wind</span></div><div class="mini" id="mPrec"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Precip 2h</span></div><div class="mini" id="mHum"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Humidity</span></div></div>
     </div>
     <div class="gauge g-speed" id="gSpeed"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="sp num">--</div><div class="unit">MPH</div><div class="rpmtxt num" id="clRpm"></div></div><div class="pwr" id="clPwr"><div class="pbar"><i class="rg"></i><i class="pw"></i><u></u></div><div class="ptxt"><svg class="rkt" viewBox="0 0 24 24"><path class="fl" d="M9.6 17.2c0 2.3 1.2 4 2.4 4.8 1.2-.8 2.4-2.5 2.4-4.8z"/><path d="M12 2c3 2.4 4.4 6 4.4 10v4.6H7.6V12C7.6 8 9 4.4 12 2z"/><circle cx="12" cy="9.2" r="1.7"/><path d="M7.6 12.6 5 15.4v2.4h2.6M16.4 12.6l2.6 2.8v2.4h-2.6"/></svg><b class="num">510</b><span class="r">HP available</span></div><div class="puse"><span class="l">Regen</span> <i class="num">0</i> hp<span class="u"> in use</span></div></div></div>
     <div class="side r">
       <div class="gauge g-side g-road" id="gRoad"><svg viewBox="-110 -110 220 220"></svg><div class="ctr"><div class="lbl">Roads</div><svg class="ic" viewBox="0 0 24 24"></svg><div class="word">--</div></div></div>
       <ul class="why" id="clWhy"></ul>
-      <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Daylight</span></div><div class="mini" id="mSnow" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Snow</span></div><div class="mini" id="mElev" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Elev.</span></div><div class="mini" id="mAqi"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Air quality</span></div></div>
+      <div class="minis"><div class="mini" id="mDay"><svg viewBox="0 0 40 40" class="dsv"><circle class="mt" cx="20" cy="20" r="16"/><path class="hz" d="M6.5 24.5H33.5"/><path class="sa" d="M8.5 24.5A11.5 11.5 0 0 1 31.5 24.5"/><path class="sp" d="M8.5 24.5A11.5 11.5 0 0 1 31.5 24.5" pathLength="100" stroke-dasharray="0 100"/><circle class="sd" r="2.8" cx="8.5" cy="24.5"/><text class="dl" x="20" y="32.6">--</text></svg><span>Daylight</span></div><div class="mini" id="mSnow" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Snow</span></div><div class="mini" id="mElev" hidden><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Elev.</span></div><div class="mini" id="mAqi"><svg viewBox="0 0 40 40"><circle class="mt" cx="20" cy="20" r="16"/><circle class="mv" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><i class="mi"></i><b class="num">--</b><span>Air quality</span></div></div>
     </div>
   </div>
   <div class="cl-alerts"><div class="cl-wx" id="clWx" hidden></div><div class="cl-rd" id="clRd" hidden></div></div>
@@ -1180,12 +1186,12 @@ async function loadWx(){
   if(!PLACE)return;
   loadFcst();loadAlerts();
   try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=visibility,temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability,weather_code,temperature_2m,precipitation,snowfall,soil_temperature_0cm,dew_point_2m&minutely_15=precipitation,snowfall&forecast_minutely_15=8&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=5`;
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${PLACE.lat}&longitude=${PLACE.lon}&current=visibility,precipitation,temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability,weather_code,temperature_2m,precipitation,snowfall,soil_temperature_0cm,dew_point_2m&minutely_15=precipitation,snowfall&forecast_minutely_15=8&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=5`;
     const j=await (await fetch(u)).json();const c=j.current,d=j.daily;
     const dirs=["N","NE","E","SE","S","SW","W","NW"];
     WX={temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),hum:c.relative_humidity_2m,vis:c.visibility,
       wind:`${dirs[Math.round(c.wind_direction_10m/45)%8]} ${Math.round(c.wind_speed_10m)} mph`,
-      code:c.weather_code,...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
+      code:c.weather_code,pNow:c.precipitation||0,...wcode(c.weather_code),hi:Math.round(d.temperature_2m_max[0]),lo:Math.round(d.temperature_2m_min[0]),
       windDir:c.wind_direction_10m,windMph:Math.round(c.wind_speed_10m),gust:Math.round(c.wind_gusts_10m??c.wind_speed_10m),
       hourly:j.hourly.time.map((t,i)=>({t:new Date(t),pp:j.hourly.precipitation_probability[i]||0,code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m?.[i],mm:j.hourly.precipitation?.[i]||0,snow:j.hourly.snowfall?.[i]||0,surf:j.hourly.soil_temperature_0cm?.[i],dew:j.hourly.dew_point_2m?.[i]})),elev:j.elevation,
       q15:(j.minutely_15?.time||[]).map((t,i)=>({t:new Date(t),mm:j.minutely_15.precipitation?.[i]||0,snow:j.minutely_15.snowfall?.[i]||0})),
@@ -1264,7 +1270,7 @@ function setDrive(){const on=driveManual??moving;
 // ---- drive mode cluster: speed gauge, outside temp, road risk, next stop ----
 const RPM_PER_MPH=115,RPM_MAX=20000,TOP_MPH=180;
 // 2024 Model 3 Performance: ~1,910 kg with driver, Cd 0.22, ~2.2 m2 frontal area, 510 hp peak
-const CAR={kg:1910,cda:.22*2.2,crr:.011,hpMax:510,regenMax:170};
+const CAR={kg:2000,eff:.9,cda:.22*2.2,crr:.011,hpMax:510,regenMax:170};
 const CL={acc:0,hp:0,pv:null,pt:0,head:null,fixAt:0,trip:null,last:null,sig:""};
 const clPt=(r,deg)=>{const a=deg*Math.PI/180;return[+(r*Math.sin(a)).toFixed(2),+(-r*Math.cos(a)).toFixed(2)]};
 const clArc=r=>{const[a,b]=clPt(r,-135),[c,d]=clPt(r,135);return`M${a} ${b}A${r} ${r} 0 1 1 ${c} ${d}`};
@@ -1284,10 +1290,10 @@ function clTrack(p){
   const c=p.coords,h=c.heading;CL.fixAt=Date.now();if(c.altitude!=null&&!isNaN(c.altitude)&&(c.altitudeAccuracy??0)<60)CL.alt=c.altitude;
   const v=c.speed,t=p.timestamp||Date.now();
   if(v!=null&&!isNaN(v)){
-    if(CL.pv!=null){const dt=(t-CL.pt)/1e3;if(dt>.3&&dt<6){const a=(v-CL.pv)/dt;CL.acc=CL.acc*.4+a*.6}}
+    if(CL.pv!=null){const dt=(t-CL.pt)/1e3;if(dt>.3&&dt<6){const a=(v-CL.pv)/dt;CL.acc=CL.acc*.15+a*.85}}
     CL.pv=v;CL.pt=t;speedSurge(CL.acc);
     const W=CAR.kg*CL.acc*v+.5*1.2*CAR.cda*v**3+CAR.crr*CAR.kg*9.81*v;
-    CL.hp=v<.5?0:Math.max(-CAR.regenMax,Math.min(CAR.hpMax,W/745.7));
+    CL.hp=v<.5?0:Math.max(-CAR.regenMax,Math.min(CAR.hpMax,(W>0?W/CAR.eff:W*CAR.eff)/745.7));
     if(CL.trip&&CL.hp>CL.trip.peak)CL.trip.peak=CL.hp;
   }
   if(h!=null&&!isNaN(h)&&(c.speed??0)>1.5)CL.head=h;
@@ -1367,7 +1373,7 @@ function atHome(){return !!(HOME&&HERE&&km(HOME,HERE)<.12)}
 function clRoadLine(){
   clRevGeo();clPoi();loadWz();const el=$("#clRoad"),h=CL.head,where=GEO2.road||GEO2.town;
   const ft=CL.alt!=null?Math.round(CL.alt*3.281):WX?.elev!=null?Math.round(WX.elev*3.281):null,elv="";
-  {const me=$("#mElev");me.hidden=ft==null;if(ft!=null&&me.dataset.v!==String(ft)){me.dataset.v=ft;clMini("#mElev",Math.max(.02,ft/2000),ft>=1000?`${(ft/1000).toFixed(1)}<small>k ft</small>`:`${ft}<small>ft</small>`)}}
+  {const me=$("#mElev");me.hidden=ft==null;if(ft!=null&&me.dataset.v!==String(ft)){me.dataset.v=ft;clMini("#mElev",Math.max(.02,ft/2000),ft>=1000?`${(ft/1000).toFixed(1)}<small>k</small>`:`${ft}<small>ft</small>`)}}
   if(stillSince&&Date.now()-stillSince>15e3&&atHome()){el.innerHTML=`<svg class="hm" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg>Parked at <b>Home</b>`;return}
   if(POI.name&&stillSince&&Date.now()-stillSince>15e3){el.innerHTML=`Parked at <b>${esc(POI.name)}</b>${GEO2.road?` · ${esc(GEO2.road)}`:""}`+elv;return}
   if(!where){el.textContent=moving&&h!=null?`Heading ${DIRW[Math.round(h/45)%8]}`:"";return}
@@ -1455,7 +1461,7 @@ function renderWxBanner(n,o){
      rd.className="cl-rd"+(rs.some(r=>r.lvl==="hazard")?" hazard":"");
      rd.innerHTML=`<i class="ri">${cone}</i><div class="rb"><div>${esc(rs[0].text)}</div></div>${rs.length>1?`<span class="rm">+${rs.length-1} more</span>`:""}`}}
   const items=o.reasons.filter(r=>r.ic!=="moon"&&r.ic!=="cone"&&(r.lvl!=="info"||wint(r)||r.ic==="rain"));
-  const c=WX.code,nowTxt=[71,73,75,77,85,86].includes(c)?"Snowing now":[56,57,66,67].includes(c)?"Freezing rain now":(c>=51&&c<=67)||(c>=80&&c<=82)?"Raining now":"";
+  const c=WX.code,wn=wetNow(n),nowTxt=[71,73,75,77,85,86].includes(c)?"Snowing now":[56,57,66,67].includes(c)?"Freezing rain now":(c>=51&&c<=67)||(c>=80&&c<=82)?"Raining now":wn?(WX.temp<=32?"Snowing now":"Raining now"):"";
   const sn=snowTotals(n),chips=[];
   if(sn.past>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.past)}</b> fell last 24 hrs`});
   if(sn.next>=.1)chips.push({ic:"snow",t:`<b>${fmtIn(sn.next)}</b> more${sn.until?` by ${hr(sn.until)}`:""}`});
@@ -1479,8 +1485,10 @@ function renderCluster(n){
   // estimated motor RPM: Model 3 Performance 9.04:1 single gear, 20in tires (~26.6in) => ~115 RPM per mph
   const rpm=Math.round((mph||0)*RPM_PER_MPH);const rr=$("#gSpeed .rpm");
   // tach ring on its own scale: square-root sweep so it climbs fast at city speeds, plus a load kick from estimated power (revs on acceleration)
-  {const load=Date.now()-CL.fixAt<8e3?Math.max(0,CL.hp||0)/CAR.hpMax:0,tgt=rpm>0?Math.min(1,Math.sqrt(Math.min(1,rpm/RPM_MAX))+load*.35):0;
-   CL.rpmF=CL.rpmF==null?tgt:CL.rpmF+(tgt-CL.rpmF)*.5}
+  // pedal feel: power in use kicks the ring hard (most of it by ~250 hp), regen pulls it down
+  {const hpN=Date.now()-CL.fixAt<8e3?(CL.hp||0):0,kick=hpN>0?Math.pow(Math.min(1,hpN/250),.6)*.5:-Math.min(.18,-hpN/CAR.regenMax*.25),
+     tgt=rpm>0?Math.max(.03,Math.min(1,Math.sqrt(Math.min(1,rpm/RPM_MAX))*.8+kick)):0;
+   CL.rpmF=CL.rpmF==null?tgt:CL.rpmF+(tgt-CL.rpmF)*.85}
   rr.setAttribute("stroke-dasharray",`${(CL.rpmF*100).toFixed(1)} 100`);rr.style.opacity=rpm>0?1:0;rr.classList.toggle("hot",CL.rpmF>.85);
   $("#clRpm").innerHTML=mph==null?"":`<b>${rpm.toLocaleString()}</b> RPM <small>est.</small>`;
   clCompass();clRoadLine();renderGlare(n);
@@ -1508,9 +1516,9 @@ function renderCluster(n){
     const q=WX.q15||[],i=q.findIndex(x=>x.mm>0||x.snow>0),rn=$("#clRain");rn.hidden=false;
     if(i>=0){const sn=q[i].snow>0,what=sn?"Snow":"Rain",mins=Math.max(0,Math.round((q[i].t-n)/6e4));rn.className="cl-pill wet";rn.innerHTML=`<svg viewBox="0 0 24 24">${RIC[sn?"snow":"rain"]}</svg>${mins<10?`${what} now`:`${what} in ${mins} min`}`}
     else rn.hidden=true;
-    {const w=$("#mWind"),from=WX.windDir??0,D=["N","NE","E","SE","S","SW","W","NW"][Math.round(from/45)%8];
-      w.querySelector(".wdir").style.transform=`rotate(${from}deg)`;clMini("#mWind",Math.max(.03,WX.windMph/40),WX.windMph);
-      w.querySelector("span").textContent=`${D}${WX.gust>=WX.windMph+5?` · G${WX.gust}`:" wind"}`;w.classList.toggle("gusty",WX.gust>=30)}
+    {const w=$("#mWind"),from=WX.windDir??0,g=WX.gust>=WX.windMph+5;
+      w.querySelector(".war").style.transform=`rotate(${(from+180)%360}deg)`;
+      w.querySelector("span").innerHTML=`<b>${WX.windMph}</b> mph${g?`<i class="gu">gust ${WX.gust}</i>`:""}`;w.classList.toggle("gusty",WX.gust>=30)}
     if(0)clMini("#mWind",WX.windMph/40,WX.gust>=WX.windMph+8?`${WX.windMph}<small>/${WX.gust}</small>`:WX.windMph,null,`<svg viewBox="0 0 24 24" style="transform:rotate(${(WX.windDir+180)%360}deg)"><path d="M12 3v18M6 9l6-6 6 6"/></svg>`);
     clMini("#mHum",WX.hum/100,WX.hum+"%");renderExtras(n);
     {const sn=snowTotals(n),ms=$("#mSnow"),v=sn.next>=.1?sn.next:sn.past;ms.hidden=!(sn.next>=.1||sn.past>=.1);
@@ -1518,7 +1526,10 @@ function renderCluster(n){
     renderWxBanner(n,o);
     const H2=(WX.hourly||[]).filter(h=>h.t>new Date(n-36e5)&&h.t<new Date(+n+2*36e5)),pp=H2.length?Math.max(...H2.map(h=>h.pp)):0;clMini("#mPrec",pp/100,pp+"%");
     if(st){const dl=st.set-st.rise,f=dark?0:(st.set-n)/dl,left=Math.max(0,Math.round((st.set-n)/6e4)),nx=dark?(n<st.rise?st.rise:sunTimes(new Date(n.getTime()+864e5),PLACE.lat,PLACE.lon).rise):st.set;
-      clMini("#mDay",f,dark?"Dark":left>=60?`${Math.floor(left/60)}:${pad(left%60)}`:`${left}<small>m</small>`,`${dark?"Rise":"Sets"} ${fmtT(nx).replace(/\s?[AP]M/i,"")}`,"")}
+      {const d=$("#mDay"),p=dark?0:Math.min(1,Math.max(0,(n-st.rise)/dl)),a=Math.PI*p,x=20-11.5*Math.cos(a),y=24.5-11.5*Math.sin(a),sd=d.querySelector(".sd");
+       d.classList.toggle("night",!!dark);sd.setAttribute("cx",x.toFixed(2));sd.setAttribute("cy",y.toFixed(2));d.querySelector(".sp").setAttribute("stroke-dasharray",`${(p*100).toFixed(1)} 100`);
+       d.querySelector(".dl").textContent=dark?"Night":left>=60?`${Math.floor(left/60)}h ${left%60}m`:`${left}m left`;
+       d.querySelector("span").textContent=`${dark?"Sunrise":"Sunset"} ${fmtT(nx).replace(/\s?[AP]M/i,"")}`}}
   }
   // next stop: one line, only if within 12 hours
   const evs=timed().filter(e=>e.s>n&&e.s-n<12*36e5).sort((a,b)=>a.s-b.s),cd=upcomingCds(n)[0];
@@ -1669,12 +1680,15 @@ async function loadWz(){
 }
 function nearWz(n){const here=HERE||PLACE;if(!here||!WZ.list.length)return[];
   return WZ.list.filter(z=>(!z.s||z.s<=n)&&(!z.e||z.e>n)).map(z=>({...z,d:Math.min(...z.pts.map(p=>km(here,p)))})).filter(z=>z.d<4.83).sort((a,b)=>a.d-b.d)}
+// precipitating right now? current code, current precip, or the 15-min bucket covering now
+function wetNow(n){if(!WX)return false;const c=WX.code;if((c>=51&&c<=67)||(c>=71&&c<=86)||c>=95||WX.pNow>0)return true;
+  return (WX.q15||[]).some(q=>q.t<=n&&+q.t+9e5>n&&(q.mm>0||q.snow>0))}
 function roadOutlook(n){
   const R=[],add=(lvl,text,ic)=>R.push({lvl,text,ic:ic||(/snow/i.test(text)?"snow":/freez|ice|icy|cold/i.test(text)?"ice":/rain|wet/i.test(text)?"rain":/wind|gust/i.test(text)?"wind":/fog/i.test(text)?"fog":/heat|hot/i.test(text)?"heat":/dark/i.test(text)?"moon":/thunder/i.test(text)?"bolt":"warn")});
   const H=(WX?.hourly||[]).filter(h=>h.t>new Date(n.getTime()-36e5)&&h.t<=new Date(n.getTime()+24*36e5));
   const hr=t=>t.toDateString()===n.toDateString()?t.toLocaleTimeString([], {hour:"numeric"}):t.toLocaleString([], {weekday:"short",hour:"numeric"});
   const span=(arr)=>{const a=arr[0].t,b=new Date(arr[arr.length-1].t.getTime()+36e5);return a<=n?`now until ${hr(b)}`:`${hr(a)} to ${hr(b)}`};
-  const likely=h=>h.pp>=40;
+  const wn=wetNow(n),likely=h=>h.pp>=40||(wn&&h.t<=n&&+h.t+36e5>n);
   const snow=H.filter(h=>likely(h)&&h.snow>0);
   if(snow.length){const tot=snow.reduce((a,h)=>a+h.snow,0);add(tot>=1?"hazard":"caution",`Snow ${span(snow)}${tot>=.1?`, about ${tot<1?tot.toFixed(1):Math.round(tot*2)/2} in`:""}`)}
   const ice=H.filter(h=>likely(h)&&h.snow===0&&h.mm>=.01&&h.temp!=null&&h.temp<=32);
